@@ -6,9 +6,6 @@
     <title>Brawl Stars</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <style>
         * {
             margin: 0;
@@ -1686,8 +1683,8 @@
             <div class="error" id="authError">❌ Ошибка</div>
             <div class="success" id="authSuccess">✅ Успешно!</div>
             <div class="btn-group">
-                <button class="login-btn" onclick="loginWithUsername()">🔑 Войти</button>
-                <button class="register-btn" onclick="registerWithUsername()">📝 Регистрация</button>
+                <button class="login-btn" id="loginBtn">🔑 Войти</button>
+                <button class="register-btn" id="registerBtn">📝 Регистрация</button>
             </div>
         </div>
     </div>
@@ -1699,8 +1696,8 @@
             <h2>⛔ ВЫ ЗАБАНЕНЫ!</h2>
             <p>Ваш аккаунт был заблокирован администратором.</p>
             <div class="btn-group">
-                <button class="new-account" onclick="createNewAccount()">🔄 Создать новый аккаунт</button>
-                <button class="appeal" onclick="appealBan()">📩 Подать заявку на разбан</button>
+                <button class="new-account" id="newAccountBtn">🔄 Создать новый аккаунт</button>
+                <button class="appeal" id="appealBtn">📩 Подать заявку на разбан</button>
             </div>
         </div>
     </div>
@@ -1712,14 +1709,14 @@
             <h2>🔒 Админ-панель</h2>
             <p>Введите пароль для доступа</p>
             <input type="password" id="passwordInput" placeholder="Введите пароль" />
-            <button onclick="checkPassword()">Войти</button>
+            <button id="checkPasswordBtn">Войти</button>
             <div class="error" id="passwordError">❌ Неверный пароль</div>
         </div>
     </div>
 
     <script>
         // ============================================================
-        //  FIREBASE КОНФИГ (без Auth)
+        //  FIREBASE КОНФИГ
         // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyB_IDn4_u5W1G82CrjXSMz6SAwXhkdnktc",
@@ -1740,9 +1737,11 @@
         const ADMIN_PASSWORD = 'admin123';
         let isAdmin = localStorage.getItem('brawl_isAdmin') === 'true';
 
-        function closePasswordModal() { document.getElementById('passwordOverlay').style.display = 'none'; }
+        window.closePasswordModal = function() {
+            document.getElementById('passwordOverlay').style.display = 'none';
+        }
 
-        function checkPassword() {
+        window.checkPassword = function() {
             const input = document.getElementById('passwordInput');
             const error = document.getElementById('passwordError');
             if (input.value === ADMIN_PASSWORD) {
@@ -1757,9 +1756,6 @@
                 setTimeout(() => { error.style.display = 'none'; }, 3000);
             }
         }
-        document.getElementById('passwordInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') { checkPassword(); }
-        });
 
         // ============================================================
         //  АВТОРИЗАЦИЯ ПО ИМЕНИ
@@ -1768,21 +1764,7 @@
         let isLoggedIn = false;
         let profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
 
-        function checkSession() {
-            const savedId = localStorage.getItem('brawl_userId');
-            if (savedId) {
-                currentUserId = savedId;
-                isLoggedIn = true;
-                document.getElementById('authOverlay').style.display = 'none';
-                loadUserProfile();
-                loadGameData();
-                render();
-            } else {
-                document.getElementById('authOverlay').style.display = 'flex';
-            }
-        }
-
-        function registerWithUsername() {
+        window.registerWithUsername = function() {
             const username = document.getElementById('authUsername').value.trim();
             const password = document.getElementById('authPassword').value.trim();
             const errorEl = document.getElementById('authError');
@@ -1844,7 +1826,7 @@
             });
         }
 
-        function loginWithUsername() {
+        window.loginWithUsername = function() {
             const username = document.getElementById('authUsername').value.trim();
             const password = document.getElementById('authPassword').value.trim();
             const errorEl = document.getElementById('authError');
@@ -1890,7 +1872,7 @@
             });
         }
 
-        function logout() {
+        window.logout = function() {
             if (confirm('Выйти из аккаунта?')) {
                 localStorage.removeItem('brawl_userId');
                 currentUserId = null;
@@ -1992,7 +1974,7 @@
             });
         }
 
-        function showNotification(text, duration = 5) {
+        window.showNotification = function(text, duration = 5) {
             const el = document.getElementById('serverNotification');
             const textEl = document.getElementById('notificationText');
             textEl.textContent = text;
@@ -2003,14 +1985,14 @@
             }, duration * 1000);
         }
 
-        function closeNotification() {
+        window.closeNotification = function() {
             const el = document.getElementById('serverNotification');
             el.style.display = 'none';
             if (notificationTimeout) { clearTimeout(notificationTimeout);
                 notificationTimeout = null; }
         }
 
-        function sendGlobalNotification() {
+        window.sendGlobalNotification = function() {
             const text = document.getElementById('notifyText').value.trim();
             const duration = parseInt(document.getElementById('notifyDuration').value) || 5;
             if (!text) { alert('Введите текст сообщения!'); return; }
@@ -2058,7 +2040,7 @@
             return false;
         }
 
-        function createNewAccount() {
+        window.createNewAccount = function() {
             document.getElementById('bannedOverlay').style.display = 'none';
             document.getElementById('authOverlay').style.display = 'flex';
             localStorage.removeItem('brawl_userId');
@@ -2068,7 +2050,7 @@
             render();
         }
 
-        function appealBan() { alert('📩 Заявка на разбан отправлена!'); }
+        window.appealBan = function() { alert('📩 Заявка на разбан отправлена!'); }
 
         // ============================================================
         //  СИНХРОНИЗАЦИЯ
@@ -2140,12 +2122,12 @@
             autoSync();
             render();
             alert(`✅ ${brawlerName} → ${playerBrawler.level} ур.!`);
-        };
+        }
 
         window.selectBrawlerForBattle = function(name) {
             selectedBrawler = name;
             render();
-        };
+        }
 
         window.resetBattle = function() {
             if (searchRef) {
@@ -2171,10 +2153,9 @@
             battleId = null;
             selectedBrawler = null;
             render();
-        };
+        }
 
-        // ----- ПОИСК БОЯ -----
-        function findBattle() {
+        window.findBattle = function() {
             if (checkBan() || !currentUserId) return;
             if (!selectedBrawler) return alert('Выберите бойца!');
             const hasBrawler = profile.brawlers && profile.brawlers.some(pb => pb.name === selectedBrawler);
@@ -2235,7 +2216,7 @@
             }, 5000);
         }
 
-        function cancelSearch() {
+        window.cancelSearch = function() {
             if (searchRef) {
                 db.ref('pvp_search/' + searchRef.key).remove();
                 searchRef = null;
@@ -2247,7 +2228,6 @@
             render();
         }
 
-        // ----- ЗАПУСК БОЯ -----
         function startPvpBattle(opponentData) {
             const myBrawler = brawlers.find(b => b.name === selectedBrawler);
             const oppBrawler = brawlers.find(b => b.name === opponentData.brawler);
@@ -2314,7 +2294,6 @@
             }
         }
 
-        // ----- ИИ БОТА -----
         window.botInterval = null;
 
         function startBotAI() {
@@ -2339,7 +2318,6 @@
             }, 1500);
         }
 
-        // ----- ОБРАБОТКА ХОДА -----
         function processPvpMove(move) {
             if (!battleData || battleData.finished) return;
 
@@ -2401,7 +2379,6 @@
             db.ref('battles/' + battleId).set(battleData);
         }
 
-        // ----- ЗАВЕРШЕНИЕ БОЯ -----
         function finishPvpBattle(data) {
             battleState = 'result';
             render();
@@ -2414,8 +2391,7 @@
                 window.botInterval = null; }
         }
 
-        // ----- ХОД ИГРОКА -----
-        function makePvpMove(action) {
+        window.makePvpMove = function(action) {
             if (!battleData || battleData.finished) return;
             const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === currentUserId) ||
                 (battleData.currentTurn === 'player2' && battleData.player2Id === currentUserId);
@@ -2715,9 +2691,9 @@
         }
 
         window.openBrawlerDetail = function(name) { selectedBrawlerForDetail = name;
-            render(); };
+            render(); }
         window.closeBrawlerDetail = function() { selectedBrawlerForDetail = null;
-            render(); };
+            render(); }
 
         // ============================================================
         //  МАГАЗИН, ВАУЧЕРЫ, ЧАТ
@@ -2754,7 +2730,7 @@
             } else {
                 alert(`✅ Вы купили: ${name}!`);
             }
-        };
+        }
 
         function renderShop(cloudHtml) {
             let html = cloudHtml;
@@ -2845,11 +2821,7 @@
             db.ref('chat').push({ playerId: currentUserId, name: profile.name || 'Аноним', text: text, timestamp: Date
                     .now() });
             input.value = '';
-        };
-
-        document.getElementById('chatInput')?.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') { sendMessage(); }
-        });
+        }
 
         function loadChat() {
             db.ref('chat').orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
@@ -2903,12 +2875,12 @@
                 container.innerHTML =
                     `<div class="voucher-code"><span class="code">${code}</span><button class="copy-btn" onclick="copyVoucher('${code}')">📋 Копировать</button></div>`;
             }
-        };
+        }
 
         window.copyVoucher = function(code) {
             navigator.clipboard.writeText(code).then(() => alert('✅ Код скопирован!')).catch(() => prompt(
                 'Скопируйте код вручную:', code));
-        };
+        }
 
         window.activateVoucher = function() {
             const codeInput = document.getElementById('voucherActivateInput');
@@ -2919,7 +2891,7 @@
             if (!voucher) return alert('❌ Неверный код!');
             if (voucher.maxUses <= 0) return alert('❌ Этот ваучер уже использован!');
             if (voucher.usedBy && voucher.usedBy.includes(currentUserId)) return alert(
-            '⚠️ Вы уже активировали этот ваучер!');
+                '⚠️ Вы уже активировали этот ваучер!');
 
             if (!voucher.usedBy) voucher.usedBy = [];
             voucher.usedBy.push(currentUserId);
@@ -2946,7 +2918,7 @@
             render();
             codeInput.value = '';
             alert(`🎉 Ваучер активирован! Осталось ${voucher.maxUses} активаций.`);
-        };
+        }
 
         // ============================================================
         //  АДМИНКА
@@ -2999,7 +2971,7 @@
                 document.getElementById('adminResourceAmount').value = '';
                 loadPlayersList();
             });
-        };
+        }
 
         window.adminGiveTrophies = function() {
             const playerId = document.getElementById('adminTrophySelect').value;
@@ -3015,7 +2987,7 @@
                 document.getElementById('adminTrophyAmount').value = '';
                 loadPlayersList();
             });
-        };
+        }
 
         window.adminDeleteAccount = function() {
             const playerId = document.getElementById('adminDeleteSelect').value;
@@ -3032,7 +3004,7 @@
                     render();
                 }
             });
-        };
+        }
 
         window.adminBanPlayer = function() {
             const playerId = document.getElementById('banPlayerSelect').value;
@@ -3047,7 +3019,7 @@
                     loadPlayersList();
                 }
             });
-        };
+        }
 
         window.adminUnbanPlayer = function() {
             const playerId = document.getElementById('unbanPlayerSelect').value;
@@ -3062,7 +3034,115 @@
                     loadPlayersList();
                 }
             });
-        };
+        }
+
+        window.addShopItem = function() {
+            const name = document.getElementById('shopName').value.trim();
+            const desc = document.getElementById('shopDesc').value.trim();
+            const category = document.getElementById('shopCategory').value;
+            const isFree = document.getElementById('shopFree').checked;
+            const fileInput = document.getElementById('shopImage');
+            if (!name) return alert('Введите название товара!');
+            if (category === 'resources') {
+                const resourceType = document.getElementById('resourceType').value;
+                const amount = parseInt(document.getElementById('resourceAmount').value) || 0;
+                if (amount <= 0) return alert('Введите количество ресурсов!');
+                const reward = resourceType === 'gems' ? `${amount} 💎` : `${amount} 🪙`;
+                const processItem = (image) => {
+                    shopItems.push({ name, desc, image, reward, category, resourceType, amount, free: isFree });
+                    autoSync();
+                    render();
+                };
+                if (fileInput.files && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) { processItem(e.target.result); };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else { processItem(''); }
+            } else if (category === 'brawler') {
+                const brawlerName = document.getElementById('brawlerSelect').value;
+                const cost = parseInt(document.getElementById('brawlerCost').value) || 0;
+                if (!brawlerName) return alert('Выберите бойца!');
+                if (!isFree && cost <= 0) return alert('Введите стоимость в гемах!');
+                const reward = `${brawlerName} (${isFree ? 'БЕСПЛАТНО' : cost + ' 💎'})`;
+                const processItem = (image) => {
+                    shopItems.push({ name, desc, image, reward, category, brawlerName, cost, free: isFree });
+                    autoSync();
+                    render();
+                };
+                if (fileInput.files && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) { processItem(e.target.result); };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else { processItem(''); }
+            }
+        }
+
+        window.deleteShopItem = function(idx) { shopItems.splice(idx, 1);
+            autoSync();
+            render(); }
+
+        window.addBrawlerFull = function() {
+            const name = document.getElementById('bName').value.trim();
+            if (!name) return alert('Введите имя бойца!');
+            const desc = document.getElementById('bDesc').value.trim();
+            const rarity = document.getElementById('bRarity').value;
+            const minDamage = parseInt(document.getElementById('bMinDamage').value) || 100;
+            const maxDamage = parseInt(document.getElementById('bMaxDamage').value) || 200;
+            const minHp = parseInt(document.getElementById('bMinHp').value) || 400;
+            const maxHp = parseInt(document.getElementById('bMaxHp').value) || 800;
+            const fileInput = document.getElementById('bImage');
+
+            const processBrawler = (image) => {
+                brawlers.push({ name, desc, rarity, image, minDamage, maxDamage, minHp, maxHp });
+                autoSync();
+                render();
+            };
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { processBrawler(e.target.result); };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else { processBrawler(''); }
+        }
+
+        window.deleteBrawler = function(idx) { brawlers.splice(idx, 1);
+            autoSync();
+            render(); }
+
+        window.deleteVoucher = function(idx) { vouchers.splice(idx, 1);
+            autoSync();
+            renderAdmin(); }
+
+        function getTimeRemaining() {
+            if (!serverSettings.closeTime) return null;
+            const closeDate = new Date(serverSettings.closeTime);
+            const now = new Date();
+            const diff = closeDate - now;
+            if (diff <= 0) return null;
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            return { hours, minutes, seconds };
+        }
+
+        window.applyServerSettings = function() {
+            const closeTime = document.getElementById('serverCloseTime').value;
+            const workMessage = document.getElementById('serverWorkMessage').value.trim();
+            const maintenanceMessage = document.getElementById('serverMaintenanceMessage').value.trim();
+            serverSettings.closeTime = closeTime ? new Date(closeTime).toISOString() : null;
+            serverSettings.workMessage = workMessage || 'Добро пожаловать в Brawl Stars!';
+            serverSettings.maintenanceMessage = maintenanceMessage || 'Технические работы. Зайдите позже.';
+            saveServerSettings();
+            checkServerStatus();
+            render();
+            alert('✅ Настройки сохранены!');
+        }
+
+        window.toggleServerManual = function() {
+            serverSettings.isClosed = !serverSettings.isClosed;
+            saveServerSettings();
+            checkServerStatus();
+            render();
+        }
 
         // ============================================================
         //  АДМИНКА (RENDER)
@@ -3298,7 +3378,7 @@
                     ' visible' : '');
                 document.getElementById('brawlerFields').className = 'category-fields' + (category === 'brawler' ?
                     ' visible' : '');
-            };
+            }
             setTimeout(window.toggleCategoryFields, 100);
 
             window.toggleVoucherFields = function() {
@@ -3306,166 +3386,89 @@
                 document.getElementById('voucherAmountField').style.display = (type === 'gems' || type === 'coins') ?
                     'block' : 'none';
                 document.getElementById('voucherBrawlerField').style.display = type === 'brawler' ? 'block' : 'none';
-            };
+            }
             setTimeout(window.toggleVoucherFields, 100);
 
             setTimeout(updatePlayerSelects, 200);
         }
 
         // ============================================================
-        //  АДМИН-ФУНКЦИИ
+        //  ПРИВЯЗКА КНОПОК
         // ============================================================
-        window.addShopItem = function() {
-            const name = document.getElementById('shopName').value.trim();
-            const desc = document.getElementById('shopDesc').value.trim();
-            const category = document.getElementById('shopCategory').value;
-            const isFree = document.getElementById('shopFree').checked;
-            const fileInput = document.getElementById('shopImage');
-            if (!name) return alert('Введите название товара!');
-            if (category === 'resources') {
-                const resourceType = document.getElementById('resourceType').value;
-                const amount = parseInt(document.getElementById('resourceAmount').value) || 0;
-                if (amount <= 0) return alert('Введите количество ресурсов!');
-                const reward = resourceType === 'gems' ? `${amount} 💎` : `${amount} 🪙`;
-                const processItem = (image) => {
-                    shopItems.push({ name, desc, image, reward, category, resourceType, amount, free: isFree });
-                    autoSync();
-                    render();
-                };
-                if (fileInput.files && fileInput.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) { processItem(e.target.result); };
-                    reader.readAsDataURL(fileInput.files[0]);
-                } else { processItem(''); }
-            } else if (category === 'brawler') {
-                const brawlerName = document.getElementById('brawlerSelect').value;
-                const cost = parseInt(document.getElementById('brawlerCost').value) || 0;
-                if (!brawlerName) return alert('Выберите бойца!');
-                if (!isFree && cost <= 0) return alert('Введите стоимость в гемах!');
-                const reward = `${brawlerName} (${isFree ? 'БЕСПЛАТНО' : cost + ' 💎'})`;
-                const processItem = (image) => {
-                    shopItems.push({ name, desc, image, reward, category, brawlerName, cost, free: isFree });
-                    autoSync();
-                    render();
-                };
-                if (fileInput.files && fileInput.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) { processItem(e.target.result); };
-                    reader.readAsDataURL(fileInput.files[0]);
-                } else { processItem(''); }
-            }
-        };
+        document.addEventListener('DOMContentLoaded', function() {
+            // Авторизация
+            document.getElementById('loginBtn').addEventListener('click', loginWithUsername);
+            document.getElementById('registerBtn').addEventListener('click', registerWithUsername);
+            document.getElementById('checkPasswordBtn').addEventListener('click', checkPassword);
+            document.getElementById('newAccountBtn').addEventListener('click', createNewAccount);
+            document.getElementById('appealBtn').addEventListener('click', appealBan);
 
-        window.deleteShopItem = function(idx) { shopItems.splice(idx, 1);
-            autoSync();
-            render(); };
+            // Пароль админки по Enter
+            document.getElementById('passwordInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { checkPassword(); }
+            });
 
-        window.addBrawlerFull = function() {
-            const name = document.getElementById('bName').value.trim();
-            if (!name) return alert('Введите имя бойца!');
-            const desc = document.getElementById('bDesc').value.trim();
-            const rarity = document.getElementById('bRarity').value;
-            const minDamage = parseInt(document.getElementById('bMinDamage').value) || 100;
-            const maxDamage = parseInt(document.getElementById('bMaxDamage').value) || 200;
-            const minHp = parseInt(document.getElementById('bMinHp').value) || 400;
-            const maxHp = parseInt(document.getElementById('bMaxHp').value) || 800;
-            const fileInput = document.getElementById('bImage');
+            // Чат по Enter
+            document.getElementById('chatInput')?.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { sendMessage(); }
+            });
 
-            const processBrawler = (image) => {
-                brawlers.push({ name, desc, rarity, image, minDamage, maxDamage, minHp, maxHp });
-                autoSync();
-                render();
-            };
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) { processBrawler(e.target.result); };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else { processBrawler(''); }
-        };
-
-        window.deleteBrawler = function(idx) { brawlers.splice(idx, 1);
-            autoSync();
-            render(); };
-
-        window.deleteVoucher = function(idx) { vouchers.splice(idx, 1);
-            autoSync();
-            renderAdmin(); };
-
-        function getTimeRemaining() {
-            if (!serverSettings.closeTime) return null;
-            const closeDate = new Date(serverSettings.closeTime);
-            const now = new Date();
-            const diff = closeDate - now;
-            if (diff <= 0) return null;
-            const hours = Math.floor(diff / 3600000);
-            const minutes = Math.floor((diff % 3600000) / 60000);
-            const seconds = Math.floor((diff % 60000) / 1000);
-            return { hours, minutes, seconds };
-        }
-
-        window.applyServerSettings = function() {
-            const closeTime = document.getElementById('serverCloseTime').value;
-            const workMessage = document.getElementById('serverWorkMessage').value.trim();
-            const maintenanceMessage = document.getElementById('serverMaintenanceMessage').value.trim();
-            serverSettings.closeTime = closeTime ? new Date(closeTime).toISOString() : null;
-            serverSettings.workMessage = workMessage || 'Добро пожаловать в Brawl Stars!';
-            serverSettings.maintenanceMessage = maintenanceMessage || 'Технические работы. Зайдите позже.';
-            saveServerSettings();
-            checkServerStatus();
-            render();
-            alert('✅ Настройки сохранены!');
-        };
-
-        window.toggleServerManual = function() {
-            serverSettings.isClosed = !serverSettings.isClosed;
-            saveServerSettings();
-            checkServerStatus();
-            render();
-        };
-
-        // ============================================================
-        //  МЕНЮ
-        // ============================================================
-        menuBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const tab = this.dataset.tab;
-                if (tab === 'admin' && !isAdmin) {
-                    document.getElementById('passwordOverlay').style.display = 'flex';
-                    return;
-                }
-                if (tab !== 'brawlers') { selectedBrawlerForDetail = null; }
-                if (tab !== 'battle' && battleState !== 'select') {
-                    if (searchRef) {
-                        db.ref('pvp_search/' + searchRef.key).remove();
-                        searchRef = null;
+            // Меню
+            menuBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.dataset.tab;
+                    if (tab === 'admin' && !isAdmin) {
+                        document.getElementById('passwordOverlay').style.display = 'flex';
+                        return;
                     }
-                    db.ref('pvp_search').off();
-                    if (searchTimeout) clearTimeout(searchTimeout);
-                    if (botTimeout) clearTimeout(botTimeout);
-                    if (battleId) {
-                        db.ref('battles/' + battleId).off();
-                        if (moveListener) {
-                            moveListener.off();
-                            moveListener = null;
+                    if (tab !== 'brawlers') { selectedBrawlerForDetail = null; }
+                    if (tab !== 'battle' && battleState !== 'select') {
+                        if (searchRef) {
+                            db.ref('pvp_search/' + searchRef.key).remove();
+                            searchRef = null;
                         }
+                        db.ref('pvp_search').off();
+                        if (searchTimeout) clearTimeout(searchTimeout);
+                        if (botTimeout) clearTimeout(botTimeout);
+                        if (battleId) {
+                            db.ref('battles/' + battleId).off();
+                            if (moveListener) {
+                                moveListener.off();
+                                moveListener = null;
+                            }
+                        }
+                        if (window.botInterval) {
+                            clearInterval(window.botInterval);
+                            window.botInterval = null;
+                        }
+                        battleState = 'select';
+                        battleData = null;
+                        battleId = null;
+                        selectedBrawler = null;
                     }
-                    if (window.botInterval) {
-                        clearInterval(window.botInterval);
-                        window.botInterval = null;
-                    }
-                    battleState = 'select';
-                    battleData = null;
-                    battleId = null;
-                    selectedBrawler = null;
-                }
-                currentMainTab = tab;
-                render();
+                    currentMainTab = tab;
+                    render();
+                });
             });
         });
 
         // ============================================================
         //  ЗАПУСК
         // ============================================================
+        function checkSession() {
+            const savedId = localStorage.getItem('brawl_userId');
+            if (savedId) {
+                currentUserId = savedId;
+                isLoggedIn = true;
+                document.getElementById('authOverlay').style.display = 'none';
+                loadUserProfile();
+                loadGameData();
+                render();
+            } else {
+                document.getElementById('authOverlay').style.display = 'flex';
+            }
+        }
+
         loadServerSettings();
         loadGameData();
         listenForNotifications();
