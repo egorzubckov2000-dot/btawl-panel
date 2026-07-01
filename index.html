@@ -6,7 +6,6 @@
     <title>Brawl Stars</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -18,8 +17,7 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
-        html,
-        body {
+        html, body {
             height: 100%;
             width: 100%;
             background: #0b0b1a;
@@ -55,13 +53,8 @@
                 height: 100vh;
                 max-height: 860px;
             }
-            .header h1 {
-                font-size: 22px;
-            }
-            .menu button {
-                font-size: 11px;
-                padding: 8px 4px;
-            }
+            .header h1 { font-size: 22px; }
+            .menu button { font-size: 11px; padding: 8px 4px; }
         }
         .header {
             display: flex;
@@ -106,13 +99,11 @@
             animation: pulse-dot 1.5s ease-in-out infinite;
         }
         @keyframes pulse-dot {
-            0%,
-            100% { opacity: 1; }
+            0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
         @keyframes pulse-badge {
-            0%,
-            100% { transform: scale(1); }
+            0%, 100% { transform: scale(1); }
             50% { transform: scale(1.02); }
         }
         .offline-badge {
@@ -135,10 +126,7 @@
             animation: fadeIn 0.4s ease;
         }
         @media (max-width:430px) {
-            #content {
-                padding: 12px 10px;
-                border-radius: 18px;
-            }
+            #content { padding: 12px 10px; border-radius: 18px; }
         }
         .cloud-panel {
             background: #0f0f2a;
@@ -208,8 +196,7 @@
             animation: bounce-icon 2s ease-in-out infinite;
         }
         @keyframes bounce-icon {
-            0%,
-            100% { transform: translateY(0); }
+            0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-8px); }
         }
 
@@ -314,8 +301,7 @@
             display: none;
         }
         @keyframes shake {
-            0%,
-            100% { transform: translateX(0); }
+            0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-8px); }
             75% { transform: translateX(8px); }
         }
@@ -344,26 +330,10 @@
             width: 90%;
             animation: scaleIn 0.4s ease;
         }
-        .banned-box .ban-icon {
-            font-size: 64px;
-            display: block;
-            margin-bottom: 8px;
-        }
-        .banned-box h2 {
-            color: #d43f3f;
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-        .banned-box p {
-            color: #8888aa;
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-        .banned-box .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .banned-box .ban-icon { font-size: 64px; display: block; margin-bottom: 8px; }
+        .banned-box h2 { color: #d43f3f; font-size: 24px; margin-bottom: 8px; }
+        .banned-box p { color: #8888aa; font-size: 14px; margin-bottom: 16px; }
+        .banned-box .btn-group { display: flex; flex-direction: column; gap: 10px; }
         .banned-box .btn-group button {
             padding: 12px;
             border-radius: 40px;
@@ -391,13 +361,58 @@
             background: #4fc3f722;
         }
 
-        /* ===== БОЙ ===== */
-        .pvp-container {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            gap: 10px;
+        /* ===== ВСПЛЫВАЮЩЕЕ СООБЩЕНИЕ ===== */
+        .server-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #f5c842, #f5a623);
+            color: #0b0b1a;
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 16px;
+            z-index: 9999;
+            box-shadow: 0 0 60px rgba(245, 200, 66, 0.5);
+            max-width: 90%;
+            width: auto;
+            text-align: center;
+            animation: slideDown 0.5s ease;
+            display: none;
+            border: 2px solid #fff;
         }
+        .server-notification .close-notify {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #d43f3f;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s ease;
+            box-shadow: 0 0 20px rgba(212, 63, 63, 0.5);
+        }
+        .server-notification .close-notify:hover {
+            transform: scale(1.15);
+            background: #ff2f2f;
+        }
+        .server-notification .notify-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-60px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ===== БОЙ ===== */
+        .pvp-container { display: flex; flex-direction: column; flex: 1; gap: 10px; }
         .pvp-search {
             text-align: center;
             padding: 30px 20px;
@@ -412,8 +427,7 @@
             align-items: center;
         }
         @keyframes pulse-search {
-            0%,
-            100% { border-color: #f5c84244; }
+            0%, 100% { border-color: #f5c84244; }
             50% { border-color: #f5c842; }
         }
         .pvp-search .spinner {
@@ -426,18 +440,9 @@
             animation: spin 1s linear infinite;
             margin-bottom: 16px;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .pvp-search h3 {
-            color: #f5c842;
-            font-size: 22px;
-            margin-bottom: 8px;
-        }
-        .pvp-search p {
-            color: #8888aa;
-            font-size: 14px;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .pvp-search h3 { color: #f5c842; font-size: 22px; margin-bottom: 8px; }
+        .pvp-search p { color: #8888aa; font-size: 14px; }
         .pvp-search .cancel-btn {
             margin-top: 16px;
             background: #555;
@@ -449,10 +454,7 @@
             cursor: pointer;
             transition: 0.3s ease;
         }
-        .pvp-search .cancel-btn:hover {
-            transform: scale(1.05);
-            background: #777;
-        }
+        .pvp-search .cancel-btn:hover { transform: scale(1.05); background: #777; }
         .battle-field {
             display: flex;
             justify-content: space-between;
@@ -474,31 +476,11 @@
             border-color: #f5c842;
             box-shadow: 0 0 30px #f5c84244;
         }
-        .battle-player .name {
-            color: #eee;
-            font-weight: 700;
-            font-size: 16px;
-        }
-        .battle-player .hp {
-            color: #ff6b6b;
-            font-size: 14px;
-            font-weight: 700;
-        }
-        .battle-player .brawler-icon {
-            font-size: 48px;
-            display: block;
-            margin: 4px 0;
-        }
-        .battle-player .power {
-            color: #f5c842;
-            font-size: 12px;
-            font-weight: 700;
-        }
-        .battle-vs {
-            color: #f5c842;
-            font-size: 24px;
-            font-weight: 800;
-        }
+        .battle-player .name { color: #eee; font-weight: 700; font-size: 16px; }
+        .battle-player .hp { color: #ff6b6b; font-size: 14px; font-weight: 700; }
+        .battle-player .brawler-icon { font-size: 48px; display: block; margin: 4px 0; }
+        .battle-player .power { color: #f5c842; font-size: 12px; font-weight: 700; }
+        .battle-vs { color: #f5c842; font-size: 24px; font-weight: 800; }
         .battle-actions {
             display: flex;
             gap: 10px;
@@ -552,19 +534,10 @@
             padding: 2px 0;
             border-bottom: 1px solid #1a1a3a;
         }
-        .battle-log .log-entry.crit {
-            color: #ffd700;
-        }
-        .battle-log .log-entry.heal {
-            color: #51cf66;
-        }
-        .battle-log .log-entry.damage {
-            color: #ff6b6b;
-        }
-        .battle-log .log-entry.win {
-            color: #f5c842;
-            font-weight: 700;
-        }
+        .battle-log .log-entry.crit { color: #ffd700; }
+        .battle-log .log-entry.heal { color: #51cf66; }
+        .battle-log .log-entry.damage { color: #ff6b6b; }
+        .battle-log .log-entry.win { color: #f5c842; font-weight: 700; }
         .battle-status {
             text-align: center;
             color: #aaaacc;
@@ -573,16 +546,13 @@
             background: #0f0f2a;
             border-radius: 12px;
         }
-        .battle-status .waiting {
-            color: #f5c842;
-        }
+        .battle-status .waiting { color: #f5c842; }
         .battle-status .fighting {
             color: #ff6b6b;
             animation: pulse-fight 1s ease-in-out infinite;
         }
         @keyframes pulse-fight {
-            0%,
-            100% { opacity: 1; }
+            0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
         .battle-result {
@@ -593,16 +563,8 @@
             border: 2px solid #f5c842;
             animation: scaleIn 0.4s ease;
         }
-        .battle-result .winner {
-            font-size: 32px;
-            font-weight: 800;
-            color: #f5c842;
-        }
-        .battle-result .trophies {
-            font-size: 18px;
-            color: #2ecc71;
-            margin-top: 4px;
-        }
+        .battle-result .winner { font-size: 32px; font-weight: 800; color: #f5c842; }
+        .battle-result .trophies { font-size: 18px; color: #2ecc71; margin-top: 4px; }
         .battle-result .back-btn {
             background: #f5c842;
             border: none;
@@ -621,11 +583,7 @@
         }
 
         /* ===== БОЙЦЫ ===== */
-        .brawler-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
+        .brawler-list { display: flex; flex-direction: column; gap: 6px; }
         .brawler-item {
             background: #0f0f2a;
             padding: 10px 14px;
@@ -658,22 +616,14 @@
             margin-top: 8px;
             text-align: center;
         }
-        .brawler-detail .avatar {
-            font-size: 80px;
-            display: block;
-            margin-bottom: 4px;
-        }
+        .brawler-detail .avatar { font-size: 80px; display: block; margin-bottom: 4px; }
         .brawler-detail .avatar img {
             width: 80px;
             height: 80px;
             border-radius: 40px;
             object-fit: cover;
         }
-        .brawler-detail .name {
-            color: #f5c842;
-            font-size: 26px;
-            font-weight: 800;
-        }
+        .brawler-detail .name { color: #f5c842; font-size: 26px; font-weight: 800; }
         .brawler-detail .rarity {
             font-size: 14px;
             color: #f5c842;
@@ -683,11 +633,7 @@
             display: inline-block;
             margin: 4px 0 12px;
         }
-        .brawler-detail .desc {
-            color: #ccccee;
-            font-size: 15px;
-            margin-bottom: 16px;
-        }
+        .brawler-detail .desc { color: #ccccee; font-size: 15px; margin-bottom: 16px; }
         .brawler-detail .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -700,24 +646,11 @@
             padding: 10px 8px;
             border: 1px solid #555577;
         }
-        .brawler-detail .stat-box .label {
-            font-size: 11px;
-            color: #8888aa;
-        }
-        .brawler-detail .stat-box .value {
-            font-size: 18px;
-            font-weight: 700;
-            color: #eee;
-        }
-        .brawler-detail .stat-box .value.damage {
-            color: #ff6b6b;
-        }
-        .brawler-detail .stat-box .value.hp {
-            color: #51cf66;
-        }
-        .brawler-detail .stat-box .value.power {
-            color: #f5c842;
-        }
+        .brawler-detail .stat-box .label { font-size: 11px; color: #8888aa; }
+        .brawler-detail .stat-box .value { font-size: 18px; font-weight: 700; color: #eee; }
+        .brawler-detail .stat-box .value.damage { color: #ff6b6b; }
+        .brawler-detail .stat-box .value.hp { color: #51cf66; }
+        .brawler-detail .stat-box .value.power { color: #f5c842; }
         .brawler-detail .status-badge {
             font-size: 14px;
             padding: 6px 20px;
@@ -725,14 +658,8 @@
             display: inline-block;
             font-weight: 700;
         }
-        .brawler-detail .status-badge.owned {
-            background: #2ecc71;
-            color: #0b0b1a;
-        }
-        .brawler-detail .status-badge.locked {
-            background: #d43f3f;
-            color: #fff;
-        }
+        .brawler-detail .status-badge.owned { background: #2ecc71; color: #0b0b1a; }
+        .brawler-detail .status-badge.locked { background: #d43f3f; color: #fff; }
         .brawler-detail .power-display {
             margin-top: 8px;
             padding: 8px;
@@ -740,10 +667,7 @@
             border-radius: 16px;
             border: 1px solid #555577;
         }
-        .brawler-detail .power-display .level {
-            color: #f5c842;
-            font-weight: 700;
-        }
+        .brawler-detail .power-display .level { color: #f5c842; font-weight: 700; }
         .brawler-detail .upgrade-btn {
             background: #f5c842;
             border: none;
@@ -783,11 +707,7 @@
         }
 
         /* ===== МАГАЗИН ===== */
-        .shop-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .shop-grid { display: flex; flex-direction: column; gap: 10px; }
         .shop-item {
             background: #0f0f2a;
             border-radius: 20px;
@@ -811,18 +731,9 @@
             background: #1a1a3a;
             border: 2px solid #f5c84255;
         }
-        .shop-item .info {
-            flex: 1;
-        }
-        .shop-item .info .name {
-            color: #eee;
-            font-weight: 700;
-            font-size: 15px;
-        }
-        .shop-item .info .desc {
-            color: #8888aa;
-            font-size: 12px;
-        }
+        .shop-item .info { flex: 1; }
+        .shop-item .info .name { color: #eee; font-weight: 700; font-size: 15px; }
+        .shop-item .info .desc { color: #8888aa; font-size: 12px; }
         .shop-item .info .reward {
             font-size: 11px;
             color: #f5c842;
@@ -862,22 +773,9 @@
             border: 1px solid #f5c84233;
             text-align: center;
         }
-        .profile-card .avatar {
-            font-size: 64px;
-            margin-bottom: 8px;
-            display: block;
-        }
-        .profile-card .nick {
-            color: #f5c842;
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        .profile-card .email {
-            color: #8888aa;
-            font-size: 12px;
-            margin-bottom: 8px;
-        }
+        .profile-card .avatar { font-size: 64px; margin-bottom: 8px; display: block; }
+        .profile-card .nick { color: #f5c842; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .profile-card .email { color: #8888aa; font-size: 12px; margin-bottom: 8px; }
         .profile-card .stats {
             display: flex;
             justify-content: center;
@@ -885,28 +783,12 @@
             margin-top: 12px;
             flex-wrap: wrap;
         }
-        .profile-card .stat-item {
-            text-align: center;
-        }
-        .profile-card .stat-item .value {
-            font-size: 24px;
-            font-weight: 800;
-            color: #f5c842;
-        }
-        .profile-card .stat-item .label {
-            font-size: 11px;
-            color: #8888aa;
-            margin-top: 2px;
-        }
-        .profile-card .stat-item .value.gems {
-            color: #4fc3f7;
-        }
-        .profile-card .stat-item .value.coins {
-            color: #ffd54f;
-        }
-        .profile-card .stat-item .value.trophies {
-            color: #f5c842;
-        }
+        .profile-card .stat-item { text-align: center; }
+        .profile-card .stat-item .value { font-size: 24px; font-weight: 800; color: #f5c842; }
+        .profile-card .stat-item .label { font-size: 11px; color: #8888aa; margin-top: 2px; }
+        .profile-card .stat-item .value.gems { color: #4fc3f7; }
+        .profile-card .stat-item .value.coins { color: #ffd54f; }
+        .profile-card .stat-item .value.trophies { color: #f5c842; }
         .profile-card .logout-btn {
             background: #d43f3f;
             border: none;
@@ -954,14 +836,13 @@
             box-shadow: 0 0 20px #f5c84255;
             transform: scale(1.03);
         }
-        .admin-tabs button:hover:not(.active-tab) {
-            color: #fff;
-        }
+        .admin-tabs button:hover:not(.active-tab) { color: #fff; }
         .admin-panel {
             display: flex;
             flex-direction: column;
             gap: 10px;
             flex: 1;
+            overflow-y: auto;
         }
         .form-card {
             background: #0f0f2a;
@@ -1013,9 +894,7 @@
             background: #f5c84211;
             transform: scale(1.01);
         }
-        .form-card .file-label input {
-            display: none;
-        }
+        .form-card .file-label input { display: none; }
         .form-card .submit-btn {
             width: 100%;
             background: #f5c842;
@@ -1052,18 +931,9 @@
             border-radius: 40px;
             object-fit: cover;
         }
-        .shop-item-admin .info {
-            flex: 1;
-        }
-        .shop-item-admin .info .name {
-            color: #eee;
-            font-weight: 700;
-            font-size: 14px;
-        }
-        .shop-item-admin .info .desc {
-            color: #8888aa;
-            font-size: 12px;
-        }
+        .shop-item-admin .info { flex: 1; }
+        .shop-item-admin .info .name { color: #eee; font-weight: 700; font-size: 14px; }
+        .shop-item-admin .info .desc { color: #8888aa; font-size: 12px; }
         .shop-item-admin .del-btn {
             background: #d43f3f;
             border: none;
@@ -1099,9 +969,7 @@
             transition: 0.3s ease;
             border-left: 4px solid #555577;
         }
-        .leaderboard-card:hover {
-            transform: scale(1.01);
-        }
+        .leaderboard-card:hover { transform: scale(1.01); }
         .leaderboard-card .rank {
             font-size: 18px;
             font-weight: 800;
@@ -1109,32 +977,13 @@
             min-width: 28px;
             text-align: center;
         }
-        .leaderboard-card .rank.gold {
-            color: #ffd700;
-        }
-        .leaderboard-card .rank.silver {
-            color: #c0c0c0;
-        }
-        .leaderboard-card .rank.bronze {
-            color: #cd7f32;
-        }
-        .leaderboard-card .info {
-            flex: 1;
-        }
-        .leaderboard-card .info .name {
-            color: #eee;
-            font-weight: 700;
-            font-size: 14px;
-        }
-        .leaderboard-card .info .stats {
-            color: #8888aa;
-            font-size: 11px;
-        }
-        .leaderboard-card .gems {
-            color: #4fc3f7;
-            font-weight: 700;
-            font-size: 16px;
-        }
+        .leaderboard-card .rank.gold { color: #ffd700; }
+        .leaderboard-card .rank.silver { color: #c0c0c0; }
+        .leaderboard-card .rank.bronze { color: #cd7f32; }
+        .leaderboard-card .info { flex: 1; }
+        .leaderboard-card .info .name { color: #eee; font-weight: 700; font-size: 14px; }
+        .leaderboard-card .info .stats { color: #8888aa; font-size: 11px; }
+        .leaderboard-card .gems { color: #4fc3f7; font-weight: 700; font-size: 16px; }
         .voucher-code {
             background: #0f0f2a;
             border-radius: 16px;
@@ -1145,12 +994,7 @@
             border: 1px solid #f5c84244;
             margin-top: 8px;
         }
-        .voucher-code .code {
-            color: #f5c842;
-            font-weight: 700;
-            font-size: 16px;
-            letter-spacing: 2px;
-        }
+        .voucher-code .code { color: #f5c842; font-weight: 700; font-size: 16px; letter-spacing: 2px; }
         .voucher-code .copy-btn {
             background: #555577;
             border: none;
@@ -1180,12 +1024,8 @@
             justify-content: center;
             gap: 10px;
         }
-        .server-btn:hover {
-            transform: scale(1.03);
-        }
-        .server-btn:active {
-            transform: scale(0.95);
-        }
+        .server-btn:hover { transform: scale(1.03); }
+        .server-btn:active { transform: scale(0.95); }
         .server-btn.stop {
             background: linear-gradient(135deg, #d43f3f, #b71c1c);
             color: #fff;
@@ -1204,9 +1044,7 @@
             box-shadow: 0 0 50px #2ecc71aa;
             background: linear-gradient(135deg, #3dff8a, #2ecc71);
         }
-        .server-btn .icon {
-            font-size: 20px;
-        }
+        .server-btn .icon { font-size: 20px; }
         .maintenance {
             background: #2a1a1a;
             border: 2px solid #f5c84288;
@@ -1217,8 +1055,7 @@
             animation: pulse-maintenance 2s ease-in-out infinite;
         }
         @keyframes pulse-maintenance {
-            0%,
-            100% { border-color: #f5c84288; }
+            0%, 100% { border-color: #f5c84288; }
             50% { border-color: #f5c842; }
         }
         .maintenance span {
@@ -1231,16 +1068,8 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .maintenance h2 {
-            color: #f5c842;
-            font-size: 20px;
-            font-weight: 700;
-        }
-        .maintenance p {
-            color: #aaaacc;
-            margin-top: 6px;
-            font-size: 14px;
-        }
+        .maintenance h2 { color: #f5c842; font-size: 20px; font-weight: 700; }
+        .maintenance p { color: #aaaacc; margin-top: 6px; font-size: 14px; }
 
         .brawl-select {
             display: flex;
@@ -1367,16 +1196,8 @@
             color: #fff;
             transform: rotate(90deg);
         }
-        .password-box h2 {
-            color: #f5c842;
-            font-size: 20px;
-            margin-bottom: 6px;
-        }
-        .password-box p {
-            color: #8888aa;
-            font-size: 13px;
-            margin-bottom: 16px;
-        }
+        .password-box h2 { color: #f5c842; font-size: 20px; margin-bottom: 6px; }
+        .password-box p { color: #8888aa; font-size: 13px; margin-bottom: 16px; }
         .password-box input {
             width: 100%;
             padding: 10px 14px;
@@ -1422,9 +1243,7 @@
             display: none;
             animation: fadeIn 0.3s ease;
         }
-        .category-fields.visible {
-            display: block;
-        }
+        .category-fields.visible { display: block; }
         .category-fields .hint {
             color: #8888aa;
             font-size: 11px;
@@ -1472,9 +1291,7 @@
             min-height: 200px;
             max-height: 400px;
         }
-        .chat-messages::-webkit-scrollbar {
-            width: 4px;
-        }
+        .chat-messages::-webkit-scrollbar { width: 4px; }
         .chat-messages::-webkit-scrollbar-track {
             background: #0f0f2a;
             border-radius: 10px;
@@ -1496,26 +1313,11 @@
             align-items: center;
             margin-bottom: 2px;
         }
-        .chat-message .msg-name {
-            font-weight: 700;
-            color: #f5c842;
-            font-size: 13px;
-        }
-        .chat-message .msg-time {
-            font-size: 10px;
-            color: #555577;
-        }
-        .chat-message .msg-text {
-            color: #ccccee;
-            font-size: 14px;
-            word-wrap: break-word;
-        }
-        .chat-message.own {
-            border-left-color: #4fc3f7;
-        }
-        .chat-message.own .msg-name {
-            color: #4fc3f7;
-        }
+        .chat-message .msg-name { font-weight: 700; color: #f5c842; font-size: 13px; }
+        .chat-message .msg-time { font-size: 10px; color: #555577; }
+        .chat-message .msg-text { color: #ccccee; font-size: 14px; word-wrap: break-word; }
+        .chat-message.own { border-left-color: #4fc3f7; }
+        .chat-message.own .msg-name { color: #4fc3f7; }
         .chat-input-row {
             display: flex;
             gap: 8px;
@@ -1559,11 +1361,7 @@
             font-size: 16px;
             margin: auto 0;
         }
-        .chat-empty span {
-            display: block;
-            font-size: 48px;
-            margin-bottom: 8px;
-        }
+        .chat-empty span { font-size: 48px; display: block; margin-bottom: 8px; }
 
         /* ===== ТАЙМЕР ===== */
         .timer-display {
@@ -1577,8 +1375,7 @@
             animation: pulse-timer 1.5s ease-in-out infinite;
         }
         @keyframes pulse-timer {
-            0%,
-            100% { opacity: 1; }
+            0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
         
@@ -1601,6 +1398,14 @@
     </style>
 </head>
 <body>
+
+<!-- ===== ВСПЛЫВАЮЩЕЕ СООБЩЕНИЕ ===== -->
+<div class="server-notification" id="serverNotification">
+    <button class="close-notify" onclick="closeNotification()">✕</button>
+    <span class="notify-icon">📢</span>
+    <span id="notificationText">Сообщение от администратора</span>
+</div>
+
 <div class="app">
     <div class="header">
         <h1>⚡ BRAWL</h1>
@@ -1620,18 +1425,18 @@
     </div>
 </div>
 
-<!-- ===== АВТОРИЗАЦИЯ ===== -->
+<!-- ===== АВТОРИЗАЦИЯ (по имени) ===== -->
 <div class="auth-overlay" id="authOverlay">
     <div class="auth-box">
         <h2>⚡ BRAWL</h2>
-        <p id="authSubtitle">Вход по имени пользователя и паролю</p>
+        <p>Вход по имени пользователя</p>
         <input type="text" id="authUsername" placeholder="Имя пользователя" />
         <input type="password" id="authPassword" placeholder="Пароль" />
         <div class="error" id="authError">❌ Ошибка</div>
         <div class="success" id="authSuccess">✅ Успешно!</div>
         <div class="btn-group">
-            <button class="login-btn" onclick="window.loginWithUsername()">🔑 Войти</button>
-            <button class="register-btn" onclick="window.registerWithUsername()">📝 Регистрация</button>
+            <button class="login-btn" onclick="loginWithUsername()">🔑 Войти</button>
+            <button class="register-btn" onclick="registerWithUsername()">📝 Регистрация</button>
         </div>
     </div>
 </div>
@@ -1641,7 +1446,7 @@
     <div class="banned-box">
         <span class="ban-icon">🚫</span>
         <h2>⛔ ВЫ ЗАБАНЕНЫ!</h2>
-        <p>Ваш аккаунт был заблокирован администратором.<br>Вы не можете пользоваться сайтом.</p>
+        <p>Ваш аккаунт был заблокирован администратором.</p>
         <div class="btn-group">
             <button class="new-account" onclick="createNewAccount()">🔄 Создать новый аккаунт</button>
             <button class="appeal" onclick="appealBan()">📩 Подать заявку на разбан</button>
@@ -1663,7 +1468,7 @@
 
 <script>
     // ============================================================
-    //  FIREBASE КОНФИГ
+    //  FIREBASE КОНФИГ (без Auth)
     // ============================================================
     const firebaseConfig = {
         apiKey: "AIzaSyB_IDn4_u5W1G82CrjXSMz6SAwXhkdnktc",
@@ -1675,29 +1480,22 @@
         appId: "1:458936707927:web:2abf0144fc135277ee6c12"
     };
 
-    // ============================================================
-    //  ИНИЦИАЛИЗАЦИЯ FIREBASE
-    // ============================================================
     try {
         firebase.initializeApp(firebaseConfig);
     } catch (e) {
         console.warn('Firebase уже инициализирован:', e);
     }
     const db = firebase.database();
-    const auth = firebase.auth();
-
-    // ============================================================
-    //  ЗАКРЫТИЕ ОКНА ПАРОЛЯ
-    // ============================================================
-    function closePasswordModal() {
-        document.getElementById('passwordOverlay').style.display = 'none';
-    }
 
     // ============================================================
     //  ПАРОЛЬ АДМИНКИ
     // ============================================================
     const ADMIN_PASSWORD = 'admin123';
     let isAdmin = localStorage.getItem('brawl_isAdmin') === 'true';
+
+    function closePasswordModal() {
+        document.getElementById('passwordOverlay').style.display = 'none';
+    }
 
     function checkPassword() {
         const input = document.getElementById('passwordInput');
@@ -1720,34 +1518,29 @@
     });
 
     // ============================================================
-    //  АВТОРИЗАЦИЯ ПО ИМЕНИ И ПАРОЛЮ
+    //  АВТОРИЗАЦИЯ ПО ИМЕНИ (без Firebase Auth)
     // ============================================================
-    let currentUser = null;
     let currentUserId = null;
     let isLoggedIn = false;
     let profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
 
-    // Проверяем состояние авторизации
-    auth.onAuthStateChanged(function(user) {
-        if (user) {
-            currentUser = user;
-            currentUserId = user.uid;
+    // Проверяем сессию
+    function checkSession() {
+        const savedId = localStorage.getItem('brawl_userId');
+        if (savedId) {
+            currentUserId = savedId;
             isLoggedIn = true;
             document.getElementById('authOverlay').style.display = 'none';
             loadUserProfile();
             loadGameData();
             render();
         } else {
-            currentUser = null;
-            currentUserId = null;
-            isLoggedIn = false;
             document.getElementById('authOverlay').style.display = 'flex';
-            render();
         }
-    });
+    }
 
     // ===== РЕГИСТРАЦИЯ =====
-    window.registerWithUsername = function() {
+    function registerWithUsername() {
         const username = document.getElementById('authUsername').value.trim();
         const password = document.getElementById('authPassword').value.trim();
         const errorEl = document.getElementById('authError');
@@ -1779,39 +1572,46 @@
                 return;
             }
 
-            // Создаём аккаунт в Firebase Auth с фейковым email
-            const fakeEmail = username + '@brawlstars.local';
-            auth.createUserWithEmailAndPassword(fakeEmail, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    // Сохраняем имя в БД
-                    const newProfile = {
-                        name: username,
-                        gems: 50,
-                        coins: 100,
-                        brawlers: [{ name: 'Шелли', level: 1 }],
-                        trophies: 0,
-                        banned: false,
-                        createdAt: Date.now()
-                    };
-                    db.ref('players/' + user.uid).set(newProfile);
-                    db.ref('usernames/' + username).set(user.uid);
-                    
-                    successEl.textContent = '✅ Аккаунт создан!';
-                    successEl.style.display = 'block';
-                    setTimeout(() => {
-                        document.getElementById('authOverlay').style.display = 'none';
-                    }, 1000);
-                })
-                .catch((error) => {
-                    errorEl.textContent = '❌ ' + error.message;
-                    errorEl.style.display = 'block';
-                });
+            // Генерируем ID
+            const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+            
+            // Сохраняем имя в usernames
+            db.ref('usernames/' + username).set(userId);
+            
+            // Сохраняем пароль (в реальном проекте — хешировать!)
+            db.ref('passwords/' + userId).set(password);
+            
+            // Создаём профиль
+            const newProfile = {
+                name: username,
+                gems: 50,
+                coins: 100,
+                brawlers: [{ name: 'Шелли', level: 1 }],
+                trophies: 0,
+                banned: false,
+                createdAt: Date.now()
+            };
+            db.ref('players/' + userId).set(newProfile);
+            
+            successEl.textContent = '✅ Аккаунт создан! Вход выполнен.';
+            successEl.style.display = 'block';
+            
+            // Автоматически входим
+            currentUserId = userId;
+            isLoggedIn = true;
+            localStorage.setItem('brawl_userId', userId);
+            profile = newProfile;
+            saveLocalProfile();
+            
+            setTimeout(() => {
+                document.getElementById('authOverlay').style.display = 'none';
+                render();
+            }, 1000);
         });
-    };
+    }
 
     // ===== ВХОД =====
-    window.loginWithUsername = function() {
+    function loginWithUsername() {
         const username = document.getElementById('authUsername').value.trim();
         const password = document.getElementById('authPassword').value.trim();
         const errorEl = document.getElementById('authError');
@@ -1825,7 +1625,7 @@
             return;
         }
 
-        // Получаем UID по имени пользователя
+        // Получаем UID по имени
         db.ref('usernames/' + username).once('value').then((snap) => {
             const uid = snap.val();
             if (!uid) {
@@ -1834,28 +1634,36 @@
                 return;
             }
 
-            // Входим с фейковым email
-            const fakeEmail = username + '@brawlstars.local';
-            auth.signInWithEmailAndPassword(fakeEmail, password)
-                .then((userCredential) => {
-                    successEl.textContent = '✅ Вход выполнен!';
-                    successEl.style.display = 'block';
-                    setTimeout(() => {
-                        document.getElementById('authOverlay').style.display = 'none';
-                    }, 500);
-                })
-                .catch((error) => {
+            // Проверяем пароль
+            db.ref('passwords/' + uid).once('value').then((passSnap) => {
+                const savedPass = passSnap.val();
+                if (savedPass !== password) {
                     errorEl.textContent = '❌ Неверный пароль!';
                     errorEl.style.display = 'block';
-                });
+                    return;
+                }
+
+                // Вход выполнен
+                currentUserId = uid;
+                isLoggedIn = true;
+                localStorage.setItem('brawl_userId', uid);
+                
+                successEl.textContent = '✅ Вход выполнен!';
+                successEl.style.display = 'block';
+                
+                loadUserProfile();
+                setTimeout(() => {
+                    document.getElementById('authOverlay').style.display = 'none';
+                    render();
+                }, 500);
+            });
         });
-    };
+    }
 
     // ===== ВЫХОД =====
     function logout() {
         if (confirm('Выйти из аккаунта?')) {
-            auth.signOut();
-            localStorage.removeItem('brawl_playerId');
+            localStorage.removeItem('brawl_userId');
             currentUserId = null;
             isLoggedIn = false;
             profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
@@ -1871,6 +1679,11 @@
             if (data) {
                 profile = data;
                 saveLocalProfile();
+                if (profile.banned) {
+                    document.getElementById('bannedOverlay').style.display = 'flex';
+                } else {
+                    document.getElementById('bannedOverlay').style.display = 'none';
+                }
             }
             render();
         });
@@ -1902,7 +1715,7 @@
     let vouchers = [];
     let serverRunning = true;
     let currentMainTab = 'brawlers';
-    let adminSubTab = 'shop';
+    let adminSubTab = 'settings';
     let battleState = 'select';
     let selectedBrawler = null;
     let isSyncing = false;
@@ -1965,6 +1778,68 @@
     }
 
     // ============================================================
+    //  ВСПЛЫВАЮЩИЕ СООБЩЕНИЯ
+    // ============================================================
+    let notificationTimeout = null;
+
+    function listenForNotifications() {
+        db.ref('serverNotifications').on('child_added', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                showNotification(data.text, data.duration || 5);
+                // Удаляем после показа
+                db.ref('serverNotifications/' + snapshot.key).remove();
+            }
+        });
+    }
+
+    function showNotification(text, duration = 5) {
+        const el = document.getElementById('serverNotification');
+        const textEl = document.getElementById('notificationText');
+        textEl.textContent = text;
+        el.style.display = 'block';
+        
+        // Автоматическое скрытие через duration секунд
+        if (notificationTimeout) clearTimeout(notificationTimeout);
+        notificationTimeout = setTimeout(() => {
+            el.style.display = 'none';
+        }, duration * 1000);
+    }
+
+    function closeNotification() {
+        const el = document.getElementById('serverNotification');
+        el.style.display = 'none';
+        if (notificationTimeout) {
+            clearTimeout(notificationTimeout);
+            notificationTimeout = null;
+        }
+    }
+
+    // ============================================================
+    //  ОТПРАВКА СООБЩЕНИЯ ВСЕМ ИГРОКАМ (из админки)
+    // ============================================================
+    function sendGlobalNotification() {
+        const text = document.getElementById('notifyText').value.trim();
+        const duration = parseInt(document.getElementById('notifyDuration').value) || 5;
+        
+        if (!text) {
+            alert('Введите текст сообщения!');
+            return;
+        }
+        
+        const data = {
+            text: text,
+            duration: duration,
+            timestamp: Date.now(),
+            sender: profile.name || 'Админ'
+        };
+        
+        db.ref('serverNotifications').push(data);
+        document.getElementById('notifyText').value = '';
+        alert('✅ Сообщение отправлено всем игрокам!');
+    }
+
+    // ============================================================
     //  ЗАГРУЗКА ДАННЫХ
     // ============================================================
     function loadGameData() {
@@ -2006,20 +1881,19 @@
         return false;
     }
 
-    window.createNewAccount = function() {
+    function createNewAccount() {
         document.getElementById('bannedOverlay').style.display = 'none';
         document.getElementById('authOverlay').style.display = 'flex';
-        localStorage.removeItem('brawl_playerId');
-        if (currentUserId) {
-            db.ref('players/' + currentUserId).remove();
-        }
-        auth.signOut();
+        localStorage.removeItem('brawl_userId');
+        currentUserId = null;
+        isLoggedIn = false;
+        profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
         render();
-    };
+    }
 
-    window.appealBan = function() {
+    function appealBan() {
         alert('📩 Ваша заявка на разбан отправлена! Администратор рассмотрит её в ближайшее время.');
-    };
+    }
 
     // ============================================================
     //  FIREBASE СИНХРОНИЗАЦИЯ
@@ -2066,16 +1940,14 @@
     }
 
     // ============================================================
-    //  БОЕВАЯ СИСТЕМА (НОРМАЛЬНАЯ)
+    //  БОЕВАЯ СИСТЕМА
     // ============================================================
-
     function getBrawlerStats(brawler, level) {
         if (!brawler) return { damage: 0, hp: 0 };
         const minDamage = brawler.minDamage || 100;
         const maxDamage = brawler.maxDamage || 200;
         const minHp = brawler.minHp || 400;
         const maxHp = brawler.maxHp || 800;
-
         const progress = (level - 1) / 9;
         const damage = Math.round(minDamage + (maxDamage - minDamage) * progress);
         const hp = Math.round(minHp + (maxHp - minHp) * progress);
@@ -2086,21 +1958,17 @@
         return { coins: level * 10, gems: Math.floor(level / 2) + 1 };
     }
 
-    // ----- ПРОКАЧКА -----
     window.upgradeBrawler = function(brawlerName) {
         if (checkBan() || !currentUserId) return;
         const brawler = brawlers.find(b => b.name === brawlerName);
         if (!brawler) return alert('Боец не найден!');
-
         if (!profile.brawlers) profile.brawlers = [];
         const playerBrawler = profile.brawlers.find(b => b.name === brawlerName);
         if (!playerBrawler) return alert('У вас нет этого бойца!');
         if (playerBrawler.level >= 10) return alert('⚠️ Максимальный уровень!');
-
         const cost = getUpgradeCost(playerBrawler.level);
         if (profile.coins < cost.coins) return alert(`❌ Нужно ${cost.coins} 🪙`);
         if (profile.gems < cost.gems) return alert(`❌ Нужно ${cost.gems} 💎`);
-
         profile.coins -= cost.coins;
         profile.gems -= cost.gems;
         playerBrawler.level += 1;
@@ -2109,7 +1977,6 @@
         alert(`✅ ${brawlerName} → ${playerBrawler.level} ур.!`);
     };
 
-    // ----- ВЫБОР БОЙЦА ДЛЯ БОЯ -----
     window.selectBrawlerForBattle = function(name) {
         selectedBrawler = name;
         render();
@@ -2137,7 +2004,6 @@
         render();
     };
 
-    // ----- ПОИСК БОЯ -----
     function findBattle() {
         if (checkBan() || !currentUserId) return;
         if (!selectedBrawler) return alert('Выберите бойца!');
@@ -2207,7 +2073,6 @@
         render();
     }
 
-    // ----- ЗАПУСК БОЯ -----
     function startPvpBattle(opponentData) {
         const myBrawler = brawlers.find(b => b.name === selectedBrawler);
         const oppBrawler = brawlers.find(b => b.name === opponentData.brawler);
@@ -2260,14 +2125,11 @@
         });
 
         listenForMoves();
-
-        // Если противник — бот, запускаем его ходы
         if (opponentData.isBot) {
             startBotAI();
         }
     }
 
-    // ----- СЛУШАЕМ ХОДЫ -----
     function listenForMoves() {
         db.ref('battles/' + battleId + '/moves').on('child_added', (snapshot) => {
             const move = snapshot.val();
@@ -2278,7 +2140,6 @@
         });
     }
 
-    // ----- ИИ БОТА -----
     window.botInterval = null;
 
     function startBotAI() {
@@ -2292,15 +2153,12 @@
             const isBotTurn = (battleData.currentTurn === 'player1' && battleData.player1Id.startsWith('bot_')) ||
                 (battleData.currentTurn === 'player2' && battleData.player2Id.startsWith('bot_'));
             if (!isBotTurn) return;
-
-            // Бот выбирает действие: 70% атака, 30% защита
             const action = Math.random() < 0.7 ? 'attack' : 'defend';
             const move = { action, timestamp: Date.now(), playerId: battleData.currentTurn === 'player1' ? battleData.player1Id : battleData.player2Id };
             db.ref('battles/' + battleId + '/moves').push(move);
         }, 1500);
     }
 
-    // ----- ОБРАБОТКА ХОДА -----
     function processPvpMove(move) {
         if (!battleData || battleData.finished) return;
         const isPlayer1 = battleData.currentTurn === 'player1';
@@ -2311,14 +2169,11 @@
 
         if (move.action === 'attack') {
             const baseDamage = isPlayer1 ? battleData.player1Damage : battleData.player2Damage;
-            // Критический удар (20%)
             isCrit = Math.random() < 0.2;
             const critMultiplier = isCrit ? 1.5 : 1;
-            // Разброс урона ±15%
             const variance = 0.85 + Math.random() * 0.3;
             damage = Math.round(baseDamage * variance * critMultiplier);
 
-            // Защита (если противник защищался на прошлом ходе)
             const lastLog = battleData.log.length > 0 ? battleData.log[battleData.log.length - 1] : '';
             if (lastLog && lastLog.includes('🛡️ ' + defenderName)) {
                 damage = Math.round(damage * 0.5);
@@ -2342,14 +2197,12 @@
             battleData.log.push(`🛡️ ${attackerName} восстановил ${heal} HP`);
         }
 
-        // Проверка на победу
         if (battleData.player1HP <= 0 || battleData.player2HP <= 0) {
             battleData.finished = true;
             battleData.winner = battleData.player1HP > 0 ? 'player1' : 'player2';
             const winnerName = battleData.winner === 'player1' ? battleData.player1Name : battleData.player2Name;
             battleData.log.push(`🏆 ${winnerName} ПОБЕДИЛ!`);
 
-            // Награда победителю
             if ((battleData.winner === 'player1' && battleData.player1Id === currentUserId) ||
                 (battleData.winner === 'player2' && battleData.player2Id === currentUserId)) {
                 profile.trophies = (profile.trophies || 0) + 10;
@@ -2364,12 +2217,10 @@
             return;
         }
 
-        // Смена хода
         battleData.currentTurn = isPlayer1 ? 'player2' : 'player1';
         db.ref('battles/' + battleId).set(battleData);
     }
 
-    // ----- ЗАВЕРШЕНИЕ БОЯ -----
     function finishPvpBattle(data) {
         battleState = 'result';
         render();
@@ -2378,7 +2229,6 @@
             window.botInterval = null; }
     }
 
-    // ----- ХОД ИГРОКА -----
     function makePvpMove(action) {
         if (!battleData || battleData.finished) return;
         const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === currentUserId) ||
@@ -2395,7 +2245,6 @@
 
         const move = { action, timestamp: Date.now(), playerId: currentUserId };
         db.ref('battles/' + battleId + '/moves').push(move).then(() => {
-            console.log('✅ Ход отправлен:', action);
             setTimeout(() => {
                 if (attackBtn) attackBtn.disabled = false;
                 if (defendBtn) defendBtn.disabled = false;
@@ -2544,7 +2393,6 @@
             const myHPClass = myHPPercent > 50 ? 'green' : myHPPercent > 25 ? 'yellow' : 'red';
             const oppHPClass = oppHPPercent > 50 ? 'green' : oppHPPercent > 25 ? 'yellow' : 'red';
 
-            // Лог с классами
             let logHtml = '';
             if (battleData.log && battleData.log.length > 0) {
                 const lastLogs = battleData.log.slice(-8);
@@ -2598,7 +2446,6 @@
             menuBtns.forEach(b => b.classList.remove('active'));
             document.querySelector('[data-tab="battle"]').classList.add('active');
             
-            // Прокрутка лога вниз
             const logEl = document.querySelector('.battle-log');
             if (logEl) logEl.scrollTop = logEl.scrollHeight;
             return;
@@ -2795,7 +2642,6 @@
                 <div class="profile-card">
                     <span class="avatar">👤</span>
                     <div class="nick">${profile.name || 'Игрок'}</div>
-                    <div class="email">👤 ${profile.name || 'Игрок'}</div>
                     <div style="font-size:12px;color:#555577;margin-bottom:8px;">ID: ${currentUserId || '—'}</div>
                     <div class="stats">
                         <div class="stat-item"><div class="value gems">${profile.gems || 0}</div><div class="label">💎 Гемы</div></div>
@@ -3080,10 +2926,10 @@
 
             if (confirm(`УДАЛИТЬ аккаунт игрока ${player.name || playerId}? Это действие НЕОБРАТИМО!`)) {
                 db.ref('players/' + playerId).remove();
-                // Удаляем также имя из usernames
                 if (player.name) {
                     db.ref('usernames/' + player.name).remove();
                 }
+                db.ref('passwords/' + playerId).remove();
                 alert(`✅ Аккаунт ${player.name || playerId} удалён!`);
                 loadPlayersList();
                 render();
@@ -3129,7 +2975,7 @@
     };
 
     // ============================================================
-    //  АДМИНКА (RENDER)
+    //  АДМИНКА (RENDER) с панелью управления сервером
     // ============================================================
     function renderAdmin(cloudHtml) {
         loadPlayersList();
@@ -3137,17 +2983,74 @@
         let html = cloudHtml +
             `
                 <div class="admin-tabs">
+                    <button class="${adminSubTab === 'settings' ? 'active-tab' : ''}" data-sub="settings">⚙️ Управление</button>
                     <button class="${adminSubTab === 'shop' ? 'active-tab' : ''}" data-sub="shop">🛒 Магазин</button>
                     <button class="${adminSubTab === 'brawlers' ? 'active-tab' : ''}" data-sub="brawlers">🦸 Бойцы</button>
                     <button class="${adminSubTab === 'vouchers' ? 'active-tab' : ''}" data-sub="vouchers">🎟️ Ваучеры</button>
                     <button class="${adminSubTab === 'players' ? 'active-tab' : ''}" data-sub="players">👥 Игроки</button>
                     <button class="${adminSubTab === 'leaderboard' ? 'active-tab' : ''}" data-sub="leaderboard">🏆 Лидерборд</button>
-                    <button class="${adminSubTab === 'settings' ? 'active-tab' : ''}" data-sub="settings">⚙️ Настройки</button>
                 </div>
                 <div class="admin-panel">
             `;
 
-        if (adminSubTab === 'shop') {
+        if (adminSubTab === 'settings') {
+            const timeRemaining = getTimeRemaining();
+            html += `
+                    <!-- ===== ОТПРАВКА СООБЩЕНИЯ ===== -->
+                    <div class="form-card" style="border-color:#f5c842;background:#1a1a2a;">
+                        <h3 style="color:#f5c842;margin-bottom:10px;">📢 Отправить сообщение всем игрокам</h3>
+                        <textarea id="notifyText" placeholder="Введите сообщение для всех игроков..." style="min-height:80px;resize:vertical;width:100%;background:#0f0f2a;border:1px solid #555577;border-radius:16px;padding:10px 14px;color:#eee;font-size:14px;outline:none;margin-bottom:8px;"></textarea>
+                        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                            <div style="flex:1;min-width:100px;">
+                                <label style="color:#aaaacc;font-size:12px;display:block;margin-bottom:2px;">⏱️ Длительность (сек)</label>
+                                <input type="number" id="notifyDuration" value="5" min="2" max="30" style="width:100%;background:#0f0f2a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
+                            </div>
+                            <button class="submit-btn" onclick="sendGlobalNotification()" style="flex:2;min-width:150px;background:#f5c842;color:#0b0b1a;border:none;padding:10px;border-radius:60px;font-weight:700;font-size:14px;cursor:pointer;transition:0.3s ease;">
+                                📢 Отправить
+                            </button>
+                        </div>
+                        <div style="margin-top:8px;font-size:12px;color:#8888aa;text-align:center;">
+                            💡 Сообщение появится у всех игроков на ${'${duration}'} секунд с возможностью закрыть
+                        </div>
+                    </div>
+
+                    <!-- ===== УПРАВЛЕНИЕ СЕРВЕРОМ ===== -->
+                    <div class="form-card">
+                        <h3 style="color:#f5c842;margin-bottom:10px;">⏰ Управление сервером</h3>
+
+                        <div style="margin-bottom:10px;">
+                            <label style="color:#aaaacc;font-size:13px;display:block;margin-bottom:4px;">Дата и время закрытия сервера</label>
+                            <input type="datetime-local" id="serverCloseTime" value="${serverSettings.closeTime ? serverSettings.closeTime.slice(0, 16) : ''}" style="width:100%;background:#1a1a3a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
+                            ${timeRemaining ? `<div style="margin-top:6px;text-align:center;"><span class="timer-display">⏳ До закрытия: ${timeRemaining.hours}ч ${timeRemaining.minutes}м ${timeRemaining.seconds}с</span></div>` : ''}
+                        </div>
+
+                        <div style="margin-bottom:10px;">
+                            <label style="color:#aaaacc;font-size:13px;display:block;margin-bottom:4px;">Сообщение во время работы сайта</label>
+                            <input type="text" id="serverWorkMessage" value="${serverSettings.workMessage || ''}" placeholder="Сообщение для игроков" style="width:100%;background:#1a1a3a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
+                        </div>
+
+                        <div style="margin-bottom:10px;">
+                            <label style="color:#aaaacc;font-size:13px;display:block;margin-bottom:4px;">Сообщение во время технического перерыва</label>
+                            <input type="text" id="serverMaintenanceMessage" value="${serverSettings.maintenanceMessage || ''}" placeholder="Сообщение при остановке" style="width:100%;background:#1a1a3a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
+                        </div>
+
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="submit-btn" onclick="applyServerSettings()" style="flex:1;">💾 Применить настройки</button>
+                            <button class="submit-btn" onclick="toggleServerManual()" style="flex:1;background:${serverRunning ? '#d43f3f' : '#2ecc71'};">
+                                ${serverRunning ? '⛔ ОСТАНОВИТЬ СЕРВЕР' : '🚀 ЗАПУСТИТЬ СЕРВЕР'}
+                            </button>
+                        </div>
+
+                        <div style="margin-top:10px;padding:10px;background:#0f0f2a;border-radius:16px;border:1px solid #555577;">
+                            <div style="color:#aaaacc;font-size:12px;">
+                                <div>📌 Статус: <span style="color:${serverRunning ? '#2ecc71' : '#d43f3f'};font-weight:700;">${serverRunning ? '🟢 Работает' : '🔴 Остановлен'}</span></div>
+                                ${serverSettings.closeTime ? `<div>⏳ Закрытие: ${new Date(serverSettings.closeTime).toLocaleString()}</div>` : '<div>⏳ Закрытие: не установлено</div>'}
+                                ${timeRemaining ? `<div>⏱️ Осталось: ${timeRemaining.hours}ч ${timeRemaining.minutes}м ${timeRemaining.seconds}с</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+        } else if (adminSubTab === 'shop') {
             html += `
                     <div class="form-card">
                         <h3 style="color:#f5c842;margin-bottom:10px;">➕ Добавить товар</h3>
@@ -3310,44 +3213,6 @@
                         `<div class="empty-state"><span>📭</span>Нет игроков</div>`;
                 }
             });
-        } else if (adminSubTab === 'settings') {
-            const timeRemaining = getTimeRemaining();
-            html += `
-                    <div class="form-card">
-                        <h3 style="color:#f5c842;margin-bottom:10px;">⏰ Управление сервером</h3>
-
-                        <div style="margin-bottom:10px;">
-                            <label style="color:#aaaacc;font-size:13px;display:block;margin-bottom:4px;">Дата и время закрытия сервера</label>
-                            <input type="datetime-local" id="serverCloseTime" value="${serverSettings.closeTime ? serverSettings.closeTime.slice(0, 16) : ''}" style="width:100%;background:#1a1a3a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
-                            ${timeRemaining ? `<div style="margin-top:6px;text-align:center;"><span class="timer-display">⏳ До закрытия: ${timeRemaining.hours}ч ${timeRemaining.minutes}м ${timeRemaining.seconds}с</span></div>` : ''}
-                        </div>
-
-                        <div style="margin-bottom:10px;">
-                            <label style="color:#aaaacc;font-size:13px;display:block;margin-bottom:4px;">Сообщение во время работы сайта</label>
-                            <input type="text" id="serverWorkMessage" value="${serverSettings.workMessage || ''}" placeholder="Сообщение для игроков" style="width:100%;background:#1a1a3a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
-                        </div>
-
-                        <div style="margin-bottom:10px;">
-                            <label style="color:#aaaacc;font-size:13px;display:block;margin-bottom:4px;">Сообщение во время технического перерыва</label>
-                            <input type="text" id="serverMaintenanceMessage" value="${serverSettings.maintenanceMessage || ''}" placeholder="Сообщение при остановке" style="width:100%;background:#1a1a3a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
-                        </div>
-
-                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                            <button class="submit-btn" onclick="applyServerSettings()" style="flex:1;">💾 Применить настройки</button>
-                            <button class="submit-btn" onclick="toggleServerManual()" style="flex:1;background:${serverRunning ? '#d43f3f' : '#2ecc71'};">
-                                ${serverRunning ? '⛔ ОСТАНОВИТЬ СЕРВЕР' : '🚀 ЗАПУСТИТЬ СЕРВЕР'}
-                            </button>
-                        </div>
-
-                        <div style="margin-top:10px;padding:10px;background:#0f0f2a;border-radius:16px;border:1px solid #555577;">
-                            <div style="color:#aaaacc;font-size:12px;">
-                                <div>📌 Статус: <span style="color:${serverRunning ? '#2ecc71' : '#d43f3f'};font-weight:700;">${serverRunning ? '🟢 Работает' : '🔴 Остановлен'}</span></div>
-                                ${serverSettings.closeTime ? `<div>⏳ Закрытие: ${new Date(serverSettings.closeTime).toLocaleString()}</div>` : '<div>⏳ Закрытие: не установлено</div>'}
-                                ${timeRemaining ? `<div>⏱️ Осталось: ${timeRemaining.hours}ч ${timeRemaining.minutes}м ${timeRemaining.seconds}с</div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
         }
 
         html += `</div>`;
@@ -3544,18 +3409,10 @@
     //  ЗАПУСК
     // ============================================================
     loadServerSettings();
-
-    if (auth.currentUser) {
-        currentUser = auth.currentUser;
-        currentUserId = currentUser.uid;
-        isLoggedIn = true;
-        document.getElementById('authOverlay').style.display = 'none';
-        loadUserProfile();
-        loadGameData();
-        render();
-    }
-
+    loadGameData();
+    listenForNotifications();
+    checkSession();
     render();
 </script>
 </body>
-</html>
+    </html>
