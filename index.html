@@ -7,7 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== ВСЕ СТИЛИ (СОКРАЩЕННО) ===== */
+        /* ===== БАЗА ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         html, body { height: 100%; width: 100%; background: #0b0b1a; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .app { width: 100%; max-width: 500px; height: 100vh; max-height: 900px; background: #14142e; padding: 16px 14px; display: flex; flex-direction: column; position: relative; }
@@ -198,6 +198,7 @@
         @keyframes spin-icon { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .maintenance h2 { color: #f5c842; font-size: 20px; font-weight: 700; }
         .maintenance p { color: #aaaacc; margin-top: 6px; font-size: 14px; }
+
         .brawl-select { display: flex; flex-direction: column; gap: 10px; height: 100%; }
         .brawl-select .brawler-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; overflow-y: auto; flex: 1; align-content: flex-start; }
         .brawl-select .brawler-card { background: #0f0f2a; padding: 10px 14px; border-radius: 40px; border: 2px solid #555577; color: #eee; font-weight: 600; cursor: pointer; transition: 0.3s ease; font-size: 13px; min-width: 70px; text-align: center; }
@@ -247,6 +248,9 @@
         .chat-input-row button:hover { transform: scale(1.05); box-shadow: 0 0 30px #f5c84255; }
         .chat-empty { color: #8888aa; text-align: center; padding: 30px 0; font-size: 16px; margin: auto 0; }
         .chat-empty span { display: block; font-size: 48px; margin-bottom: 8px; }
+
+        /* ===== ТАЙМЕР ===== */
+        .timer-display { font-size: 14px; color: #f5c842; font-weight: 700; padding: 4px 12px; background: #0f0f2a; border-radius: 40px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -289,8 +293,8 @@
 <div class="banned-overlay" id="bannedOverlay">
     <div class="banned-box">
         <span class="ban-icon">🚫</span>
-        <h2>Вы забанены!</h2>
-        <p>Ваш аккаунт был заблокирован администратором.</p>
+        <h2>⛔ ВЫ ЗАБАНЕНЫ!</h2>
+        <p>Ваш аккаунт был заблокирован администратором.<br>Вы не можете пользоваться сайтом.</p>
         <div class="btn-group">
             <button class="new-account" onclick="createNewAccount()">🔄 Создать новый аккаунт</button>
             <button class="appeal" onclick="appealBan()">📩 Подать заявку на разбан</button>
@@ -299,7 +303,7 @@
 </div>
 
 <!-- ===== ПАРОЛЬ АДМИНКИ ===== -->
-<div class="password-overlay" id="passwordOverlay">
+<div class="password-overlay" id="passwordOverlay" style="display:none;">
     <div class="password-box">
         <h2>🔒 Админ-панель</h2>
         <p>Введите пароль для доступа</p>
@@ -311,16 +315,17 @@
 
 <script>
     // ============================================================
-    //  ПАРОЛЬ АДМИНКИ
+    //  ПАРОЛЬ АДМИНКИ (С СОХРАНЕНИЕМ СЕССИИ)
     // ============================================================
     const ADMIN_PASSWORD = 'admin123';
-    let isAdmin = false;
+    let isAdmin = localStorage.getItem('brawl_isAdmin') === 'true';
 
     function checkPassword() {
         const input = document.getElementById('passwordInput');
         const error = document.getElementById('passwordError');
         if (input.value === ADMIN_PASSWORD) {
             isAdmin = true;
+            localStorage.setItem('brawl_isAdmin', 'true');
             document.getElementById('passwordOverlay').style.display = 'none';
             renderAdmin();
         } else {
@@ -330,6 +335,7 @@
             setTimeout(() => { error.style.display = 'none'; }, 3000);
         }
     }
+
     document.getElementById('passwordInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') { checkPassword(); }
     });
@@ -368,7 +374,6 @@
     let searchRef = null;
     let searchTimeout = null;
 
-    // НАСТРОЙКИ СЕРВЕРА
     let serverSettings = {
         closeTime: null,
         workMessage: 'Добро пожаловать в Brawl Stars!',
@@ -499,16 +504,8 @@
         }
     }
 
-    function checkAuth() {
-        if (!currentPlayerId) {
-            document.getElementById('authOverlay').style.display = 'flex';
-            return false;
-        }
-        return true;
-    }
-
     // ============================================================
-    //  НАСТРОЙКИ СЕРВЕРА (ЗАГРУЗКА)
+    //  НАСТРОЙКИ СЕРВЕРА
     // ============================================================
     function loadServerSettings() {
         db.ref('serverSettings').on('value', (snapshot) => {
@@ -539,6 +536,18 @@
         db.ref('serverSettings').set(serverSettings);
     }
 
+    function getTimeRemaining() {
+        if (!serverSettings.closeTime) return null;
+        const closeDate = new Date(serverSettings.closeTime);
+        const now = new Date();
+        const diff = closeDate - now;
+        if (diff <= 0) return null;
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        return { hours, minutes, seconds };
+    }
+
     // ============================================================
     //  ЗАГРУЗКА ДАННЫХ
     // ============================================================
@@ -555,6 +564,12 @@
                         if (p) {
                             profile = p;
                             saveLocalProfile();
+                            // Проверяем бан
+                            if (profile.banned) {
+                                document.getElementById('bannedOverlay').style.display = 'flex';
+                            } else {
+                                document.getElementById('bannedOverlay').style.display = 'none';
+                            }
                         }
                         render();
                     });
@@ -1005,12 +1020,20 @@
     const menuBtns = document.querySelectorAll('.menu button');
 
     function render() {
+        // Проверяем бан при каждом рендере
+        if (profile.banned) {
+            document.getElementById('bannedOverlay').style.display = 'flex';
+            content.innerHTML = `<div class="empty-state"><span>🚫</span>Вы забанены</div>`;
+            menuBtns.forEach(b => b.classList.remove('active'));
+            const activeBtn = Array.from(menuBtns).find(b => b.dataset.tab === currentMainTab);
+            if (activeBtn) activeBtn.classList.add('active');
+            return;
+        } else {
+            document.getElementById('bannedOverlay').style.display = 'none';
+        }
+
         if (!isLoggedIn && !currentPlayerId) {
             document.getElementById('authOverlay').style.display = 'flex';
-            return;
-        }
-        if (checkBan()) {
-            content.innerHTML = `<div class="empty-state"><span>🚫</span>Доступ запрещён</div>`;
             return;
         }
 
@@ -1033,7 +1056,6 @@
             return;
         }
 
-        // ПРОВЕРКА СЕРВЕРА
         checkServerStatus();
 
         if (!serverRunning) {
@@ -1044,10 +1066,6 @@
                     <p>${serverSettings.closeTime ? 'Сервер будет доступен после ' + new Date(serverSettings.closeTime).toLocaleString() : 'Сервер временно недоступен'}</p>
                 </div>
             `;
-            // Добавляем сообщение о работе, если оно есть
-            if (serverSettings.workMessage && serverSettings.workMessage !== 'Добро пожаловать в Brawl Stars!') {
-                // Показываем сообщение в облачной панели
-            }
             content.innerHTML = html;
             menuBtns.forEach(b => b.classList.remove('active'));
             const activeBtn = Array.from(menuBtns).find(b => b.dataset.tab === tab);
@@ -1380,7 +1398,7 @@
     }
 
     // ============================================================
-    //  АДМИНКА (С НАСТРОЙКАМИ СЕРВЕРА)
+    //  АДМИНКА
     // ============================================================
     let playersList = [];
 
@@ -1476,7 +1494,7 @@
         });
     };
 
-    // ===== НАСТРОЙКИ СЕРВЕРА (АДМИНКА) =====
+    // ===== НАСТРОЙКИ СЕРВЕРА =====
     window.applyServerSettings = function() {
         const closeTime = document.getElementById('serverCloseTime').value;
         const workMessage = document.getElementById('serverWorkMessage').value.trim();
@@ -1652,6 +1670,7 @@
                 }
             });
         } else if (adminSubTab === 'settings') {
+            const timeRemaining = getTimeRemaining();
             html += `
                 <div class="form-card">
                     <h3 style="color:#f5c842;margin-bottom:10px;">⏰ Управление сервером</h3>
@@ -1659,6 +1678,7 @@
                     <div style="margin-bottom:10px;">
                         <label style="color:#aaaacc;font-size:13px;display:block;margin-bottom:4px;">Дата и время закрытия сервера</label>
                         <input type="datetime-local" id="serverCloseTime" value="${serverSettings.closeTime ? serverSettings.closeTime.slice(0,16) : ''}" style="width:100%;background:#1a1a3a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
+                        ${timeRemaining ? `<div style="margin-top:6px;text-align:center;"><span class="timer-display">⏳ До закрытия: ${timeRemaining.hours}ч ${timeRemaining.minutes}м ${timeRemaining.seconds}с</span></div>` : ''}
                     </div>
                     
                     <div style="margin-bottom:10px;">
@@ -1682,6 +1702,7 @@
                         <div style="color:#aaaacc;font-size:12px;">
                             <div>📌 Статус: <span style="color:${serverRunning ? '#2ecc71' : '#d43f3f'};font-weight:700;">${serverRunning ? '🟢 Работает' : '🔴 Остановлен'}</span></div>
                             ${serverSettings.closeTime ? `<div>⏳ Закрытие: ${new Date(serverSettings.closeTime).toLocaleString()}</div>` : '<div>⏳ Закрытие: не установлено</div>'}
+                            ${timeRemaining ? `<div>⏱️ Осталось: ${timeRemaining.hours}ч ${timeRemaining.minutes}м ${timeRemaining.seconds}с</div>` : ''}
                         </div>
                     </div>
                 </div>
@@ -1717,6 +1738,9 @@
         setTimeout(updatePlayerSelects, 200);
     }
 
+    // ============================================================
+    //  АДМИН-ФУНКЦИИ
+    // ============================================================
     window.addShopItem = function() {
         const name = document.getElementById('shopName').value.trim();
         const desc = document.getElementById('shopDesc').value.trim();
@@ -1820,10 +1844,8 @@
     // ============================================================
     //  ЗАПУСК
     // ============================================================
-    // Загружаем настройки сервера
     loadServerSettings();
 
-    // Проверяем авторизацию
     if (currentPlayerId) {
         const saved = loadLocalProfile();
         if (saved) {
