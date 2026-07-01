@@ -1143,6 +1143,7 @@
             25% { transform: translateX(-8px); }
             75% { transform: translateX(8px); }
         }
+
         .category-fields {
             display: none;
             animation: fadeIn 0.3s ease;
@@ -1293,13 +1294,13 @@
     let isSyncing = false;
     let selectedBrawlerForDetail = null;
 
-    // ID и профиль
+    // ============================================================
+    //  СОХРАНЕНИЕ ИГРОКА (ID В LOCALSTORAGE)
+    // ============================================================
     let playerId = localStorage.getItem('brawl_playerId');
-    let isFirstLaunch = false;
     if (!playerId) {
         playerId = 'player_' + Math.random().toString(36).substring(2, 10);
         localStorage.setItem('brawl_playerId', playerId);
-        isFirstLaunch = true;
     }
 
     let profile = { name: '', gems: 0, coins: 0, brawlers: [], banned: false };
@@ -1344,10 +1345,10 @@
     }
 
     // ============================================================
-    //  ОНБОРДИНГ
+    //  ОНБОРДИНГ (ПОКАЗЫВАЕМ ТОЛЬКО ЕСЛИ НЕТ ИМЕНИ)
     // ============================================================
     function showOnboarding() {
-        if (isFirstLaunch || !profile.name) {
+        if (!profile.name) {
             document.getElementById('onboardingOverlay').style.display = 'flex';
         }
     }
@@ -1361,7 +1362,6 @@
             return;
         }
         profile.name = name;
-        // Даём Шелли и стартовые ресурсы
         if (!profile.brawlers || profile.brawlers.length === 0) {
             profile.brawlers = ['Шелли'];
             profile.gems = 50;
@@ -1390,21 +1390,18 @@
     }
 
     window.createNewAccount = function() {
-        // Генерируем новый ID
         playerId = 'player_' + Math.random().toString(36).substring(2, 10);
         localStorage.setItem('brawl_playerId', playerId);
         profile = { name: '', gems: 0, coins: 0, brawlers: [], banned: false };
         saveLocalData();
         syncToFirebase();
         document.getElementById('bannedOverlay').style.display = 'none';
-        isFirstLaunch = true;
         showOnboarding();
         render();
     };
 
     window.appealBan = function() {
         alert('📩 Ваша заявка на разбан отправлена! Администратор рассмотрит её в ближайшее время.');
-        // В реальном проекте здесь был бы запрос в Firebase
     };
 
     // ============================================================
@@ -1438,20 +1435,20 @@
                     shopItems = data.shopItems || [];
                     vouchers = data.vouchers || [];
                     serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
+                    // Загружаем профиль по ID
                     db.ref('players/' + playerId).once('value').then((snap) => {
                         const playerData = snap.val();
                         if (playerData) {
                             profile = playerData;
                         }
-                        // Проверяем бан
+                        // Если профиль есть, но нет имени — показываем онбординг
+                        if (!profile.name && !profile.banned) {
+                            showOnboarding();
+                        }
                         if (profile.banned) {
                             document.getElementById('bannedOverlay').style.display = 'flex';
                         } else {
                             document.getElementById('bannedOverlay').style.display = 'none';
-                        }
-                        // Если нет имени — показываем онбординг
-                        if (!profile.name && !profile.banned) {
-                            showOnboarding();
                         }
                         saveLocalData();
                         render();
@@ -1547,7 +1544,6 @@
         autoSync();
         renderAdmin();
         alert(`✅ Ваучер создан!\nКод: ${code}\nНаграда: ${rewardType === 'gems' ? '💎 '+amount : rewardType === 'coins' ? '🪙 '+amount : '👤 '+brawlerName}`);
-        // Показываем код
         const container = document.getElementById('voucherResult');
         if (container) {
             container.innerHTML = `
@@ -1576,7 +1572,6 @@
         if (!voucher) return alert('❌ Неверный код!');
         if (voucher.used) return alert('❌ Этот ваучер уже использован!');
 
-        // Активируем
         voucher.used = true;
         voucher.usedBy = playerId;
 
@@ -1603,17 +1598,50 @@
     };
 
     // ============================================================
-    //  АДМИНКА: ВЫДАЧА РЕСУРСОВ И БАН
+    //  АДМИНКА: ВЫДАЧА РЕСУРСОВ И БАН (СПИСОК ИГРОКОВ)
     // ============================================================
+    let playersList = [];
+
+    function loadPlayersList() {
+        db.ref('players').once('value').then((snapshot) => {
+            const players = snapshot.val();
+            if (players) {
+                playersList = Object.keys(players).map(key => ({
+                    id: key,
+                    ...players[key]
+                }));
+                playersList.sort((a, b) => (a.name || 'Аноним').localeCompare(b.name || 'Аноним'));
+                updatePlayerSelects();
+            }
+        });
+    }
+
+    function updatePlayerSelects() {
+        const selects = ['adminPlayerSelect', 'banPlayerSelect', 'unbanPlayerSelect'];
+        selects.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const currentVal = el.value;
+                el.innerHTML = '<option value="">-- Выберите игрока --</option>';
+                playersList.forEach(p => {
+                    const label = `${p.name || 'Аноним'} (${p.id})`;
+                    el.innerHTML += `<option value="${p.id}">${label}</option>`;
+                });
+                if (currentVal) el.value = currentVal;
+            }
+        });
+    }
+
     window.adminGiveResources = function() {
-        const playerIdInput = document.getElementById('adminPlayerId');
+        const select = document.getElementById('adminPlayerSelect');
+        const playerId = select.value;
         const resourceType = document.getElementById('adminResourceType').value;
         const amount = parseInt(document.getElementById('adminResourceAmount').value) || 0;
 
-        if (!playerIdInput.value.trim()) return alert('Введите ID игрока!');
+        if (!playerId) return alert('Выберите игрока!');
         if (amount <= 0) return alert('Введите количество!');
 
-        db.ref('players/' + playerIdInput.value.trim()).once('value').then((snap) => {
+        db.ref('players/' + playerId).once('value').then((snap) => {
             const player = snap.val();
             if (!player) return alert('❌ Игрок не найден!');
 
@@ -1623,45 +1651,45 @@
                 player.coins = (player.coins || 0) + amount;
             }
 
-            db.ref('players/' + playerIdInput.value.trim()).set(player);
-            alert(`✅ Выдано ${amount} ${resourceType === 'gems' ? '💎 гемов' : '🪙 монет'} игроку ${player.name || playerIdInput.value.trim()}`);
-            playerIdInput.value = '';
+            db.ref('players/' + playerId).set(player);
+            alert(`✅ Выдано ${amount} ${resourceType === 'gems' ? '💎 гемов' : '🪙 монет'} игроку ${player.name || playerId}`);
             document.getElementById('adminResourceAmount').value = '';
+            loadPlayersList();
         });
     };
 
     window.adminBanPlayer = function() {
-        const playerIdInput = document.getElementById('banPlayerId');
-        const id = playerIdInput.value.trim();
-        if (!id) return alert('Введите ID игрока!');
+        const select = document.getElementById('banPlayerSelect');
+        const playerId = select.value;
+        if (!playerId) return alert('Выберите игрока!');
 
-        db.ref('players/' + id).once('value').then((snap) => {
+        db.ref('players/' + playerId).once('value').then((snap) => {
             const player = snap.val();
             if (!player) return alert('❌ Игрок не найден!');
 
-            if (confirm(`Забанить игрока ${player.name || id}?`)) {
+            if (confirm(`Забанить игрока ${player.name || playerId}?`)) {
                 player.banned = true;
-                db.ref('players/' + id).set(player);
-                alert(`✅ Игрок ${player.name || id} забанен!`);
-                playerIdInput.value = '';
+                db.ref('players/' + playerId).set(player);
+                alert(`✅ Игрок ${player.name || playerId} забанен!`);
+                loadPlayersList();
             }
         });
     };
 
     window.adminUnbanPlayer = function() {
-        const playerIdInput = document.getElementById('unbanPlayerId');
-        const id = playerIdInput.value.trim();
-        if (!id) return alert('Введите ID игрока!');
+        const select = document.getElementById('unbanPlayerSelect');
+        const playerId = select.value;
+        if (!playerId) return alert('Выберите игрока!');
 
-        db.ref('players/' + id).once('value').then((snap) => {
+        db.ref('players/' + playerId).once('value').then((snap) => {
             const player = snap.val();
             if (!player) return alert('❌ Игрок не найден!');
 
-            if (confirm(`Разбанить игрока ${player.name || id}?`)) {
+            if (confirm(`Разбанить игрока ${player.name || playerId}?`)) {
                 player.banned = false;
-                db.ref('players/' + id).set(player);
-                alert(`✅ Игрок ${player.name || id} разбанен!`);
-                playerIdInput.value = '';
+                db.ref('players/' + playerId).set(player);
+                alert(`✅ Игрок ${player.name || playerId} разбанен!`);
+                loadPlayersList();
             }
         });
     };
@@ -1776,7 +1804,6 @@
     // ===== МАГАЗИН =====
     function renderShop(cloudHtml) {
         let html = cloudHtml;
-        // Поле активации ваучера
         html += `
             <div class="form-card" style="margin-bottom:10px;">
                 <h3 style="color:#f5c842;margin-bottom:8px;">🎟️ Активировать ваучер</h3>
@@ -1917,6 +1944,9 @@
     //  АДМИНКА
     // ============================================================
     function renderAdmin(cloudHtml) {
+        // Загружаем список игроков
+        loadPlayersList();
+
         let html = cloudHtml + `
             <div class="admin-tabs">
                 <button class="${adminSubTab === 'shop' ? 'active-tab' : ''}" data-sub="shop">🛒 Магазин</button>
@@ -2022,24 +2052,30 @@
             `;
         }
 
-        // ===== ИГРОКИ =====
+        // ===== ИГРОКИ (СПИСОК) =====
         else if (adminSubTab === 'players') {
             html += `
                 <div class="form-card">
                     <h3 style="color:#f5c842;margin-bottom:10px;">💎 Выдать ресурсы</h3>
-                    <input type="text" id="adminPlayerId" placeholder="ID игрока">
+                    <select id="adminPlayerSelect">
+                        <option value="">-- Загрузка игроков... --</option>
+                    </select>
                     <select id="adminResourceType"><option value="gems">💎 Гемы</option><option value="coins">🪙 Монеты</option></select>
                     <input type="number" id="adminResourceAmount" placeholder="Количество" value="100">
                     <button class="submit-btn" onclick="adminGiveResources()">💰 Выдать</button>
                 </div>
                 <div class="form-card">
                     <h3 style="color:#d43f3f;margin-bottom:10px;">🚫 Бан игрока</h3>
-                    <input type="text" id="banPlayerId" placeholder="ID игрока">
+                    <select id="banPlayerSelect">
+                        <option value="">-- Загрузка игроков... --</option>
+                    </select>
                     <button class="submit-btn" onclick="adminBanPlayer()" style="background:#d43f3f;color:#fff;">⛔ Забанить</button>
                 </div>
                 <div class="form-card">
                     <h3 style="color:#2ecc71;margin-bottom:10px;">✅ Разбан игрока</h3>
-                    <input type="text" id="unbanPlayerId" placeholder="ID игрока">
+                    <select id="unbanPlayerSelect">
+                        <option value="">-- Загрузка игроков... --</option>
+                    </select>
                     <button class="submit-btn" onclick="adminUnbanPlayer()" style="background:#2ecc71;">🔓 Разбанить</button>
                 </div>
             `;
@@ -2089,7 +2125,10 @@
         document.querySelector('[data-tab="admin"]').classList.add('active');
 
         document.querySelectorAll('.admin-tabs button').forEach(btn => {
-            btn.addEventListener('click', function() { adminSubTab = this.dataset.sub; renderAdmin(cloudHtml); });
+            btn.addEventListener('click', function() {
+                adminSubTab = this.dataset.sub;
+                renderAdmin(cloudHtml);
+            });
         });
 
         window.toggleCategoryFields = function() {
@@ -2105,6 +2144,9 @@
             document.getElementById('voucherBrawlerField').style.display = type === 'brawler' ? 'block' : 'none';
         };
         setTimeout(window.toggleVoucherFields, 100);
+
+        // Обновляем списки игроков после рендера
+        setTimeout(updatePlayerSelects, 200);
     }
 
     // ============================================================
@@ -2211,7 +2253,6 @@
     loadFromFirebase();
     document.getElementById('passwordOverlay').style.display = 'none';
 
-    // Проверяем онбординг после загрузки
     setTimeout(() => {
         if (!profile.name && !profile.banned) {
             showOnboarding();
