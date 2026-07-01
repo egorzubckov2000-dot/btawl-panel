@@ -7,7 +7,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== БАЗА ===== */
         * {
             margin: 0;
             padding: 0;
@@ -118,8 +117,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        /* ===== ПАНЕЛЬ СИНХРОНИЗАЦИИ ===== */
         .cloud-panel {
             background: #0f0f2a;
             border-radius: 20px;
@@ -149,8 +146,6 @@
             color: #d43f3f;
             font-weight: 700;
         }
-
-        /* ===== МЕНЮ ===== */
         .menu {
             display: flex;
             justify-content: space-around;
@@ -199,8 +194,6 @@
             color: #fff;
             transform: scale(1.05);
         }
-
-        /* ===== ПУСТОЙ СОСТОЯНИЕ ===== */
         .empty-state {
             color: #8888aa;
             text-align: center;
@@ -220,8 +213,6 @@
             100% { transform: translateY(0); }
             50% { transform: translateY(-8px); }
         }
-
-        /* ===== КАРТОЧКИ БОЙЦОВ ===== */
         .brawler-list {
             display: flex;
             flex-direction: column;
@@ -254,8 +245,6 @@
             border-radius: 40px;
             object-fit: cover;
         }
-
-        /* ===== АДМИН-ВКЛАДКИ ===== */
         .admin-tabs {
             display: flex;
             gap: 6px;
@@ -286,8 +275,6 @@
         .admin-tabs button:hover:not(.active-tab) {
             color: #fff;
         }
-
-        /* ===== ФОРМЫ ===== */
         .admin-panel {
             display: flex;
             flex-direction: column;
@@ -368,8 +355,6 @@
             transform: scale(1.03);
             box-shadow: 0 0 30px #f5c84255;
         }
-
-        /* ===== КАРТОЧКИ ТОВАРОВ В АДМИНКЕ ===== */
         .shop-item-admin {
             background: #0f0f2a;
             border-radius: 20px;
@@ -430,8 +415,6 @@
             transform: scale(1.15);
             background: #ff2f2f;
         }
-
-        /* ===== КАРТОЧКИ ТОВАРОВ НА СТРАНИЦЕ МАГАЗИНА ===== */
         .shop-grid {
             display: flex;
             flex-direction: column;
@@ -497,8 +480,6 @@
             transform: scale(1.08);
             box-shadow: 0 0 30px #f5c84255;
         }
-
-        /* ===== СТАТУС СЕРВЕРА ===== */
         .maintenance {
             background: #2a1a1a;
             border: 2px solid #f5c84288;
@@ -533,8 +514,9 @@
             margin-top: 8px;
             font-size: 15px;
         }
-        .maintenance .start-btn {
-            margin-top: 20px;
+
+        /* ===== ЗЕЛЁНАЯ КНОПКА ЗАПУСКА ===== */
+        .start-btn {
             background: #2ecc71;
             border: none;
             padding: 14px 40px;
@@ -545,10 +527,38 @@
             cursor: pointer;
             transition: 0.3s ease;
             box-shadow: 0 0 30px #2ecc7166;
+            width: 100%;
+            max-width: 300px;
+            margin: 12px auto 0;
         }
-        .maintenance .start-btn:hover {
+        .start-btn:hover {
             transform: scale(1.05);
             background: #3dff8a;
+            box-shadow: 0 0 50px #2ecc71aa;
+        }
+        .start-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ===== КРАСНАЯ КНОПКА ОСТАНОВКИ ===== */
+        .stop-btn {
+            background: #d43f3f;
+            border: none;
+            padding: 14px;
+            border-radius: 60px;
+            font-weight: 800;
+            font-size: 18px;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.3s ease;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+        .stop-btn:hover {
+            transform: scale(1.03);
+            background: #ff2f2f;
+            box-shadow: 0 0 30px #d43f3f66;
         }
 
         /* ===== ОКНО ПАРОЛЯ ===== */
@@ -753,25 +763,11 @@
             transform: scale(1.05);
             box-shadow: 0 0 30px #f5c84255;
         }
-
-        .stop-btn {
-            background: #d43f3f;
-            border: none;
-            padding: 14px;
-            border-radius: 60px;
-            font-weight: 800;
-            font-size: 18px;
-            color: #fff;
-            cursor: pointer;
-            transition: 0.3s ease;
-            margin-top: 8px;
-            letter-spacing: 1px;
-            flex-shrink: 0;
-        }
-        .stop-btn:hover {
-            transform: scale(1.03);
-            background: #ff2f2f;
-            box-shadow: 0 0 30px #d43f3f66;
+        .settings-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
         }
     </style>
 </head>
@@ -994,6 +990,7 @@
             return;
         }
 
+        // Если сервер остановлен и это НЕ админка — показываем заглушку без кнопки
         if (!serverRunning) {
             let html = cloudHtml + `
                 <div class="maintenance">
@@ -1189,9 +1186,13 @@
             `;
         } else if (adminSubTab === 'settings') {
             html += `
-                <div style="color:#aaa;padding:12px 0;text-align:center;">Управление сервером</div>
-                <button class="stop-btn" onclick="stopServer()">⛔ ОСТАНОВИТЬ СЕРВЕР</button>
-                <button class="submit-btn" onclick="startServer()" style="margin-top:8px;">🚀 ЗАПУСТИТЬ СЕРВЕР</button>
+                <div class="settings-panel">
+                    <div style="color:#aaa;padding:12px 0;text-align:center;">Управление сервером</div>
+                    ${serverRunning 
+                        ? `<button class="stop-btn" onclick="stopServer()">⛔ ОСТАНОВИТЬ СЕРВЕР</button>`
+                        : `<button class="start-btn" onclick="startServer()">🚀 ЗАПУСТИТЬ СЕРВЕР</button>`
+                    }
+                </div>
             `;
         }
 
@@ -1302,12 +1303,17 @@
         render();
     };
 
-    window.startServer = function() { serverRunning = true;
+    window.startServer = function() { 
+        serverRunning = true;
         autoSync();
-        render(); };
-    window.stopServer = function() { serverRunning = false;
+        render(); 
+    };
+    
+    window.stopServer = function() { 
+        serverRunning = false;
         autoSync();
-        render(); };
+        render(); 
+    };
 
     // ============================================================
     //  МЕНЮ
@@ -1338,4 +1344,4 @@
     render();
 </script>
 </body>
-</html>
+</html>        
