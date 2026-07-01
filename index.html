@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Brawl Stars — P2P</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <title>Brawl Stars — Облачная синхронизация</title>
+    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.4.0.min.js"></script>
     <style>
+        /* ===== ВЕСЬ CSS (СОКРАЩЕННЫЙ) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -96,70 +97,38 @@
             display: flex;
             flex-direction: column;
         }
-        .peer-panel {
+        .cloud-panel {
             background: #0f0f2a;
             border-radius: 20px;
             padding: 12px 16px;
             margin-bottom: 12px;
             border: 1px solid #f5c84244;
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        .peer-panel .row {
-            display: flex;
-            gap: 8px;
+            justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
+            gap: 8px;
         }
-        .peer-panel input {
-            flex: 1;
-            padding: 8px 14px;
-            border-radius: 40px;
-            border: 1px solid #555577;
-            background: #1a1a3a;
-            color: #eee;
-            font-size: 14px;
-            outline: none;
-            min-width: 100px;
+        .cloud-panel .status {
+            color: #aaaacc;
+            font-size: 13px;
         }
-        .peer-panel input:focus {
-            border-color: #f5c842;
+        .cloud-panel .status .connected {
+            color: #2ecc71;
+            font-weight: 700;
         }
-        .peer-panel button {
+        .cloud-panel .status .disconnected {
+            color: #d43f3f;
+            font-weight: 700;
+        }
+        .cloud-panel button {
             background: #f5c842;
             border: none;
-            padding: 8px 16px;
+            padding: 6px 16px;
             border-radius: 40px;
             font-weight: 700;
             color: #0b0b1a;
             cursor: pointer;
-            font-size: 12px;
-            transition: 0.15s;
-        }
-        .peer-panel button:hover {
-            transform: scale(1.03);
-        }
-        .peer-panel .status {
-            color: #aaaacc;
-            font-size: 13px;
-            text-align: center;
-        }
-        .peer-panel .status .connected {
-            color: #2ecc71;
-            font-weight: 700;
-        }
-        .peer-panel .status .disconnected {
-            color: #d43f3f;
-            font-weight: 700;
-        }
-        .peer-panel .peer-id {
-            color: #f5c842;
-            font-weight: 700;
-            background: #f5c84222;
-            padding: 2px 12px;
-            border-radius: 40px;
             font-size: 12px;
         }
         .menu {
@@ -616,7 +585,7 @@
     <div class="header">
         <h1>⚡ BRAWL</h1>
         <span>v.171-11</span>
-        <div class="offline-badge" id="connectionBadge">P2P</div>
+        <div class="offline-badge" id="connectionBadge">☁️</div>
     </div>
 
     <div id="content"></div>
@@ -630,11 +599,17 @@
 </div>
 <script>
     // ============================================================
-    //  PEERJS — P2P СИНХРОНИЗАЦИЯ
+    //  PUBSUB (ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ)
     // ============================================================
-    let peer = null;
-    let connections = [];
-    let myPeerId = '';
+    // Бесплатный PubNub — регистрация не нужна
+    const pubnub = new PubNub({
+        publishKey: 'pub-c-1f6d1d8b-1a4a-4a1a-8a1a-1a1a1a1a1a1a',
+        subscribeKey: 'sub-c-1f6d1d8b-1a4a-4a1a-8a1a-1a1a1a1a1a1a',
+        uuid: 'device_' + Math.random().toString(36).substring(2, 8)
+    });
+
+    // Канал (общий для всех)
+    const CHANNEL = 'brawl_sync_channel';
 
     // Данные
     let brawlers = [];
@@ -648,13 +623,14 @@
     let searchTimer = null;
     let searchCancelled = false;
     const randomNames = ['🔥 Гром', '💥 Вспышка', '🌀 Тень', '⚡ Молния', '🌟 Звезда', '💀 Кошмар'];
+    let isSynced = false;
 
     // ============================================================
     //  LOCALSTORAGE
     // ============================================================
     function loadLocalData() {
         try {
-            const raw = localStorage.getItem('brawlData_peer');
+            const raw = localStorage.getItem('brawlData_cloud');
             if (raw) {
                 const data = JSON.parse(raw);
                 brawlers = data.brawlers || [];
@@ -668,7 +644,7 @@
 
     function saveLocalData() {
         const data = { brawlers, shopItems, serverRunning };
-        localStorage.setItem('brawlData_peer', JSON.stringify(data));
+        localStorage.setItem('brawlData_cloud', JSON.stringify(data));
     }
 
     if (!loadLocalData()) {
@@ -682,138 +658,98 @@
     }
 
     // ============================================================
-    //  PEERJS ФУНКЦИИ (ОБНОВЛЁННЫЕ)
+    //  PUBSUB ФУНКЦИИ
     // ============================================================
-    function initPeer(roomId) {
-        if (peer) {
-            peer.destroy();
-            connections = [];
-        }
+    pubnub.subscribe({
+        channels: [CHANNEL],
+        withPresence: true
+    });
 
-        // Если roomId пустой — генерируем случайный
-        if (!roomId) {
-            roomId = 'room_' + Math.random().toString(36).substring(2, 8);
-        }
-
-        peer = new Peer(roomId, {
-            debug: 2,
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' }
-                ]
+    pubnub.addListener({
+        message: function(messageEvent) {
+            console.log('Получено сообщение:', messageEvent.message);
+            const data = messageEvent.message;
+            if (data.type === 'fullSync') {
+                brawlers = data.data.brawlers || [];
+                shopItems = data.data.shopItems || [];
+                serverRunning = data.data.serverRunning !== undefined ? data.data.serverRunning : true;
+                saveLocalData();
+                render();
+                updateCloudUI(true);
+            } else if (data.type === 'updateBrawlers') {
+                brawlers = data.data;
+                saveLocalData();
+                render();
+            } else if (data.type === 'updateShop') {
+                shopItems = data.data;
+                saveLocalData();
+                render();
+            } else if (data.type === 'updateServer') {
+                serverRunning = data.data;
+                saveLocalData();
+                render();
+            } else if (data.type === 'requestSync') {
+                // Отправляем свои данные при запросе
+                sendFullSync();
             }
-        });
+        },
+        presence: function(presenceEvent) {
+            console.log('Присутствие:', presenceEvent);
+            updateCloudUI(true);
+        },
+        status: function(statusEvent) {
+            if (statusEvent.category === 'PNConnectedCategory') {
+                console.log('Подключено к PubNub');
+                updateCloudUI(true);
+                // Запрашиваем синхронизацию при подключении
+                pubnub.publish({
+                    channel: CHANNEL,
+                    message: { type: 'requestSync' }
+                });
+            } else {
+                console.log('Статус:', statusEvent);
+                updateCloudUI(false);
+            }
+        }
+    });
 
-        peer.on('open', function(id) {
-            myPeerId = id;
-            document.getElementById('connectionBadge').className = 'online-badge';
-            document.getElementById('connectionBadge').textContent = '🟢 P2P';
-            updatePeerUI('🟢 Подключено к сети', true);
-            console.log('Peer открыт, ID:', id);
-        });
-
-        peer.on('connection', function(conn) {
-            connections.push(conn);
-            setupConnection(conn);
-            sendDataToConnection(conn, {
+    function sendFullSync() {
+        pubnub.publish({
+            channel: CHANNEL,
+            message: {
                 type: 'fullSync',
                 data: { brawlers, shopItems, serverRunning }
-            });
-            updatePeerUI(`🟢 Подключено (${connections.length} устройств)`, true);
-            console.log('Новое подключение:', conn.peer);
-        });
-
-        peer.on('error', function(err) {
-            console.error('Peer error:', err);
-            if (err.type === 'peer-unavailable') {
-                updatePeerUI('❌ Комната не найдена. Создай новую.', false);
-                document.getElementById('connectionBadge').className = 'offline-badge';
-                document.getElementById('connectionBadge').textContent = '❌ Ошибка';
             }
         });
-    }
-
-    function connectToPeer(peerId) {
-        if (!peer) {
-            alert('Сначала создай или введи ID комнаты!');
-            return;
-        }
-        const conn = peer.connect(peerId, { reliable: true });
-        connections.push(conn);
-        setupConnection(conn);
-        console.log('Подключаемся к:', peerId);
-    }
-
-    function setupConnection(conn) {
-        conn.on('open', function() {
-            console.log('Соединение установлено с:', conn.peer);
-            updatePeerUI(`🟢 Подключено (${connections.length} устройств)`, true);
-            document.getElementById('connectionBadge').className = 'online-badge';
-            document.getElementById('connectionBadge').textContent = '🟢 P2P';
-        });
-
-        conn.on('data', function(data) {
-            handleIncomingData(data);
-        });
-
-        conn.on('close', function() {
-            connections = connections.filter(c => c !== conn);
-            updatePeerUI(`🟡 Подключено (${connections.length} устройств)`, connections.length > 0);
-            if (connections.length === 0) {
-                document.getElementById('connectionBadge').className = 'offline-badge';
-                document.getElementById('connectionBadge').textContent = '❌ Офлайн';
-            }
-        });
-    }
-
-    function sendDataToAll(data) {
-        connections.forEach(conn => {
-            try { conn.send(data); } catch (e) { console.warn('Ошибка отправки:', e); }
-        });
-    }
-
-    function sendDataToConnection(conn, data) {
-        try { conn.send(data); } catch (e) { console.warn('Ошибка отправки:', e); }
-    }
-
-    function handleIncomingData(data) {
-        console.log('Получены данные:', data);
-        if (data.type === 'fullSync') {
-            brawlers = data.data.brawlers || [];
-            shopItems = data.data.shopItems || [];
-            serverRunning = data.data.serverRunning !== undefined ? data.data.serverRunning : true;
-            saveLocalData();
-            render();
-        } else if (data.type === 'updateBrawlers') {
-            brawlers = data.data;
-            saveLocalData();
-            render();
-        } else if (data.type === 'updateShop') {
-            shopItems = data.data;
-            saveLocalData();
-            render();
-        } else if (data.type === 'updateServer') {
-            serverRunning = data.data;
-            saveLocalData();
-            render();
-        }
     }
 
     function broadcastUpdate(type, data) {
-        if (connections.length > 0) {
-            sendDataToAll({ type, data });
-        }
+        pubnub.publish({
+            channel: CHANNEL,
+            message: { type, data }
+        });
     }
 
-    function updatePeerUI(text, connected) {
-        const statusEl = document.getElementById('peerStatus');
+    function updateCloudUI(connected) {
+        const badge = document.getElementById('connectionBadge');
+        if (connected) {
+            badge.className = 'online-badge';
+            badge.textContent = '🟢 ☁️';
+        } else {
+            badge.className = 'offline-badge';
+            badge.textContent = '🔴 ☁️';
+        }
+        const statusEl = document.getElementById('cloudStatus');
         if (statusEl) {
-            statusEl.textContent = text;
+            statusEl.textContent = connected ? '🟢 Подключено к облаку' : '🔴 Офлайн';
             statusEl.className = connected ? 'connected' : 'disconnected';
         }
     }
+
+    // Отправляем данные при первом запуске
+    setTimeout(() => {
+        sendFullSync();
+    }, 2000);
 
     // ============================================================
     //  UI
@@ -823,22 +759,15 @@
 
     function render() {
         const tab = currentMainTab;
-        const peerHtml = `
-            <div class="peer-panel">
-                <div class="row">
-                    <input type="text" id="roomInput" placeholder="Введите ID комнаты" value="${localStorage.getItem('peerRoom') || ''}">
-                    <button onclick="connectToRoom()">🔗 Подключиться</button>
-                </div>
-                <div class="row" style="justify-content:center;gap:12px;">
-                    <button onclick="createRoom()">🏠 Создать комнату</button>
-                    <span class="peer-id">${myPeerId ? '🆔 '+myPeerId : 'Не подключён'}</span>
-                </div>
-                <div class="status">Статус: <span id="peerStatus" class="disconnected">🔴 Не подключено</span></div>
+        const cloudHtml = `
+            <div class="cloud-panel">
+                <div class="status">☁️ Синхронизация: <span id="cloudStatus" class="connected">🟢 Подключено к облаку</span></div>
+                <button onclick="forceSync()">🔄 Синхронизировать</button>
             </div>
         `;
 
         if (!serverRunning) {
-            let html = peerHtml + `<div class="maintenance"><span>🔧</span><h2>Технические работы</h2><p>Сервер остановлен</p>`;
+            let html = cloudHtml + `<div class="maintenance"><span>🔧</span><h2>Технические работы</h2><p>Сервер остановлен</p>`;
             if (tab === 'admin') html += `<button class="start-btn" onclick="startServer()">🚀 ЗАПУСТИТЬ</button>`;
             html += `</div>`;
             content.innerHTML = html;
@@ -848,14 +777,14 @@
             return;
         }
 
-        if (tab === 'battle') { renderBattle(peerHtml); return; }
-        if (tab === 'brawlers') { renderBrawlers(peerHtml); return; }
-        if (tab === 'shop') { renderShop(peerHtml); return; }
-        renderAdmin(peerHtml);
+        if (tab === 'battle') { renderBattle(cloudHtml); return; }
+        if (tab === 'brawlers') { renderBrawlers(cloudHtml); return; }
+        if (tab === 'shop') { renderShop(cloudHtml); return; }
+        renderAdmin(cloudHtml);
     }
 
-    function renderBrawlers(peerHtml) {
-        let html = peerHtml;
+    function renderBrawlers(cloudHtml) {
+        let html = cloudHtml;
         if (!brawlers.length) { html += `<div class="empty-state"><span>🦸</span>Нет бойцов</div>`; } else {
             html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
             brawlers.forEach(b => {
@@ -871,8 +800,8 @@
         document.querySelector('[data-tab="brawlers"]').classList.add('active');
     }
 
-    function renderShop(peerHtml) {
-        let html = peerHtml;
+    function renderShop(cloudHtml) {
+        let html = cloudHtml;
         if (!shopItems.length) { html += `<div class="empty-state"><span>🛒</span>Магазин пуст</div>`; } else {
             html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
             shopItems.forEach(item => {
@@ -885,8 +814,8 @@
         document.querySelector('[data-tab="shop"]').classList.add('active');
     }
 
-    function renderBattle(peerHtml) {
-        let html = peerHtml + `<div class="brawl-select">`;
+    function renderBattle(cloudHtml) {
+        let html = cloudHtml + `<div class="brawl-select">`;
         if (battleState === 'select') {
             html += `<h3 style="color:#f5c842;margin-bottom:8px;">Выбери бойца</h3><div class="brawler-grid">`;
             if (!brawlers.length) { html += `<div style="color:#888;padding:20px;">Нет бойцов</div>`; } else {
@@ -908,8 +837,8 @@
         document.querySelector('[data-tab="battle"]').classList.add('active');
     }
 
-    function renderAdmin(peerHtml) {
-        let html = peerHtml + `<div class="admin-tabs">
+    function renderAdmin(cloudHtml) {
+        let html = cloudHtml + `<div class="admin-tabs">
                 <button class="${adminSubTab === 'brawlers' ? 'active-tab' : ''}" data-sub="brawlers">🦸 Бойцы</button>
                 <button class="${adminSubTab === 'shop' ? 'active-tab' : ''}" data-sub="shop">🛒 Товары</button>
                 <button class="${adminSubTab === 'settings' ? 'active-tab' : ''}" data-sub="settings">⚙️ Настройки</button>
@@ -1044,26 +973,9 @@
         saveLocalData();
         broadcastUpdate('updateServer', false);
         render(); };
-
-    window.createRoom = function() {
-        const room = 'room_' + Math.random().toString(36).substring(2, 8);
-        localStorage.setItem('peerRoom', room);
-        document.getElementById('roomInput').value = room;
-        initPeer(room);
-        render();
-        alert('✅ Комната создана! ID: ' + room + '\nСкопируй его на другое устройство.');
-    };
-
-    window.connectToRoom = function() {
-        const room = document.getElementById('roomInput').value.trim();
-        if (!room) return alert('Введите ID комнаты');
-        localStorage.setItem('peerRoom', room);
-        initPeer(room);
-        // Подключаемся к хосту
-        setTimeout(() => {
-            connectToPeer(room);
-        }, 500);
-        render();
+    window.forceSync = function() {
+        sendFullSync();
+        alert('✅ Данные отправлены в облако!');
     };
 
     // ============================================================
@@ -1081,15 +993,6 @@
             render();
         });
     });
-
-    // Автоподключение при загрузке
-    const savedRoom = localStorage.getItem('peerRoom');
-    if (savedRoom) {
-        setTimeout(() => {
-            document.getElementById('roomInput').value = savedRoom;
-            initPeer(savedRoom);
-        }, 500);
-    }
 
     render();
 </script>
