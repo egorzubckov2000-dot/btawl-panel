@@ -405,3 +405,28 @@
         if (!val) return;
         shopItems[idx] = val;
         saveLocalData(); saveShopToGun();
+    };
+    window.startServer = function() { serverRunning = true; saveLocalData(); saveServerToGun(); render(); };
+    window.stopServer = function() { serverRunning = false; saveLocalData(); saveServerToGun(); render(); };
+    window.forceSync = function() { saveBrawlersToGun(); saveShopToGun(); saveServerToGun(); alert('✅ Синхронизация выполнена!'); };
+
+    // ============================================================
+    //  МЕНЮ
+    // ============================================================
+    menuBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (currentMainTab !== 'battle' && battleState !== 'select') {
+                clearTimeout(searchTimer);
+                battleState = 'select';
+                selectedBrawler = null;
+                opponent = null;
+            }
+            currentMainTab = this.dataset.tab;
+            render();
+        });
+    });
+
+    render();
+</script>
+</body>
+</html>
