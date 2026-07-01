@@ -6,10 +6,12 @@
     <title>Brawl Stars</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <style>
+        /* ===== ВСЕ СТИЛИ (СОКРАЩЕННО) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -211,7 +213,7 @@
             50% { transform: translateY(-8px); }
         }
 
-        /* ===== ВХОД ===== */
+        /* ===== АВТОРИЗАЦИЯ (ПОЧТА) ===== */
         .auth-overlay {
             position: fixed;
             top: 0;
@@ -310,6 +312,17 @@
             font-size: 13px;
             margin-top: 8px;
             display: none;
+        }
+        .auth-box .forgot-link {
+            color: #8888aa;
+            font-size: 12px;
+            margin-top: 10px;
+            cursor: pointer;
+            display: block;
+            transition: 0.3s ease;
+        }
+        .auth-box .forgot-link:hover {
+            color: #f5c842;
         }
         @keyframes shake {
             0%,
@@ -849,6 +862,11 @@
             font-size: 20px;
             font-weight: 700;
             margin-bottom: 4px;
+        }
+        .profile-card .email {
+            color: #8888aa;
+            font-size: 12px;
+            margin-bottom: 8px;
         }
         .profile-card .stats {
             display: flex;
@@ -1578,19 +1596,20 @@
     </div>
 </div>
 
-<!-- ===== ВХОД ===== -->
+<!-- ===== АВТОРИЗАЦИЯ (ПОЧТА) ===== -->
 <div class="auth-overlay" id="authOverlay">
     <div class="auth-box">
         <h2>⚡ BRAWL</h2>
         <p id="authSubtitle">Войдите или зарегистрируйтесь</p>
-        <input type="text" id="authNick" placeholder="Никнейм" maxlength="20" />
-        <input type="password" id="authPassword" placeholder="Пароль" maxlength="30" />
+        <input type="email" id="authEmail" placeholder="Email" />
+        <input type="password" id="authPassword" placeholder="Пароль" />
         <div class="error" id="authError">❌ Ошибка</div>
         <div class="success" id="authSuccess">✅ Успешно!</div>
         <div class="btn-group">
-            <button class="login-btn" onclick="window.login()">🔑 Войти</button>
-            <button class="register-btn" onclick="window.register()">📝 Регистрация</button>
+            <button class="login-btn" onclick="window.loginWithEmail()">🔑 Войти</button>
+            <button class="register-btn" onclick="window.registerWithEmail()">📝 Регистрация</button>
         </div>
+        <span class="forgot-link" onclick="resetPassword()">🔓 Забыли пароль?</span>
     </div>
 </div>
 
@@ -1642,6 +1661,7 @@
         console.warn('Firebase уже инициализирован:', e);
     }
     const db = firebase.database();
+    const auth = firebase.auth();
 
     // ============================================================
     //  ЗАКРЫТИЕ ОКНА ПАРОЛЯ
@@ -1677,6 +1697,167 @@
     });
 
     // ============================================================
+    //  АВТОРИЗАЦИЯ ПО ПОЧТЕ
+    // ============================================================
+    let currentUser = null;
+    let currentUserId = null;
+    let isLoggedIn = false;
+    let profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
+
+    // Проверяем состояние авторизации при загрузке
+    auth.onAuthStateChanged(function(user) {
+        if (user) {
+            // Пользователь вошёл
+            currentUser = user;
+            currentUserId = user.uid;
+            isLoggedIn = true;
+            document.getElementById('authOverlay').style.display = 'none';
+            // Загружаем профиль из базы
+            loadUserProfile();
+            loadGameData();
+            render();
+        } else {
+            // Пользователь вышел
+            currentUser = null;
+            currentUserId = null;
+            isLoggedIn = false;
+            document.getElementById('authOverlay').style.display = 'flex';
+            render();
+        }
+    });
+
+    window.registerWithEmail = function() {
+        const email = document.getElementById('authEmail').value.trim();
+        const pass = document.getElementById('authPassword').value.trim();
+        const errorEl = document.getElementById('authError');
+        const successEl = document.getElementById('authSuccess');
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!email || !pass) {
+            errorEl.textContent = '❌ Заполните все поля!';
+            errorEl.style.display = 'block';
+            return;
+        }
+        if (pass.length < 6) {
+            errorEl.textContent = '❌ Пароль должен быть минимум 6 символов!';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        auth.createUserWithEmailAndPassword(email, pass)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                // Создаём профиль в базе данных
+                const newProfile = {
+                    name: email.split('@')[0] || 'Игрок',
+                    email: email,
+                    gems: 50,
+                    coins: 100,
+                    brawlers: [{ name: 'Шелли', level: 1 }],
+                    trophies: 0,
+                    banned: false,
+                    createdAt: Date.now()
+                };
+                db.ref('players/' + user.uid).set(newProfile);
+                successEl.textContent = '✅ Аккаунт создан! Вход выполнен.';
+                successEl.style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('authOverlay').style.display = 'none';
+                }, 1000);
+            })
+            .catch((error) => {
+                errorEl.textContent = '❌ ' + error.message;
+                errorEl.style.display = 'block';
+            });
+    };
+
+    window.loginWithEmail = function() {
+        const email = document.getElementById('authEmail').value.trim();
+        const pass = document.getElementById('authPassword').value.trim();
+        const errorEl = document.getElementById('authError');
+        const successEl = document.getElementById('authSuccess');
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!email || !pass) {
+            errorEl.textContent = '❌ Заполните все поля!';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        auth.signInWithEmailAndPassword(email, pass)
+            .then((userCredential) => {
+                successEl.textContent = '✅ Вход выполнен!';
+                successEl.style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('authOverlay').style.display = 'none';
+                }, 500);
+            })
+            .catch((error) => {
+                errorEl.textContent = '❌ ' + error.message;
+                errorEl.style.display = 'block';
+            });
+    };
+
+    window.resetPassword = function() {
+        const email = document.getElementById('authEmail').value.trim();
+        if (!email) {
+            alert('Введите ваш email для восстановления пароля');
+            return;
+        }
+        auth.sendPasswordResetEmail(email)
+            .then(() => {
+                alert('✅ Письмо для восстановления пароля отправлено на ' + email);
+            })
+            .catch((error) => {
+                alert('❌ ' + error.message);
+            });
+    };
+
+    function logout() {
+        if (confirm('Выйти из аккаунта?')) {
+            auth.signOut();
+            localStorage.removeItem('brawl_playerId');
+            currentUserId = null;
+            isLoggedIn = false;
+            profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
+            document.getElementById('authOverlay').style.display = 'flex';
+            render();
+        }
+    }
+
+    function loadUserProfile() {
+        if (!currentUserId) return;
+        db.ref('players/' + currentUserId).once('value').then((snap) => {
+            const data = snap.val();
+            if (data) {
+                profile = data;
+                saveLocalProfile();
+            }
+            render();
+        });
+    }
+
+    function saveLocalProfile() {
+        localStorage.setItem('brawl_profile', JSON.stringify(profile));
+    }
+
+    function loadLocalProfile() {
+        try {
+            const raw = localStorage.getItem('brawl_profile');
+            if (raw) {
+                const p = JSON.parse(raw);
+                if (p && p.name) {
+                    profile = p;
+                    return true;
+                }
+            }
+        } catch (e) {}
+        return false;
+    }
+
+    // ============================================================
     //  ДАННЫЕ
     // ============================================================
     let brawlers = [];
@@ -1700,117 +1881,6 @@
         workMessage: 'Добро пожаловать в Brawl Stars!',
         maintenanceMessage: 'Технические работы. Зайдите позже.',
         isClosed: false
-    };
-
-    let currentPlayerId = localStorage.getItem('brawl_playerId');
-    let isLoggedIn = false;
-    let profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false, password: '' };
-
-    // ============================================================
-    //  АВТОРИЗАЦИЯ (ГЛОБАЛЬНЫЕ ФУНКЦИИ)
-    // ============================================================
-    window.register = function() {
-        const nick = document.getElementById('authNick').value.trim();
-        const pass = document.getElementById('authPassword').value.trim();
-        const errorEl = document.getElementById('authError');
-        const successEl = document.getElementById('authSuccess');
-        errorEl.style.display = 'none';
-        successEl.style.display = 'none';
-
-        if (!nick || !pass) {
-            errorEl.textContent = '❌ Заполните все поля!';
-            errorEl.style.display = 'block';
-            return;
-        }
-        if (nick.length < 3) {
-            errorEl.textContent = '❌ Ник должен быть минимум 3 символа!';
-            errorEl.style.display = 'block';
-            return;
-        }
-        if (pass.length < 4) {
-            errorEl.textContent = '❌ Пароль должен быть минимум 4 символа!';
-            errorEl.style.display = 'block';
-            return;
-        }
-
-        db.ref('players').orderByChild('name').equalTo(nick).once('value').then((snap) => {
-            if (snap.exists()) {
-                errorEl.textContent = '❌ Этот ник уже занят!';
-                errorEl.style.display = 'block';
-                return;
-            }
-
-            const playerId = 'player_' + Math.random().toString(36).substring(2, 10);
-            const newProfile = {
-                name: nick,
-                password: pass,
-                gems: 50,
-                coins: 100,
-                brawlers: [{ name: 'Шелли', level: 1 }],
-                trophies: 0,
-                banned: false,
-                createdAt: Date.now()
-            };
-
-            db.ref('players/' + playerId).set(newProfile).then(() => {
-                successEl.textContent = '✅ Аккаунт создан! Войдите.';
-                successEl.style.display = 'block';
-                document.getElementById('authNick').value = '';
-                document.getElementById('authPassword').value = '';
-            });
-        });
-    };
-
-    window.login = function() {
-        const nick = document.getElementById('authNick').value.trim();
-        const pass = document.getElementById('authPassword').value.trim();
-        const errorEl = document.getElementById('authError');
-        const successEl = document.getElementById('authSuccess');
-        errorEl.style.display = 'none';
-        successEl.style.display = 'none';
-
-        if (!nick || !pass) {
-            errorEl.textContent = '❌ Заполните все поля!';
-            errorEl.style.display = 'block';
-            return;
-        }
-
-        db.ref('players').orderByChild('name').equalTo(nick).once('value').then((snap) => {
-            if (!snap.exists()) {
-                errorEl.textContent = '❌ Пользователь не найден!';
-                errorEl.style.display = 'block';
-                return;
-            }
-
-            const data = snap.val();
-            const playerId = Object.keys(data)[0];
-            const player = data[playerId];
-
-            if (player.password !== pass) {
-                errorEl.textContent = '❌ Неверный пароль!';
-                errorEl.style.display = 'block';
-                return;
-            }
-
-            if (player.banned) {
-                errorEl.textContent = '❌ Вы забанены!';
-                errorEl.style.display = 'block';
-                document.getElementById('bannedOverlay').style.display = 'flex';
-                return;
-            }
-
-            currentPlayerId = playerId;
-            localStorage.setItem('brawl_playerId', playerId);
-            profile = player;
-            isLoggedIn = true;
-            document.getElementById('authOverlay').style.display = 'none';
-            document.getElementById('bannedOverlay').style.display = 'none';
-            successEl.textContent = '✅ Вход выполнен!';
-            successEl.style.display = 'block';
-
-            loadGameData();
-            render();
-        });
     };
 
     // ============================================================
@@ -1867,8 +1937,8 @@
                 brawlers = data.brawlers || [];
                 shopItems = data.shopItems || [];
                 vouchers = data.vouchers || [];
-                if (currentPlayerId) {
-                    db.ref('players/' + currentPlayerId).once('value').then((snap) => {
+                if (currentUserId) {
+                    db.ref('players/' + currentUserId).once('value').then((snap) => {
                         const p = snap.val();
                         if (p) {
                             profile = p;
@@ -1887,24 +1957,6 @@
         });
     }
 
-    function saveLocalProfile() {
-        localStorage.setItem('brawl_profile', JSON.stringify(profile));
-    }
-
-    function loadLocalProfile() {
-        try {
-            const raw = localStorage.getItem('brawl_profile');
-            if (raw) {
-                const p = JSON.parse(raw);
-                if (p && p.name) {
-                    profile = p;
-                    return true;
-                }
-            }
-        } catch (e) {}
-        return false;
-    }
-
     // ============================================================
     //  БАН
     // ============================================================
@@ -1920,12 +1972,11 @@
     window.createNewAccount = function() {
         document.getElementById('bannedOverlay').style.display = 'none';
         document.getElementById('authOverlay').style.display = 'flex';
-        document.getElementById('authSubtitle').textContent = 'Создайте новый аккаунт';
         localStorage.removeItem('brawl_playerId');
-        localStorage.removeItem('brawl_profile');
-        currentPlayerId = null;
-        isLoggedIn = false;
-        profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false, password: '' };
+        if (currentUserId) {
+            db.ref('players/' + currentUserId).remove();
+        }
+        auth.signOut();
         render();
     };
 
@@ -1937,13 +1988,13 @@
     //  FIREBASE СИНХРОНИЗАЦИЯ
     // ============================================================
     function syncToFirebase() {
-        if (isSyncing || !currentPlayerId) return;
+        if (isSyncing || !currentUserId) return;
         isSyncing = true;
         const data = { brawlers, shopItems, vouchers };
         db.ref('data').set(data)
             .then(() => {
-                if (currentPlayerId) {
-                    db.ref('players/' + currentPlayerId).set(profile);
+                if (currentUserId) {
+                    db.ref('players/' + currentUserId).set(profile);
                 }
                 console.log('✅ Данные отправлены в Firebase');
                 updateCloudUI(true);
@@ -2005,7 +2056,7 @@
     //  ПРОКАЧКА БОЙЦА
     // ============================================================
     window.upgradeBrawler = function(brawlerName) {
-        if (checkBan() || !currentPlayerId) return;
+        if (checkBan() || !currentUserId) return;
         const brawler = brawlers.find(b => b.name === brawlerName);
         if (!brawler) return alert('Боец не найден!');
 
@@ -2039,6 +2090,14 @@
     const menuBtns = document.querySelectorAll('.menu button');
 
     function render() {
+        if (!isLoggedIn || !currentUserId) {
+            document.getElementById('authOverlay').style.display = 'flex';
+            content.innerHTML =
+                `<div class="empty-state"><span>🔒</span>Авторизуйтесь для продолжения</div>`;
+            menuBtns.forEach(b => b.classList.remove('active'));
+            return;
+        }
+
         if (profile.banned) {
             document.getElementById('bannedOverlay').style.display = 'flex';
             content.innerHTML =
@@ -2049,11 +2108,6 @@
             return;
         } else {
             document.getElementById('bannedOverlay').style.display = 'none';
-        }
-
-        if (!isLoggedIn && !currentPlayerId) {
-            document.getElementById('authOverlay').style.display = 'flex';
-            return;
         }
 
         const tab = currentMainTab;
@@ -2147,10 +2201,10 @@
         }
 
         if (battleState === 'fighting' && battleData) {
-            const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === currentPlayerId) ||
-                (battleData.currentTurn === 'player2' && battleData.player2Id === currentPlayerId);
+            const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === currentUserId) ||
+                (battleData.currentTurn === 'player2' && battleData.player2Id === currentUserId);
 
-            const isPlayer1 = battleData.player1Id === currentPlayerId;
+            const isPlayer1 = battleData.player1Id === currentUserId;
             const myName = isPlayer1 ? battleData.player1Name : battleData.player2Name;
             const oppName = isPlayer1 ? battleData.player2Name : battleData.player1Name;
             const myHP = isPlayer1 ? battleData.player1HP : battleData.player2HP;
@@ -2207,8 +2261,8 @@
         }
 
         if (battleState === 'result' && battleData) {
-            const isWin = (battleData.winner === 'player1' && battleData.player1Id === currentPlayerId) ||
-                (battleData.winner === 'player2' && battleData.player2Id === currentPlayerId);
+            const isWin = (battleData.winner === 'player1' && battleData.player1Id === currentUserId) ||
+                (battleData.winner === 'player2' && battleData.player2Id === currentUserId);
             html += `
                     <div class="battle-result">
                         <div class="winner">${isWin ? '🎉 ПОБЕДА!' : '💀 ПОРАЖЕНИЕ'}</div>
@@ -2253,10 +2307,10 @@
     };
 
     // ============================================================
-    //  ПОИСК БОЯ (С БОТОМ ЧЕРЕЗ 5 СЕКУНД)
+    //  ПОИСК БОЯ
     // ============================================================
     function findBattle() {
-        if (checkBan() || !currentPlayerId) return;
+        if (checkBan() || !currentUserId) return;
         if (!selectedBrawler) return alert('Выберите бойца!');
         const hasBrawler = profile.brawlers && profile.brawlers.some(pb => pb.name === selectedBrawler);
         if (!hasBrawler) {
@@ -2267,7 +2321,7 @@
         renderBattle();
 
         const searchData = {
-            playerId: currentPlayerId,
+            playerId: currentUserId,
             name: profile.name || 'Игрок',
             brawler: selectedBrawler,
             brawlerLevel: profile.brawlers.find(pb => pb.name === selectedBrawler)?.level || 1,
@@ -2283,7 +2337,7 @@
 
             const other = Object.keys(searches).find(key => {
                 const s = searches[key];
-                return s.playerId !== currentPlayerId && s.status === 'searching';
+                return s.playerId !== currentUserId && s.status === 'searching';
             });
 
             if (other) {
@@ -2298,10 +2352,8 @@
             }
         });
 
-        // Таймер на 5 секунд — если никто не нашёлся, подключаем бота
         botTimeout = setTimeout(() => {
             if (battleState === 'searching') {
-                // Создаём бота
                 const botNames = ['🤖 Гром', '🤖 Вспышка', '🤖 Тень', '🤖 Молния', '🤖 Звезда', '🤖 Кошмар', '🤖 Щит', '🤖 Клинок', '🤖 Стрела', '🤖 Фейерверк', '🤖 Призрак', '🤖 Волк', '🤖 Орел', '🤖 Дракон', '🤖 Воин', '🤖 НЛО'];
                 const botBrawlers = brawlers.length > 0 ? brawlers : [{ name: 'Шелли' }, { name: 'Кольт' }];
 
@@ -2355,7 +2407,7 @@
 
         battleData = {
             id: battleId,
-            player1Id: currentPlayerId,
+            player1Id: currentUserId,
             player1Name: profile.name || 'Игрок',
             player1Brawler: selectedBrawler,
             player1HP: myStats.hp,
@@ -2397,7 +2449,7 @@
     function listenForMoves() {
         db.ref('battles/' + battleId + '/moves').on('child_added', (snapshot) => {
             const move = snapshot.val();
-            if (move.playerId === currentPlayerId) return;
+            if (move.playerId === currentUserId) return;
             if (battleData && !battleData.finished) {
                 processPvpMove(move);
             }
@@ -2406,8 +2458,8 @@
 
     function makePvpMove(action) {
         if (!battleData || battleData.finished) return;
-        const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === currentPlayerId) ||
-            (battleData.currentTurn === 'player2' && battleData.player2Id === currentPlayerId);
+        const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === currentUserId) ||
+            (battleData.currentTurn === 'player2' && battleData.player2Id === currentUserId);
         if (!isMyTurn) {
             alert('⏳ Сейчас не ваш ход!');
             return;
@@ -2418,7 +2470,7 @@
         if (attackBtn) attackBtn.disabled = true;
         if (defendBtn) defendBtn.disabled = true;
 
-        const move = { action: action, timestamp: Date.now(), playerId: currentPlayerId };
+        const move = { action: action, timestamp: Date.now(), playerId: currentUserId };
         db.ref('battles/' + battleId + '/moves').push(move).then(() => {
             console.log('✅ Ход отправлен:', action);
             setTimeout(() => {
@@ -2465,8 +2517,8 @@
             const winnerName = battleData.winner === 'player1' ? battleData.player1Name : battleData.player2Name;
             battleData.log.push(`🏆 ${winnerName} победил!`);
 
-            if ((battleData.winner === 'player1' && battleData.player1Id === currentPlayerId) ||
-                (battleData.winner === 'player2' && battleData.player2Id === currentPlayerId)) {
+            if ((battleData.winner === 'player1' && battleData.player1Id === currentUserId) ||
+                (battleData.winner === 'player2' && battleData.player2Id === currentUserId)) {
                 profile.trophies = (profile.trophies || 0) + 10;
                 autoSync();
                 alert('🏆 Вы победили! +10 кубков!');
@@ -2570,10 +2622,10 @@
         render(); };
 
     // ============================================================
-    //  МАГАЗИН, ВАУЧЕРЫ, ЧАТ
+    //  МАГАЗИН, ВАУЧЕРЫ, ЧАТ (СОКРАЩЕННО)
     // ============================================================
     window.buyItem = function(name) {
-        if (checkBan() || !currentPlayerId) return;
+        if (checkBan() || !currentUserId) return;
         const item = shopItems.find(i => i.name === name);
         if (!item) return alert('Товар не найден!');
         const isFree = item.free === true;
@@ -2655,7 +2707,8 @@
                 <div class="profile-card">
                     <span class="avatar">👤</span>
                     <div class="nick">${profile.name || 'Игрок'}</div>
-                    <div style="font-size:12px;color:#555577;margin-bottom:8px;">ID: ${currentPlayerId || '—'}</div>
+                    <div class="email">📧 ${currentUser?.email || '—'}</div>
+                    <div style="font-size:12px;color:#555577;margin-bottom:8px;">ID: ${currentUserId || '—'}</div>
                     <div class="stats">
                         <div class="stat-item"><div class="value gems">${profile.gems || 0}</div><div class="label">💎 Гемы</div></div>
                         <div class="stat-item"><div class="value coins">${profile.coins || 0}</div><div class="label">🪙 Монеты</div></div>
@@ -2693,13 +2746,13 @@
     }
 
     window.sendMessage = function() {
-        if (checkBan() || !currentPlayerId) return;
+        if (checkBan() || !currentUserId) return;
         const input = document.getElementById('chatInput');
         const text = input.value.trim();
         if (!text) return;
 
         const msg = {
-            playerId: currentPlayerId,
+            playerId: currentUserId,
             name: profile.name || 'Аноним',
             text: text,
             timestamp: Date.now()
@@ -2734,7 +2787,7 @@
             let html = '';
             const msgs = Object.values(messages).reverse();
             msgs.forEach(msg => {
-                const isOwn = msg.playerId === currentPlayerId;
+                const isOwn = msg.playerId === currentUserId;
                 const time = new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
                 html += `
                         <div class="chat-message ${isOwn ? 'own' : ''}">
@@ -2809,12 +2862,12 @@
         if (!voucher) return alert('❌ Неверный код!');
         if (voucher.maxUses <= 0) return alert('❌ Этот ваучер уже использован!');
 
-        if (voucher.usedBy && voucher.usedBy.includes(currentPlayerId)) {
+        if (voucher.usedBy && voucher.usedBy.includes(currentUserId)) {
             return alert('⚠️ Вы уже активировали этот ваучер!');
         }
 
         if (!voucher.usedBy) voucher.usedBy = [];
-        voucher.usedBy.push(currentPlayerId);
+        voucher.usedBy.push(currentUserId);
         voucher.maxUses -= 1;
         if (voucher.maxUses <= 0) {
             voucher.used = true;
@@ -2843,7 +2896,7 @@
     };
 
     // ============================================================
-    //  АДМИНКА
+    //  АДМИНКА (ПОЛНАЯ)
     // ============================================================
     let playersList = [];
 
@@ -3360,21 +3413,6 @@
     };
 
     // ============================================================
-    //  ВЫХОД
-    // ============================================================
-    function logout() {
-        if (confirm('Выйти из аккаунта?')) {
-            localStorage.removeItem('brawl_playerId');
-            currentPlayerId = null;
-            isLoggedIn = false;
-            profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false, password: '' };
-            document.getElementById('authOverlay').style.display = 'flex';
-            document.getElementById('authSubtitle').textContent = 'Войдите или зарегистрируйтесь';
-            render();
-        }
-    }
-
-    // ============================================================
     //  МЕНЮ
     // ============================================================
     menuBtns.forEach(btn => {
@@ -3411,36 +3449,15 @@
     // ============================================================
     loadServerSettings();
 
-    if (currentPlayerId) {
-        const saved = loadLocalProfile();
-        if (saved) {
-            if (profile.banned) {
-                document.getElementById('bannedOverlay').style.display = 'flex';
-            } else {
-                isLoggedIn = true;
-                document.getElementById('authOverlay').style.display = 'none';
-                loadGameData();
-            }
-        } else {
-            document.getElementById('authOverlay').style.display = 'flex';
-        }
-    } else {
-        document.getElementById('authOverlay').style.display = 'flex';
-    }
-
-    if (currentPlayerId && !profile.name) {
-        db.ref('players/' + currentPlayerId).once('value').then((snap) => {
-            const p = snap.val();
-            if (p) {
-                profile = p;
-                saveLocalProfile();
-                isLoggedIn = true;
-                document.getElementById('authOverlay').style.display = 'none';
-                loadGameData();
-            } else {
-                document.getElementById('authOverlay').style.display = 'flex';
-            }
-        });
+    // Проверяем, есть ли уже авторизованный пользователь
+    if (auth.currentUser) {
+        currentUser = auth.currentUser;
+        currentUserId = currentUser.uid;
+        isLoggedIn = true;
+        document.getElementById('authOverlay').style.display = 'none';
+        loadUserProfile();
+        loadGameData();
+        render();
     }
 
     render();
