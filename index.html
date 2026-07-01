@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brawl Stars — Gun.js синхронизация</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Brawl Stars — Gun.js</title>
     <script src="https://cdn.jsdelivr.net/npm/gun@0.9.99/gun.js"></script>
     <style>
-        /* ТУТ ВЕСЬ CSS, КОТОРЫЙ Я ДАВАЛ РАНЕЕ (вставь сюда) */
+        /* ===== ВЕСЬ ТВОЙ CSS ТУТ (вставь свой) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         html, body { height: 100%; width: 100%; background: #0b0b1a; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .app { width: 100%; max-width: 430px; height: 100vh; max-height: 860px; background: #14142e; padding: 20px 16px; display: flex; flex-direction: column; }
@@ -21,6 +21,7 @@
         .gun-panel { background: #0f0f2a; border-radius: 20px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #f5c84244; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
         .gun-panel .status { color: #aaaacc; font-size: 13px; }
         .gun-panel .status .connected { color: #2ecc71; font-weight: 700; }
+        .gun-panel .status .disconnected { color: #d43f3f; font-weight: 700; }
         .gun-panel button { background: #f5c842; border: none; padding: 6px 16px; border-radius: 40px; font-weight: 700; color: #0b0b1a; cursor: pointer; font-size: 12px; }
         .menu { display: flex; justify-content: space-around; background: #0f0f28; border-radius: 60px; padding: 8px 6px; border: 1px solid #f5c84233; flex-shrink: 0; margin-top: 12px; }
         .menu button { background: transparent; border: none; color: #777799; font-weight: 700; font-size: 13px; padding: 10px 6px; border-radius: 40px; cursor: pointer; flex: 1; text-align: center; }
@@ -102,24 +103,29 @@
 </div>
 <script>
     // ============================================================
-    //  GUN.JS ИНИЦИАЛИЗАЦИЯ
+    //  GUN.JS — НОВЫЕ РАБОЧИЕ СЕРВЕРЫ
     // ============================================================
     const gun = Gun({
         peers: [
             'https://gun-manhattan.herokuapp.com/gun',
-            'https://gun-us.herokuapp.com/gun'
+            'https://gun-ams.herokuapp.com/gun',
+            'https://gun-eu-sv2.herokuapp.com/gun'
         ],
         localStorage: true,
-        radisk: true
+        radisk: true,
+        // Добавляем WebRTC для прямого P2P (обход серверов)
+        webRTC: {
+            signal: 'https://signal.gun.eco'
+        }
     });
 
+    // ============================================================
+    //  РАБОТА С ДАННЫМИ
+    // ============================================================
     const brawlersRef = gun.get('brawlers');
     const shopRef = gun.get('shopItems');
     const serverRef = gun.get('serverRunning');
 
-    // ============================================================
-    //  ДАННЫЕ
-    // ============================================================
     let brawlers = [];
     let shopItems = [];
     let serverRunning = true;
@@ -130,16 +136,33 @@
     brawlersRef.on(function(data) {
         if (data) {
             if (Array.isArray(data)) { brawlers = data; } 
-            else { const arr = []; for (let k in data) { if (data.hasOwnProperty(k)) { arr.push(data[k]); } } brawlers = arr; }
+            else { 
+                const arr = []; 
+                for (let k in data) { 
+                    if (data.hasOwnProperty(k)) { 
+                        arr.push(data[k]); 
+                    } 
+                } 
+                brawlers = arr; 
+            }
             saveLocalData();
             render();
+            updateGunUI(true);
         }
     });
 
     shopRef.on(function(data) {
         if (data) {
             if (Array.isArray(data)) { shopItems = data; } 
-            else { const arr = []; for (let k in data) { if (data.hasOwnProperty(k)) { arr.push(data[k]); } } shopItems = arr; }
+            else { 
+                const arr = []; 
+                for (let k in data) { 
+                    if (data.hasOwnProperty(k)) { 
+                        arr.push(data[k]); 
+                    } 
+                } 
+                shopItems = arr; 
+            }
             saveLocalData();
             render();
         }
@@ -197,6 +220,17 @@
     // ============================================================
     //  UI
     // ============================================================
+    function updateGunUI(connected) {
+        const badge = document.getElementById('connectionBadge');
+        if (connected) {
+            badge.className = 'online-badge';
+            badge.textContent = '🟢 GUN';
+        } else {
+            badge.className = 'offline-badge';
+            badge.textContent = '🔴 GUN';
+        }
+    }
+
     const content = document.getElementById('content');
     const menuBtns = document.querySelectorAll('.menu button');
     let currentMainTab = 'brawlers';
@@ -408,7 +442,12 @@
     };
     window.startServer = function() { serverRunning = true; saveLocalData(); saveServerToGun(); render(); };
     window.stopServer = function() { serverRunning = false; saveLocalData(); saveServerToGun(); render(); };
-    window.forceSync = function() { saveBrawlersToGun(); saveShopToGun(); saveServerToGun(); alert('✅ Синхронизация выполнена!'); };
+    window.forceSync = function() { 
+        saveBrawlersToGun(); 
+        saveShopToGun(); 
+        saveServerToGun(); 
+        alert('✅ Данные отправлены в сеть Gun.js'); 
+    };
 
     // ============================================================
     //  МЕНЮ
@@ -429,4 +468,4 @@
     render();
 </script>
 </body>
-</html>
+    </html>
