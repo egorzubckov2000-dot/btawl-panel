@@ -577,6 +577,14 @@
             transform: scale(1.05);
             box-shadow: 0 0 30px #4fc3f766;
         }
+        .battle-actions .ability {
+            background: #9b59b6;
+            color: #fff;
+        }
+        .battle-actions .ability:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #9b59b666;
+        }
         .battle-actions button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -2086,11 +2094,11 @@
         }
 
         // ============================================================
-        //  БОЕВАЯ СИСТЕМА
+        //  НОВАЯ БОЕВАЯ СИСТЕМА
         // ============================================================
 
         function getBrawlerStats(brawler, level) {
-            if (!brawler) return { damage: 0, hp: 0 };
+            if (!brawler) return { damage: 0, hp: 0, dodge: 0 };
             const minDamage = brawler.minDamage || 100;
             const maxDamage = brawler.maxDamage || 200;
             const minHp = brawler.minHp || 400;
@@ -2098,7 +2106,8 @@
             const progress = (level - 1) / 9;
             const damage = Math.round(minDamage + (maxDamage - minDamage) * progress);
             const hp = Math.round(minHp + (maxHp - minHp) * progress);
-            return { damage, hp };
+            const dodge = Math.round(5 + progress * 15);
+            return { damage, hp, dodge };
         }
 
         function getUpgradeCost(level) {
@@ -2250,6 +2259,9 @@
                 player1MaxHP: myStats.hp,
                 player1Damage: myStats.damage,
                 player1Power: myLevel,
+                player1Dodge: myStats.dodge,
+                player1Shield: false,
+                player1AbilityCooldown: 0,
                 player2Id: opponentData.playerId,
                 player2Name: opponentData.name || 'Противник',
                 player2Brawler: opponentData.brawler,
@@ -2257,6 +2269,9 @@
                 player2MaxHP: oppStats.hp,
                 player2Damage: oppStats.damage,
                 player2Power: oppLevel,
+                player2Dodge: oppStats.dodge,
+                player2Shield: false,
+                player2AbilityCooldown: 0,
                 currentTurn: 'player1',
                 started: Date.now(),
                 finished: false,
@@ -2308,7 +2323,34 @@
                     (battleData.currentTurn === 'player2' && battleData.player2Id.startsWith('bot_'));
                 if (!isBotTurn) return;
 
-                const action = Math.random() < 0.7 ? 'attack' : 'defend';
+                const isPlayer1Bot = battleData.currentTurn === 'player1';
+                const botHP = isPlayer1Bot ? battleData.player1HP : battleData.player2HP;
+                const botMaxHP = isPlayer1Bot ? battleData.player1MaxHP : battleData.player2MaxHP;
+                const botHPPercent = botHP / botMaxHP;
+                const playerHP = isPlayer1Bot ? battleData.player2HP : battleData.player1HP;
+                const playerMaxHP = isPlayer1Bot ? battleData.player2MaxHP : battleData.player1MaxHP;
+                const playerHPPercent = playerHP / playerMaxHP;
+                const botCooldown = isPlayer1Bot ? battleData.player1AbilityCooldown : battleData.player2AbilityCooldown;
+
+                let action;
+                const rand = Math.random();
+
+                if (botHPPercent < 0.25) {
+                    action = 'defend';
+                } else if (botCooldown <= 0 && playerHPPercent < 0.4 && rand < 0.5) {
+                    action = 'ability';
+                } else if (playerHPPercent < 0.2 && rand < 0.7) {
+                    action = 'attack';
+                } else {
+                    const actions = ['attack', 'attack', 'attack', 'defend', 'ability'];
+                    if (botCooldown > 0) {
+                        const available = ['attack', 'attack', 'attack', 'defend'];
+                        action = available[Math.floor(Math.random() * available.length)];
+                    } else {
+                        action = actions[Math.floor(Math.random() * actions.length)];
+                    }
+                }
+
                 const move = {
                     action: action,
                     timestamp: Date.now(),
@@ -2322,37 +2364,93 @@
             if (!battleData || battleData.finished) return;
 
             const isPlayer1 = battleData.currentTurn === 'player1';
-            const isPlayerTurn = isPlayer1 ? battleData.player1Id === move.playerId : battleData.player2Id === move
-            .playerId;
+            const isPlayerTurn = isPlayer1 ? battleData.player1Id === move.playerId : battleData.player2Id === move.playerId;
             if (!isPlayerTurn) return;
 
             let damage = 0;
             let isCrit = false;
+            let isDodge = false;
             const attackerName = isPlayer1 ? battleData.player1Name : battleData.player2Name;
             const defenderName = isPlayer1 ? battleData.player2Name : battleData.player1Name;
+            const attackerDamage = isPlayer1 ? battleData.player1Damage : battleData.player2Damage;
+            const defenderDodge = isPlayer1 ? battleData.player2Dodge : battleData.player1Dodge;
+            const defenderShield = isPlayer1 ? battleData.player2Shield : battleData.player1Shield;
+
+            if (isPlayer1) {
+                if (battleData.player1AbilityCooldown > 0) battleData.player1AbilityCooldown--;
+                if (battleData.player2AbilityCooldown > 0) battleData.player2AbilityCooldown--;
+            } else {
+                if (battleData.player2AbilityCooldown > 0) battleData.player2AbilityCooldown--;
+                if (battleData.player1AbilityCooldown > 0) battleData.player1AbilityCooldown--;
+            }
 
             if (move.action === 'attack') {
-                const baseDamage = isPlayer1 ? battleData.player1Damage : battleData.player2Damage;
-                isCrit = Math.random() < 0.2;
-                const critMultiplier = isCrit ? 1.5 : 1;
-                const variance = 0.85 + Math.random() * 0.3;
-                damage = Math.round(baseDamage * variance * critMultiplier);
-
-                battleData.log.push(`💥 ${attackerName} нанёс ${damage} урона ${defenderName}${isCrit ? ' 💥 КРИТ!' : ''}`);
-
-                if (isPlayer1) {
-                    battleData.player2HP = Math.max(0, battleData.player2HP - damage);
+                if (Math.random() * 100 < defenderDodge) {
+                    isDodge = true;
+                    battleData.log.push(`💨 ${defenderName} уклонился от атаки!`);
                 } else {
-                    battleData.player1HP = Math.max(0, battleData.player1HP - damage);
+                    isCrit = Math.random() < 0.2;
+                    const critMultiplier = isCrit ? 1.5 : 1;
+                    const variance = 0.85 + Math.random() * 0.3;
+                    damage = Math.round(attackerDamage * variance * critMultiplier);
+
+                    if (defenderShield) {
+                        damage = Math.round(damage * 0.5);
+                        battleData.log.push(`🛡️ Щит ${defenderName} заблокировал часть урона!`);
+                        if (isPlayer1) battleData.player2Shield = false;
+                        else battleData.player1Shield = false;
+                    }
+
+                    battleData.log.push(`💥 ${attackerName} нанёс ${damage} урона ${defenderName}${isCrit ? ' 💥 КРИТ!' : ''}`);
+
+                    if (isPlayer1) {
+                        battleData.player2HP = Math.max(0, battleData.player2HP - damage);
+                    } else {
+                        battleData.player1HP = Math.max(0, battleData.player1HP - damage);
+                    }
                 }
             } else if (move.action === 'defend') {
-                const heal = Math.floor((isPlayer1 ? battleData.player1MaxHP : battleData.player2MaxHP) * 0.12);
+                const heal = Math.floor((isPlayer1 ? battleData.player1MaxHP : battleData.player2MaxHP) * 0.15);
                 if (isPlayer1) {
                     battleData.player1HP = Math.min(battleData.player1MaxHP, battleData.player1HP + heal);
+                    battleData.player1Shield = true;
                 } else {
                     battleData.player2HP = Math.min(battleData.player2MaxHP, battleData.player2HP + heal);
+                    battleData.player2Shield = true;
                 }
-                battleData.log.push(`🛡️ ${attackerName} восстановил ${heal} HP`);
+                battleData.log.push(`🛡️ ${attackerName} восстановил ${heal} HP и поставил щит!`);
+            } else if (move.action === 'ability') {
+                const abilityCooldown = isPlayer1 ? battleData.player1AbilityCooldown : battleData.player2AbilityCooldown;
+                if (abilityCooldown > 0) {
+                    battleData.log.push(`⏳ ${attackerName} пытался использовать способность, но она на перезарядке!`);
+                } else {
+                    if (isPlayer1) battleData.player1AbilityCooldown = 3;
+                    else battleData.player2AbilityCooldown = 3;
+
+                    isCrit = Math.random() < 0.3;
+                    const critMultiplier = isCrit ? 1.5 : 1;
+                    const variance = 0.9 + Math.random() * 0.2;
+                    damage = Math.round(attackerDamage * 2 * variance * critMultiplier);
+
+                    if (Math.random() * 100 < defenderDodge) {
+                        isDodge = true;
+                        battleData.log.push(`💨 ${defenderName} уклонился от сильного удара!`);
+                    } else {
+                        if (defenderShield) {
+                            damage = Math.round(damage * 0.5);
+                            battleData.log.push(`🛡️ Щит ${defenderName} заблокировал часть урона!`);
+                            if (isPlayer1) battleData.player2Shield = false;
+                            else battleData.player1Shield = false;
+                        }
+                        battleData.log.push(`⚡ ${attackerName} нанёс СИЛЬНЫЙ УДАР (${damage} урона) ${defenderName}${isCrit ? ' 💥 КРИТ!' : ''}`);
+
+                        if (isPlayer1) {
+                            battleData.player2HP = Math.max(0, battleData.player2HP - damage);
+                        } else {
+                            battleData.player1HP = Math.max(0, battleData.player1HP - damage);
+                        }
+                    }
+                }
             }
 
             if (battleData.player1HP <= 0 || battleData.player2HP <= 0) {
@@ -2400,21 +2498,34 @@
                 return;
             }
 
+            if (action === 'ability') {
+                const cooldown = battleData.currentTurn === 'player1' ? battleData.player1AbilityCooldown : battleData
+                    .player2AbilityCooldown;
+                if (cooldown > 0) {
+                    alert(`⏳ Способность перезаряжается! Осталось ${cooldown} ходов.`);
+                    return;
+                }
+            }
+
             const attackBtn = document.querySelector('.attack');
             const defendBtn = document.querySelector('.defend');
+            const abilityBtn = document.querySelector('.ability');
             if (attackBtn) attackBtn.disabled = true;
             if (defendBtn) defendBtn.disabled = true;
+            if (abilityBtn) abilityBtn.disabled = true;
 
             const move = { action, timestamp: Date.now(), playerId: currentUserId };
             db.ref('battles/' + battleId + '/moves').push(move).then(() => {
                 setTimeout(() => {
                     if (attackBtn) attackBtn.disabled = false;
                     if (defendBtn) defendBtn.disabled = false;
+                    if (abilityBtn) abilityBtn.disabled = false;
                 }, 500);
             }).catch(err => {
                 console.error('❌ Ошибка:', err);
                 if (attackBtn) attackBtn.disabled = false;
                 if (defendBtn) defendBtn.disabled = false;
+                if (abilityBtn) abilityBtn.disabled = false;
             });
         }
 
@@ -2533,6 +2644,8 @@
                 const oppMaxHP = isPlayer1 ? battleData.player2MaxHP : battleData.player1MaxHP;
                 const myPower = isPlayer1 ? battleData.player1Power : battleData.player2Power;
                 const oppPower = isPlayer1 ? battleData.player2Power : battleData.player1Power;
+                const myCooldown = isPlayer1 ? battleData.player1AbilityCooldown : battleData.player2AbilityCooldown;
+                const myShield = isPlayer1 ? battleData.player1Shield : battleData.player2Shield;
 
                 const myHPPercent = Math.round((myHP / myMaxHP) * 100);
                 const oppHPPercent = Math.round((oppHP / oppMaxHP) * 100);
@@ -2548,7 +2661,10 @@
                         if (log.includes('КРИТ')) cls = 'crit';
                         if (log.includes('восстановил')) cls = 'heal';
                         if (log.includes('ПОБЕДИЛ')) cls = 'win';
-                        if (log.includes('заблокировал')) cls = 'heal';
+                        if (log.includes('Щит')) cls = 'heal';
+                        if (log.includes('уклонился')) cls = 'heal';
+                        if (log.includes('СИЛЬНЫЙ')) cls = 'crit';
+                        if (log.includes('⏳')) cls = 'heal';
                         return `<div class="log-entry ${cls}">${log}</div>`;
                     }).join('');
                 }
@@ -2557,11 +2673,13 @@
                         <div class="pvp-container">
                             <div class="battle-status">
                                 ${isMyTurn ? '🔥 <span class="fighting">Ваш ход!</span>' : '⏳ <span class="waiting">Ход противника...</span>'}
+                                ${myShield ? ' 🛡️ ЩИТ АКТИВЕН!' : ''}
+                                ${myCooldown > 0 ? ` ⏳ Перезарядка: ${myCooldown}` : ' ⚡ Способность готова!'}
                             </div>
                             <div class="battle-field">
                                 <div class="battle-player ${isMyTurn ? 'active' : ''}">
                                     <span class="brawler-icon">⚡</span>
-                                    <div class="name">${myName} ${isPlayer1 ? '(Вы)' : ''}</div>
+                                    <div class="name">${myName} ${isPlayer1 ? '(Вы)' : ''} ${myShield ? '🛡️' : ''}</div>
                                     <div class="power">⚡ Уровень ${myPower}</div>
                                     <div class="hp">❤️ ${myHP}/${myMaxHP}</div>
                                     <div class="hp-bar">
@@ -2582,6 +2700,9 @@
                             <div class="battle-actions">
                                 <button class="attack" onclick="makePvpMove('attack')" ${!isMyTurn ? 'disabled' : ''}>⚔️ Атака</button>
                                 <button class="defend" onclick="makePvpMove('defend')" ${!isMyTurn ? 'disabled' : ''}>🛡️ Защита</button>
+                                <button class="ability" onclick="makePvpMove('ability')" ${!isMyTurn || myCooldown > 0 ? 'disabled' : ''}>
+                                    ⚡ Удар ${myCooldown > 0 ? `(${myCooldown})` : ''}
+                                </button>
                             </div>
                             <div class="battle-log">${logHtml}</div>
                         </div>
@@ -3396,24 +3517,20 @@
         //  ПРИВЯЗКА КНОПОК
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
-            // Авторизация
             document.getElementById('loginBtn').addEventListener('click', loginWithUsername);
             document.getElementById('registerBtn').addEventListener('click', registerWithUsername);
             document.getElementById('checkPasswordBtn').addEventListener('click', checkPassword);
             document.getElementById('newAccountBtn').addEventListener('click', createNewAccount);
             document.getElementById('appealBtn').addEventListener('click', appealBan);
 
-            // Пароль админки по Enter
             document.getElementById('passwordInput').addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') { checkPassword(); }
             });
 
-            // Чат по Enter
             document.getElementById('chatInput')?.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') { sendMessage(); }
             });
 
-            // Меню
             menuBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     const tab = this.dataset.tab;
