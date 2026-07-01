@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Brawl Stars — PvP с ботами</title>
+    <title>Brawl Stars</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <style>
-        /* ===== ВСЕ СТИЛИ (СОКРАЩЕННО) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -1586,8 +1588,8 @@
         <div class="error" id="authError">❌ Ошибка</div>
         <div class="success" id="authSuccess">✅ Успешно!</div>
         <div class="btn-group">
-            <button class="login-btn" onclick="login()">🔑 Войти</button>
-            <button class="register-btn" onclick="register()">📝 Регистрация</button>
+            <button class="login-btn" onclick="window.login()">🔑 Войти</button>
+            <button class="register-btn" onclick="window.register()">📝 Регистрация</button>
         </div>
     </div>
 </div>
@@ -1698,9 +1700,9 @@
     let profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false, password: '' };
 
     // ============================================================
-    //  АВТОРИЗАЦИЯ
+    //  АВТОРИЗАЦИЯ (ГЛОБАЛЬНЫЕ ФУНКЦИИ)
     // ============================================================
-    function register() {
+    window.register = function() {
         const nick = document.getElementById('authNick').value.trim();
         const pass = document.getElementById('authPassword').value.trim();
         const errorEl = document.getElementById('authError');
@@ -1750,9 +1752,9 @@
                 document.getElementById('authPassword').value = '';
             });
         });
-    }
+    };
 
-    function login() {
+    window.login = function() {
         const nick = document.getElementById('authNick').value.trim();
         const pass = document.getElementById('authPassword').value.trim();
         const errorEl = document.getElementById('authError');
@@ -1802,19 +1804,7 @@
             loadGameData();
             render();
         });
-    }
-
-    function logout() {
-        if (confirm('Выйти из аккаунта?')) {
-            localStorage.removeItem('brawl_playerId');
-            currentPlayerId = null;
-            isLoggedIn = false;
-            profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false, password: '' };
-            document.getElementById('authOverlay').style.display = 'flex';
-            document.getElementById('authSubtitle').textContent = 'Войдите или зарегистрируйтесь';
-            render();
-        }
-    }
+    };
 
     // ============================================================
     //  НАСТРОЙКИ СЕРВЕРА
@@ -2573,7 +2563,7 @@
         render(); };
 
     // ============================================================
-    //  МАГАЗИН, ВАУЧЕРЫ, ЧАТ (СОКРАЩЕННО)
+    //  МАГАЗИН, ВАУЧЕРЫ, ЧАТ
     // ============================================================
     window.buyItem = function(name) {
         if (checkBan() || !currentPlayerId) return;
@@ -2672,7 +2662,8 @@
         document.querySelector('[data-tab="profile"]').classList.add('active');
     }
 
-    // ===== ЧАТ =====    function renderChat(cloudHtml) {
+    // ===== ЧАТ =====
+    function renderChat(cloudHtml) {
         const html = cloudHtml +
             `
                 <div class="chat-container">
@@ -2845,7 +2836,7 @@
     };
 
     // ============================================================
-    //  АДМИНКА (ПОЛНАЯ)
+    //  АДМИНКА
     // ============================================================
     let playersList = [];
 
@@ -3360,6 +3351,21 @@
         checkServerStatus();
         render();
     };
+
+    // ============================================================
+    //  ВЫХОД
+    // ============================================================
+    function logout() {
+        if (confirm('Выйти из аккаунта?')) {
+            localStorage.removeItem('brawl_playerId');
+            currentPlayerId = null;
+            isLoggedIn = false;
+            profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false, password: '' };
+            document.getElementById('authOverlay').style.display = 'flex';
+            document.getElementById('authSubtitle').textContent = 'Войдите или зарегистрируйтесь';
+            render();
+        }
+    }
 
     // ============================================================
     //  МЕНЮ
