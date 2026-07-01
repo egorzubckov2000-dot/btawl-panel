@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
+        /* ===== ВСЕ СТИЛИ (СОКРАЩЕННО) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -1273,6 +1274,7 @@
             animation: fadeIn 0.4s ease;
         }
         .password-box {
+            position: relative;
             background: #1a1a3a;
             padding: 30px 24px;
             border-radius: 30px;
@@ -1281,6 +1283,21 @@
             max-width: 320px;
             width: 90%;
             animation: scaleIn 0.4s ease;
+        }
+        .password-box .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            background: transparent;
+            border: none;
+            color: #aaaacc;
+            font-size: 24px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .password-box .close-btn:hover {
+            color: #fff;
+            transform: rotate(90deg);
         }
         .password-box h2 {
             color: #f5c842;
@@ -1549,6 +1566,7 @@
 <!-- ===== ПАРОЛЬ АДМИНКИ ===== -->
 <div class="password-overlay" id="passwordOverlay">
     <div class="password-box">
+        <button class="close-btn" onclick="closePasswordModal()">✕</button>
         <h2>🔒 Админ-панель</h2>
         <p>Введите пароль для доступа</p>
         <input type="password" id="passwordInput" placeholder="Введите пароль" />
@@ -1559,7 +1577,14 @@
 
 <script>
     // ============================================================
-    //  ПАРОЛЬ АДМИНКИ (С СОХРАНЕНИЕМ)
+    //  ЗАКРЫТИЕ ОКНА ПАРОЛЯ
+    // ============================================================
+    function closePasswordModal() {
+        document.getElementById('passwordOverlay').style.display = 'none';
+    }
+
+    // ============================================================
+    //  ПАРОЛЬ АДМИНКИ
     // ============================================================
     const ADMIN_PASSWORD = 'admin123';
     let isAdmin = localStorage.getItem('brawl_isAdmin') === 'true';
@@ -2643,7 +2668,7 @@
     }
 
     // ============================================================
-    //  АДМИНКА
+    //  АДМИНКА (НОВАЯ ВЕРСИЯ С ВЫДАЧЕЙ КУБКОВ И УДАЛЕНИЕМ)
     // ============================================================
     let playersList = [];
 
@@ -2655,21 +2680,21 @@
                     id: key,
                     ...players[key]
                 }));
-                playersList.sort((a, b) => (a.name || 'Аноним').localeCompare(b.name || 'Аноним'));
+                playersList.sort((a, b) => (b.trophies || 0) - (a.trophies || 0));
                 updatePlayerSelects();
             }
         });
     }
 
     function updatePlayerSelects() {
-        const selects = ['adminPlayerSelect', 'banPlayerSelect', 'unbanPlayerSelect'];
+        const selects = ['adminPlayerSelect', 'banPlayerSelect', 'unbanPlayerSelect', 'adminTrophySelect', 'adminDeleteSelect'];
         selects.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 const currentVal = el.value;
                 el.innerHTML = '<option value="">-- Выберите игрока --</option>';
                 playersList.forEach(p => {
-                    const label = `${p.name || 'Аноним'} (${p.id})`;
+                    const label = `${p.name || 'Аноним'} (🏆 ${p.trophies || 0})`;
                     el.innerHTML += `<option value="${p.id}">${label}</option>`;
                 });
                 if (currentVal) el.value = currentVal;
@@ -2677,6 +2702,7 @@
         });
     }
 
+    // ===== ВЫДАЧА РЕСУРСОВ =====
     window.adminGiveResources = function() {
         const select = document.getElementById('adminPlayerSelect');
         const playerId = select.value;
@@ -2703,6 +2729,47 @@
         });
     };
 
+    // ===== ВЫДАЧА КУБКОВ =====
+    window.adminGiveTrophies = function() {
+        const select = document.getElementById('adminTrophySelect');
+        const playerId = select.value;
+        const amount = parseInt(document.getElementById('adminTrophyAmount').value) || 0;
+
+        if (!playerId) return alert('Выберите игрока!');
+        if (amount <= 0) return alert('Введите количество кубков!');
+
+        db.ref('players/' + playerId).once('value').then((snap) => {
+            const player = snap.val();
+            if (!player) return alert('❌ Игрок не найден!');
+
+            player.trophies = (player.trophies || 0) + amount;
+            db.ref('players/' + playerId).set(player);
+            alert(`✅ Выдано ${amount} 🏆 кубков игроку ${player.name || playerId}`);
+            document.getElementById('adminTrophyAmount').value = '';
+            loadPlayersList();
+        });
+    };
+
+    // ===== УДАЛЕНИЕ АККАУНТА =====
+    window.adminDeleteAccount = function() {
+        const select = document.getElementById('adminDeleteSelect');
+        const playerId = select.value;
+        if (!playerId) return alert('Выберите игрока!');
+
+        db.ref('players/' + playerId).once('value').then((snap) => {
+            const player = snap.val();
+            if (!player) return alert('❌ Игрок не найден!');
+
+            if (confirm(`УДАЛИТЬ аккаунт игрока ${player.name || playerId}? Это действие НЕОБРАТИМО!`)) {
+                db.ref('players/' + playerId).remove();
+                alert(`✅ Аккаунт ${player.name || playerId} удалён!`);
+                loadPlayersList();
+                render();
+            }
+        });
+    };
+
+    // ===== БАН/РАЗБАН =====
     window.adminBanPlayer = function() {
         const select = document.getElementById('banPlayerSelect');
         const playerId = select.value;
@@ -2875,6 +2942,24 @@
                         <input type="number" id="adminResourceAmount" placeholder="Количество" value="100">
                         <button class="submit-btn" onclick="adminGiveResources()">💰 Выдать</button>
                     </div>
+                    
+                    <div class="form-card">
+                        <h3 style="color:#f5c842;margin-bottom:10px;">🏆 Выдать кубки</h3>
+                        <select id="adminTrophySelect">
+                            <option value="">-- Загрузка игроков... --</option>
+                        </select>
+                        <input type="number" id="adminTrophyAmount" placeholder="Количество кубков" value="10">
+                        <button class="submit-btn" onclick="adminGiveTrophies()">🏆 Выдать кубки</button>
+                    </div>
+                    
+                    <div class="form-card">
+                        <h3 style="color:#d43f3f;margin-bottom:10px;">🗑️ Удалить аккаунт</h3>
+                        <select id="adminDeleteSelect">
+                            <option value="">-- Загрузка игроков... --</option>
+                        </select>
+                        <button class="submit-btn" onclick="adminDeleteAccount()" style="background:#d43f3f;color:#fff;">🗑️ УДАЛИТЬ АККАУНТ</button>
+                    </div>
+                    
                     <div class="form-card">
                         <h3 style="color:#d43f3f;margin-bottom:10px;">🚫 Бан игрока</h3>
                         <select id="banPlayerSelect">
@@ -2891,7 +2976,7 @@
                     </div>
                 `;
         } else if (adminSubTab === 'leaderboard') {
-            html += `<h3 style="color:#f5c842;margin-bottom:10px;">🏆 Лидерборд</h3><div id="leaderboardContainer"></div>`;
+            html += `<h3 style="color:#f5c842;margin-bottom:10px;">🏆 Топ по кубкам</h3><div id="leaderboardContainer"></div>`;
             db.ref('players').once('value').then((snapshot) => {
                 const players = snapshot.val();
                 if (players) {
