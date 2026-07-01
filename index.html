@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
+        /* ===== ВСЕ СТИЛИ (ТЕ ЖЕ) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -35,14 +36,12 @@
             position: relative;
         }
         @media (min-width:600px) {
-            .app {
-                max-width: 500px;
+            .app { max-width: 500px;
                 height: 95vh;
                 border-radius: 40px;
                 border: 1px solid #f5c84255;
                 box-shadow: 0 0 60px #f5c84222;
-                padding: 20px 18px;
-            }
+                padding: 20px 18px; }
         }
         @media (max-width:430px) {
             .app { padding: 12px 10px;
@@ -1561,7 +1560,7 @@
     let serverRunning = true;
     let currentMainTab = 'brawlers';
     let adminSubTab = 'shop';
-    let battleState = 'select'; // select | searching | fighting | result
+    let battleState = 'select';
     let selectedBrawler = null;
     let isSyncing = false;
     let selectedBrawlerForDetail = null;
@@ -1779,7 +1778,6 @@
         battleState = 'searching';
         renderBattle();
 
-        // Создаём запись о поиске
         const searchData = {
             playerId: playerId,
             name: profile.name || 'Игрок',
@@ -1788,36 +1786,29 @@
             status: 'searching'
         };
 
-        // Добавляем в очередь поиска
         searchRef = db.ref('pvp_search').push(searchData);
 
-        // Слушаем изменения в очереди
         db.ref('pvp_search').on('value', (snapshot) => {
             const searches = snapshot.val();
             if (!searches) return;
 
-            // Ищем другого игрока (не себя)
             const other = Object.keys(searches).find(key => {
                 const s = searches[key];
                 return s.playerId !== playerId && s.status === 'searching';
             });
 
             if (other) {
-                // Нашли противника!
                 const opponentData = searches[other];
-                // Удаляем оба поиска из очереди
                 db.ref('pvp_search/' + other).remove();
                 if (searchRef) {
                     db.ref('pvp_search/' + searchRef.key).remove();
                 }
                 db.ref('pvp_search').off();
 
-                // Создаём бой
                 startPvpBattle(opponentData);
             }
         });
 
-        // Таймаут через 30 секунд (если никто не нашёлся)
         searchTimeout = setTimeout(() => {
             if (battleState === 'searching') {
                 cancelSearch();
@@ -1838,7 +1829,7 @@
     }
 
     // ============================================================
-    //  PVP БОЙ
+    //  PVP БОЙ (ИСПРАВЛЕНО)
     // ============================================================
     function startPvpBattle(opponentData) {
         const myBrawler = brawlers.find(b => b.name === selectedBrawler);
@@ -1874,12 +1865,11 @@
             log: ['⚔️ Бой начался!']
         };
 
-        // Сохраняем в Firebase
         db.ref('battles/' + battleId).set(battleData);
         battleState = 'fighting';
         renderBattle();
 
-        // Подписываемся на обновления боя
+        // Слушаем обновления боя
         db.ref('battles/' + battleId).on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -1895,14 +1885,15 @@
         db.ref('battles/' + battleId + '/moves').on('child_added', (snapshot) => {
             const move = snapshot.val();
             if (battleData && !battleData.finished) {
-                // Проверяем, чей ход
-                const isMyTurn = battleData.currentTurn === 'player1' && battleData.player1Id === playerId;
-                const isOppTurn = battleData.currentTurn === 'player2' && battleData.player2Id === playerId;
-                // Обрабатываем ход только если это ход противника
-                if ((battleData.currentTurn === 'player2' && battleData.player1Id === playerId) ||
-                    (battleData.currentTurn === 'player1' && battleData.player2Id === playerId)) {
-                    processPvpMove(move);
-                }
+                // Проверяем, чей ход и кто отправил
+                const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === playerId) ||
+                    (battleData.currentTurn === 'player2' && battleData.player2Id === playerId);
+
+                // Если это мой ход — игнорируем (мы уже отправили свой ход)
+                if (isMyTurn) return;
+
+                // Обрабатываем ход противника
+                processPvpMove(move);
             }
         });
     }
@@ -1942,14 +1933,12 @@
             }
         }
 
-        // Проверяем победу
         if (battleData.player1HP <= 0 || battleData.player2HP <= 0) {
             battleData.finished = true;
             battleData.winner = battleData.player1HP > 0 ? 'player1' : 'player2';
             const winnerName = battleData.winner === 'player1' ? battleData.player1Name : battleData.player2Name;
             battleData.log.push(`🏆 ${winnerName} победил!`);
 
-            // Начисляем кубки победителю
             if (battleData.winner === 'player1' && battleData.player1Id === playerId) {
                 profile.trophies = (profile.trophies || 0) + 10;
                 autoSync();
@@ -1962,7 +1951,6 @@
             return;
         }
 
-        // Меняем ход
         battleData.currentTurn = isPlayer1 ? 'player2' : 'player1';
         db.ref('battles/' + battleId).set(battleData);
     }
@@ -1973,15 +1961,20 @@
         db.ref('battles/' + battleId).off();
     }
 
+    // ===== ОТПРАВКА ХОДА (ИСПРАВЛЕНО) =====
     function makePvpMove(action) {
         if (!battleData || battleData.finished) return;
 
+        // Проверяем, чей сейчас ход
         const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === playerId) ||
             (battleData.currentTurn === 'player2' && battleData.player2Id === playerId);
 
-        if (!isMyTurn) return;
+        if (!isMyTurn) {
+            alert('⏳ Сейчас не ваш ход!');
+            return;
+        }
 
-        const move = { action, timestamp: Date.now() };
+        const move = { action: action, timestamp: Date.now() };
         db.ref('battles/' + battleId + '/moves').push(move);
     }
 
@@ -2279,7 +2272,42 @@
         document.querySelector('[data-tab="shop"]').classList.add('active');
     }
 
-    // ===== ПРОФИЛЬ =====
+    // ===== ПОКУПКА =====
+    window.buyItem = function(name) {
+        if (checkBan()) return;
+        const item = shopItems.find(i => i.name === name);
+        if (!item) return alert('Товар не найден!');
+        const isFree = item.free === true;
+
+        if (item.category === 'brawler') {
+            if (profile.brawlers && profile.brawlers.includes(item.brawlerName)) {
+                return alert(`⚠️ У вас уже есть боец ${item.brawlerName}!`);
+            }
+            if (!isFree && profile.gems < item.cost) {
+                return alert(`❌ Не хватает гемов! Нужно ${item.cost} 💎, у вас ${profile.gems}`);
+            }
+            if (!isFree) { profile.gems -= item.cost; }
+            if (!profile.brawlers) profile.brawlers = [];
+            profile.brawlers.push(item.brawlerName);
+            alert(`✅ Вы купили бойца ${item.brawlerName}${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
+            autoSync();
+            render();
+        } else if (item.category === 'resources') {
+            if (item.resourceType === 'gems') {
+                profile.gems += item.amount;
+                alert(`✅ Вы получили ${item.amount} 💎 Гемов${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
+            } else if (item.resourceType === 'coins') {
+                profile.coins += item.amount;
+                alert(`✅ Вы получили ${item.amount} 🪙 Монет${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
+            }
+            autoSync();
+            render();
+        } else {
+            alert(`✅ Вы купили: ${name}!`);
+        }
+    };
+
+    // ===== ПРОФИЛЬ (С СОХРАНЕНИЕМ НИКА) =====
     function renderProfile(cloudHtml) {
         let html = cloudHtml + `
             <div class="profile-card">
@@ -2337,139 +2365,8 @@
     }
 
     // ============================================================
-    //  АДМИНКА (СОКРАЩЕННО)
+    //  ВАУЧЕРЫ, ЧАТ (ИСПРАВЛЕНО)
     // ============================================================
-    let playersList = [];
-
-    function loadPlayersList() {
-        db.ref('players').once('value').then((snapshot) => {
-            const players = snapshot.val();
-            if (players) {
-                playersList = Object.keys(players).map(key => ({
-                    id: key,
-                    ...players[key]
-                }));
-                playersList.sort((a, b) => (a.name || 'Аноним').localeCompare(b.name || 'Аноним'));
-                updatePlayerSelects();
-            }
-        });
-    }
-
-    function updatePlayerSelects() {
-        const selects = ['adminPlayerSelect', 'banPlayerSelect', 'unbanPlayerSelect'];
-        selects.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                const currentVal = el.value;
-                el.innerHTML = '<option value="">-- Выберите игрока --</option>';
-                playersList.forEach(p => {
-                    const label = `${p.name || 'Аноним'} (${p.id})`;
-                    el.innerHTML += `<option value="${p.id}">${label}</option>`;
-                });
-                if (currentVal) el.value = currentVal;
-            }
-        });
-    }
-
-    window.adminGiveResources = function() {
-        const select = document.getElementById('adminPlayerSelect');
-        const playerId = select.value;
-        const resourceType = document.getElementById('adminResourceType').value;
-        const amount = parseInt(document.getElementById('adminResourceAmount').value) || 0;
-
-        if (!playerId) return alert('Выберите игрока!');
-        if (amount <= 0) return alert('Введите количество!');
-
-        db.ref('players/' + playerId).once('value').then((snap) => {
-            const player = snap.val();
-            if (!player) return alert('❌ Игрок не найден!');
-
-            if (resourceType === 'gems') {
-                player.gems = (player.gems || 0) + amount;
-            } else if (resourceType === 'coins') {
-                player.coins = (player.coins || 0) + amount;
-            }
-
-            db.ref('players/' + playerId).set(player);
-            alert(`✅ Выдано ${amount} ${resourceType === 'gems' ? '💎 гемов' : '🪙 монет'} игроку ${player.name || playerId}`);
-            document.getElementById('adminResourceAmount').value = '';
-            loadPlayersList();
-        });
-    };
-
-    window.adminBanPlayer = function() {
-        const select = document.getElementById('banPlayerSelect');
-        const playerId = select.value;
-        if (!playerId) return alert('Выберите игрока!');
-
-        db.ref('players/' + playerId).once('value').then((snap) => {
-            const player = snap.val();
-            if (!player) return alert('❌ Игрок не найден!');
-
-            if (confirm(`Забанить игрока ${player.name || playerId}?`)) {
-                player.banned = true;
-                db.ref('players/' + playerId).set(player);
-                alert(`✅ Игрок ${player.name || playerId} забанен!`);
-                loadPlayersList();
-            }
-        });
-    };
-
-    window.adminUnbanPlayer = function() {
-        const select = document.getElementById('unbanPlayerSelect');
-        const playerId = select.value;
-        if (!playerId) return alert('Выберите игрока!');
-
-        db.ref('players/' + playerId).once('value').then((snap) => {
-            const player = snap.val();
-            if (!player) return alert('❌ Игрок не найден!');
-
-            if (confirm(`Разбанить игрока ${player.name || playerId}?`)) {
-                player.banned = false;
-                db.ref('players/' + playerId).set(player);
-                alert(`✅ Игрок ${player.name || playerId} разбанен!`);
-                loadPlayersList();
-            }
-        });
-    };
-
-    // ============================================================
-    //  ПОКУПКА, ВАУЧЕРЫ, ЧАТ (КОРОТКО)
-    // ============================================================
-    window.buyItem = function(name) {
-        if (checkBan()) return;
-        const item = shopItems.find(i => i.name === name);
-        if (!item) return alert('Товар не найден!');
-        const isFree = item.free === true;
-
-        if (item.category === 'brawler') {
-            if (profile.brawlers && profile.brawlers.includes(item.brawlerName)) {
-                return alert(`⚠️ У вас уже есть боец ${item.brawlerName}!`);
-            }
-            if (!isFree && profile.gems < item.cost) {
-                return alert(`❌ Не хватает гемов! Нужно ${item.cost} 💎, у вас ${profile.gems}`);
-            }
-            if (!isFree) { profile.gems -= item.cost; }
-            if (!profile.brawlers) profile.brawlers = [];
-            profile.brawlers.push(item.brawlerName);
-            alert(`✅ Вы купили бойца ${item.brawlerName}${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
-            autoSync();
-            render();
-        } else if (item.category === 'resources') {
-            if (item.resourceType === 'gems') {
-                profile.gems += item.amount;
-                alert(`✅ Вы получили ${item.amount} 💎 Гемов${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
-            } else if (item.resourceType === 'coins') {
-                profile.coins += item.amount;
-                alert(`✅ Вы получили ${item.amount} 🪙 Монет${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
-            }
-            autoSync();
-            render();
-        } else {
-            alert(`✅ Вы купили: ${name}!`);
-        }
-    };
-
     window.generateVoucher = function() {
         const rewardType = document.getElementById('voucherRewardType').value;
         const amount = parseInt(document.getElementById('voucherAmount').value) || 0;
@@ -2603,6 +2500,103 @@
             container.scrollTop = container.scrollHeight;
         });
     }
+
+    // ============================================================
+    //  АДМИНКА (СПИСОК ИГРОКОВ)
+    // ============================================================
+    let playersList = [];
+
+    function loadPlayersList() {
+        db.ref('players').once('value').then((snapshot) => {
+            const players = snapshot.val();
+            if (players) {
+                playersList = Object.keys(players).map(key => ({
+                    id: key,
+                    ...players[key]
+                }));
+                playersList.sort((a, b) => (a.name || 'Аноним').localeCompare(b.name || 'Аноним'));
+                updatePlayerSelects();
+            }
+        });
+    }
+
+    function updatePlayerSelects() {
+        const selects = ['adminPlayerSelect', 'banPlayerSelect', 'unbanPlayerSelect'];
+        selects.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const currentVal = el.value;
+                el.innerHTML = '<option value="">-- Выберите игрока --</option>';
+                playersList.forEach(p => {
+                    const label = `${p.name || 'Аноним'} (${p.id})`;
+                    el.innerHTML += `<option value="${p.id}">${label}</option>`;
+                });
+                if (currentVal) el.value = currentVal;
+            }
+        });
+    }
+
+    window.adminGiveResources = function() {
+        const select = document.getElementById('adminPlayerSelect');
+        const playerId = select.value;
+        const resourceType = document.getElementById('adminResourceType').value;
+        const amount = parseInt(document.getElementById('adminResourceAmount').value) || 0;
+
+        if (!playerId) return alert('Выберите игрока!');
+        if (amount <= 0) return alert('Введите количество!');
+
+        db.ref('players/' + playerId).once('value').then((snap) => {
+            const player = snap.val();
+            if (!player) return alert('❌ Игрок не найден!');
+
+            if (resourceType === 'gems') {
+                player.gems = (player.gems || 0) + amount;
+            } else if (resourceType === 'coins') {
+                player.coins = (player.coins || 0) + amount;
+            }
+
+            db.ref('players/' + playerId).set(player);
+            alert(`✅ Выдано ${amount} ${resourceType === 'gems' ? '💎 гемов' : '🪙 монет'} игроку ${player.name || playerId}`);
+            document.getElementById('adminResourceAmount').value = '';
+            loadPlayersList();
+        });
+    };
+
+    window.adminBanPlayer = function() {
+        const select = document.getElementById('banPlayerSelect');
+        const playerId = select.value;
+        if (!playerId) return alert('Выберите игрока!');
+
+        db.ref('players/' + playerId).once('value').then((snap) => {
+            const player = snap.val();
+            if (!player) return alert('❌ Игрок не найден!');
+
+            if (confirm(`Забанить игрока ${player.name || playerId}?`)) {
+                player.banned = true;
+                db.ref('players/' + playerId).set(player);
+                alert(`✅ Игрок ${player.name || playerId} забанен!`);
+                loadPlayersList();
+            }
+        });
+    };
+
+    window.adminUnbanPlayer = function() {
+        const select = document.getElementById('unbanPlayerSelect');
+        const playerId = select.value;
+        if (!playerId) return alert('Выберите игрока!');
+
+        db.ref('players/' + playerId).once('value').then((snap) => {
+            const player = snap.val();
+            if (!player) return alert('❌ Игрок не найден!');
+
+            if (confirm(`Разбанить игрока ${player.name || playerId}?`)) {
+                player.banned = false;
+                db.ref('players/' + playerId).set(player);
+                alert(`✅ Игрок ${player.name || playerId} разбанен!`);
+                loadPlayersList();
+            }
+        });
+    };
 
     // ============================================================
     //  АДМИНКА (ПОЛНАЯ)
