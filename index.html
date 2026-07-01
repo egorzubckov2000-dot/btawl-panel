@@ -7,7 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== БАЗА ===== */
+        /* ===== ВСЕ СТИЛИ ===== */
         * {
             margin: 0;
             padding: 0;
@@ -59,20 +59,6 @@
                 padding: 8px 4px;
             }
         }
-        @media (max-width: 380px) {
-            .menu button {
-                font-size: 10px;
-                padding: 6px 2px;
-            }
-            .header h1 {
-                font-size: 18px;
-            }
-            .header span {
-                font-size: 10px;
-                padding: 1px 10px;
-            }
-        }
-
         .header {
             display: flex;
             justify-content: space-between;
@@ -150,7 +136,6 @@
                 border-radius: 18px;
             }
         }
-
         .cloud-panel {
             background: #0f0f2a;
             border-radius: 20px;
@@ -171,11 +156,6 @@
             color: #2ecc71;
             font-weight: 700;
         }
-        .cloud-panel .status .disconnected {
-            color: #d43f3f;
-            font-weight: 700;
-        }
-
         .menu {
             display: flex;
             justify-content: space-around;
@@ -199,18 +179,6 @@
             flex: 1;
             text-align: center;
             transition: 0.3s ease;
-            position: relative;
-        }
-        .menu button::after {
-            content: '';
-            position: absolute;
-            bottom: 2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 2px;
-            background: #f5c842;
-            transition: 0.3s ease;
         }
         .menu button.active {
             background: #f5c842;
@@ -218,15 +186,201 @@
             box-shadow: 0 0 24px #f5c84277;
             transform: scale(1.05);
         }
-        .menu button.active::after {
-            width: 0;
-        }
         .menu button:hover:not(.active) {
             color: #fff;
             transform: scale(1.05);
         }
+        .empty-state {
+            color: #8888aa;
+            text-align: center;
+            padding: 30px 0;
+            font-size: 18px;
+            margin: auto 0;
+        }
+        .empty-state span {
+            display: block;
+            font-size: 52px;
+            margin-bottom: 12px;
+            animation: bounce-icon 2s ease-in-out infinite;
+        }
+        @keyframes bounce-icon {
+            0%,
+            100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
 
-        /* ===== КАРТОЧКА БОЙЦА ===== */
+        /* ===== ОНБОРДИНГ ===== */
+        .onboarding-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            animation: fadeIn 0.5s ease;
+        }
+        .onboarding-box {
+            background: #1a1a3a;
+            padding: 30px 24px;
+            border-radius: 30px;
+            border: 2px solid #f5c842;
+            text-align: center;
+            max-width: 340px;
+            width: 90%;
+            animation: scaleIn 0.4s ease;
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .onboarding-box h2 {
+            color: #f5c842;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .onboarding-box p {
+            color: #8888aa;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .onboarding-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 40px;
+            border: 1px solid #555577;
+            background: #0f0f2a;
+            color: #eee;
+            font-size: 16px;
+            outline: none;
+            text-align: center;
+            transition: 0.3s ease;
+        }
+        .onboarding-box input:focus {
+            border-color: #f5c842;
+            box-shadow: 0 0 30px #f5c84222;
+        }
+        .onboarding-box button {
+            margin-top: 16px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 40px;
+            border: none;
+            background: #f5c842;
+            color: #0b0b1a;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .onboarding-box button:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px #f5c84255;
+        }
+
+        /* ===== БАН ===== */
+        .banned-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            animation: fadeIn 0.5s ease;
+        }
+        .banned-box {
+            background: #1a1a3a;
+            padding: 30px 24px;
+            border-radius: 30px;
+            border: 2px solid #d43f3f;
+            text-align: center;
+            max-width: 340px;
+            width: 90%;
+            animation: scaleIn 0.4s ease;
+        }
+        .banned-box .ban-icon {
+            font-size: 64px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .banned-box h2 {
+            color: #d43f3f;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .banned-box p {
+            color: #8888aa;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .banned-box .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .banned-box .btn-group button {
+            padding: 12px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .banned-box .btn-group .new-account {
+            background: #f5c842;
+            color: #0b0b1a;
+        }
+        .banned-box .btn-group .new-account:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px #f5c84255;
+        }
+        .banned-box .btn-group .appeal {
+            background: transparent;
+            color: #4fc3f7;
+            border: 2px solid #4fc3f7;
+        }
+        .banned-box .btn-group .appeal:hover {
+            transform: scale(1.03);
+            background: #4fc3f722;
+        }
+
+        /* ===== БОЙЦЫ ===== */
+        .brawler-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .brawler-item {
+            background: #0f0f2a;
+            padding: 10px 14px;
+            border-radius: 16px;
+            border-left: 4px solid #f5c842;
+            color: #eee;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s ease;
+            cursor: pointer;
+        }
+        .brawler-item:hover {
+            transform: scale(1.02);
+            border-left-color: #f5c84288;
+        }
+        .brawler-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 40px;
+            object-fit: cover;
+        }
         .brawler-detail {
             background: #0f0f2a;
             border-radius: 24px;
@@ -235,10 +389,6 @@
             animation: scaleIn 0.3s ease;
             margin-top: 8px;
             text-align: center;
-        }
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
         }
         .brawler-detail .avatar {
             font-size: 80px;
@@ -331,55 +481,8 @@
             transform: scale(1.05);
             background: #777799;
         }
-        .brawler-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .brawler-item {
-            background: #0f0f2a;
-            padding: 10px 14px;
-            border-radius: 16px;
-            border-left: 4px solid #f5c842;
-            color: #eee;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideIn 0.3s ease;
-            transition: 0.3s ease;
-            cursor: pointer;
-        }
-        .brawler-item:hover {
-            transform: scale(1.02);
-            border-left-color: #f5c84288;
-        }
-        .brawler-item img {
-            width: 32px;
-            height: 32px;
-            border-radius: 40px;
-            object-fit: cover;
-        }
 
-        .empty-state {
-            color: #8888aa;
-            text-align: center;
-            padding: 30px 0;
-            font-size: 18px;
-            margin: auto 0;
-        }
-        .empty-state span {
-            display: block;
-            font-size: 52px;
-            margin-bottom: 12px;
-            animation: bounce-icon 2s ease-in-out infinite;
-        }
-        @keyframes bounce-icon {
-            0%,
-            100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-
+        /* ===== МАГАЗИН ===== */
         .shop-grid {
             display: flex;
             flex-direction: column;
@@ -394,7 +497,6 @@
             gap: 14px;
             align-items: center;
             transition: 0.3s ease;
-            animation: slideIn 0.3s ease;
         }
         .shop-item:hover {
             transform: scale(1.02);
@@ -447,13 +549,13 @@
             box-shadow: 0 0 30px #f5c84255;
         }
 
+        /* ===== ПРОФИЛЬ ===== */
         .profile-card {
             background: #0f0f2a;
             border-radius: 24px;
             padding: 20px;
             border: 1px solid #f5c84233;
             text-align: center;
-            animation: scaleIn 0.4s ease;
         }
         .profile-card .avatar {
             font-size: 64px;
@@ -521,7 +623,7 @@
             box-shadow: 0 0 30px #f5c84255;
         }
 
-        /* Админка */
+        /* ===== АДМИНКА ===== */
         .admin-tabs {
             display: flex;
             gap: 4px;
@@ -530,15 +632,17 @@
             background: #0f0f28;
             padding: 4px;
             border-radius: 40px;
+            flex-wrap: wrap;
         }
         .admin-tabs button {
             flex: 1;
+            min-width: 40px;
             background: transparent;
             border: none;
             color: #777799;
             font-weight: 700;
-            font-size: 12px;
-            padding: 6px 0;
+            font-size: 11px;
+            padding: 6px 8px;
             border-radius: 40px;
             transition: 0.3s ease;
             cursor: pointer;
@@ -563,7 +667,6 @@
             padding: 14px;
             border-radius: 20px;
             border: 1px solid #f5c84233;
-            transition: 0.3s ease;
         }
         .form-card input,
         .form-card textarea,
@@ -636,7 +739,6 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            animation: slideIn 0.3s ease;
             transition: 0.3s ease;
         }
         .shop-item-admin:hover {
@@ -648,8 +750,6 @@
             height: 40px;
             border-radius: 40px;
             object-fit: cover;
-            background: #1a1a3a;
-            border: 2px solid #f5c84255;
         }
         .shop-item-admin .info {
             flex: 1;
@@ -680,7 +780,6 @@
             transform: scale(1.15);
             background: #ff2f2f;
         }
-
         .list-admin {
             display: flex;
             flex-direction: column;
@@ -696,7 +795,6 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            animation: slideIn 0.3s ease;
             transition: 0.3s ease;
             border-left: 4px solid #555577;
         }
@@ -737,6 +835,39 @@
             font-size: 16px;
         }
 
+        /* ===== ВАУЧЕРЫ ===== */
+        .voucher-code {
+            background: #0f0f2a;
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #f5c84244;
+            margin-top: 8px;
+        }
+        .voucher-code .code {
+            color: #f5c842;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+        .voucher-code .copy-btn {
+            background: #555577;
+            border: none;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.3s ease;
+        }
+        .voucher-code .copy-btn:hover {
+            background: #777799;
+            transform: scale(1.05);
+        }
+
+        /* ===== КНОПКИ СЕРВЕРА ===== */
         .server-btn {
             border: none;
             padding: 14px;
@@ -1012,7 +1143,6 @@
             25% { transform: translateX(-8px); }
             75% { transform: translateX(8px); }
         }
-
         .category-fields {
             display: none;
             animation: fadeIn 0.3s ease;
@@ -1070,6 +1200,30 @@
     </div>
 </div>
 
+<!-- ===== ОНБОРДИНГ ===== -->
+<div class="onboarding-overlay" id="onboardingOverlay">
+    <div class="onboarding-box">
+        <h2>👋 Добро пожаловать!</h2>
+        <p>Введите ваше имя, чтобы начать игру</p>
+        <input type="text" id="onboardingName" placeholder="Ваше имя" maxlength="20" />
+        <button onclick="finishOnboarding()">Начать игру 🚀</button>
+    </div>
+</div>
+
+<!-- ===== БАН ===== -->
+<div class="banned-overlay" id="bannedOverlay">
+    <div class="banned-box">
+        <span class="ban-icon">🚫</span>
+        <h2>Вы забанены!</h2>
+        <p>Ваш аккаунт был заблокирован администратором.</p>
+        <div class="btn-group">
+            <button class="new-account" onclick="createNewAccount()">🔄 Создать новый аккаунт</button>
+            <button class="appeal" onclick="appealBan()">📩 Подать заявку на разбан</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ПАРОЛЬ ===== -->
 <div class="password-overlay" id="passwordOverlay">
     <div class="password-box">
         <h2>🔒 Админ-панель</h2>
@@ -1081,6 +1235,9 @@
 </div>
 
 <script>
+    // ============================================================
+    //  ПАРОЛЬ
+    // ============================================================
     const ADMIN_PASSWORD = 'admin123';
     let isAdmin = false;
 
@@ -1118,9 +1275,12 @@
     try { firebase.initializeApp(firebaseConfig); } catch (e) { console.warn('Firebase уже инициализирован:', e); }
     const db = firebase.database();
 
-    // Данные
+    // ============================================================
+    //  ДАННЫЕ
+    // ============================================================
     let brawlers = [];
     let shopItems = [];
+    let vouchers = [];
     let serverRunning = true;
     let currentMainTab = 'brawlers';
     let adminSubTab = 'shop';
@@ -1133,13 +1293,16 @@
     let isSyncing = false;
     let selectedBrawlerForDetail = null;
 
+    // ID и профиль
     let playerId = localStorage.getItem('brawl_playerId');
+    let isFirstLaunch = false;
     if (!playerId) {
         playerId = 'player_' + Math.random().toString(36).substring(2, 10);
         localStorage.setItem('brawl_playerId', playerId);
+        isFirstLaunch = true;
     }
 
-    let profile = { name: 'Игрок', gems: 0, coins: 0, brawlers: [] };
+    let profile = { name: '', gems: 0, coins: 0, brawlers: [], banned: false };
 
     // ============================================================
     //  LOCALSTORAGE
@@ -1151,8 +1314,9 @@
                 const data = JSON.parse(raw);
                 brawlers = data.brawlers || [];
                 shopItems = data.shopItems || [];
+                vouchers = data.vouchers || [];
                 serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
-                profile = data.profile || { name: 'Игрок', gems: 0, coins: 0, brawlers: [] };
+                profile = data.profile || { name: '', gems: 0, coins: 0, brawlers: [], banned: false };
                 return true;
             }
         } catch (e) {}
@@ -1160,7 +1324,7 @@
     }
 
     function saveLocalData() {
-        const data = { brawlers, shopItems, serverRunning, profile };
+        const data = { brawlers, shopItems, vouchers, serverRunning, profile };
         localStorage.setItem('brawlData_firebase', JSON.stringify(data));
     }
 
@@ -1173,36 +1337,83 @@
             { name: 'Ящик x10', desc: '10 ящиков с наградами', image: '', reward: 'Ящики', category: 'resources', resourceType: 'gems', amount: 80, free: false },
             { name: 'Скин Дракон', desc: 'Эксклюзивный скин для Кольта', image: '', reward: 'Скин', category: 'brawler', brawlerName: 'Кольт', cost: 149, free: false }
         ];
+        vouchers = [];
         serverRunning = true;
-        profile = { name: 'Игрок', gems: 0, coins: 0, brawlers: [] };
+        profile = { name: '', gems: 0, coins: 0, brawlers: [], banned: false };
         saveLocalData();
     }
 
     // ============================================================
-    //  ВЫДАЧА СТАРТОВОГО БОЙЦА
+    //  ОНБОРДИНГ
     // ============================================================
-    function giveStarterBrawler() {
-        if (!profile.brawlers || profile.brawlers.length === 0) {
-            const shelly = brawlers.find(b => b.name === 'Шелли');
-            if (shelly) {
-                profile.brawlers = ['Шелли'];
-                profile.gems = 50;
-                profile.coins = 100;
-                saveLocalData();
-                console.log('🎁 Игроку выдана Шелли и стартовые ресурсы!');
-                return true;
-            }
+    function showOnboarding() {
+        if (isFirstLaunch || !profile.name) {
+            document.getElementById('onboardingOverlay').style.display = 'flex';
         }
+    }
+
+    window.finishOnboarding = function() {
+        const input = document.getElementById('onboardingName');
+        const name = input.value.trim();
+        if (!name) {
+            input.style.borderColor = '#d43f3f';
+            input.placeholder = '⚠️ Введите имя!';
+            return;
+        }
+        profile.name = name;
+        // Даём Шелли и стартовые ресурсы
+        if (!profile.brawlers || profile.brawlers.length === 0) {
+            profile.brawlers = ['Шелли'];
+            profile.gems = 50;
+            profile.coins = 100;
+        }
+        saveLocalData();
+        syncToFirebase();
+        document.getElementById('onboardingOverlay').style.display = 'none';
+        render();
+    };
+
+    document.getElementById('onboardingName').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { finishOnboarding(); }
+    });
+
+    // ============================================================
+    //  БАН
+    // ============================================================
+    function checkBan() {
+        if (profile.banned) {
+            document.getElementById('bannedOverlay').style.display = 'flex';
+            return true;
+        }
+        document.getElementById('bannedOverlay').style.display = 'none';
         return false;
     }
 
+    window.createNewAccount = function() {
+        // Генерируем новый ID
+        playerId = 'player_' + Math.random().toString(36).substring(2, 10);
+        localStorage.setItem('brawl_playerId', playerId);
+        profile = { name: '', gems: 0, coins: 0, brawlers: [], banned: false };
+        saveLocalData();
+        syncToFirebase();
+        document.getElementById('bannedOverlay').style.display = 'none';
+        isFirstLaunch = true;
+        showOnboarding();
+        render();
+    };
+
+    window.appealBan = function() {
+        alert('📩 Ваша заявка на разбан отправлена! Администратор рассмотрит её в ближайшее время.');
+        // В реальном проекте здесь был бы запрос в Firebase
+    };
+
     // ============================================================
-    //  FIREBASE СИНХРОНИЗАЦИЯ
+    //  FIREBASE
     // ============================================================
     function syncToFirebase() {
         if (isSyncing) return;
         isSyncing = true;
-        const data = { brawlers, shopItems, serverRunning, profile };
+        const data = { brawlers, shopItems, vouchers, serverRunning, profile };
         db.ref('data').set(data)
             .then(() => {
                 db.ref('players/' + playerId).set(profile);
@@ -1225,15 +1436,22 @@
                 if (JSON.stringify(localData) !== JSON.stringify(data)) {
                     brawlers = data.brawlers || [];
                     shopItems = data.shopItems || [];
+                    vouchers = data.vouchers || [];
                     serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
                     db.ref('players/' + playerId).once('value').then((snap) => {
                         const playerData = snap.val();
                         if (playerData) {
                             profile = playerData;
                         }
-                        if (!profile.brawlers || profile.brawlers.length === 0) {
-                            const given = giveStarterBrawler();
-                            if (given) { syncToFirebase(); }
+                        // Проверяем бан
+                        if (profile.banned) {
+                            document.getElementById('bannedOverlay').style.display = 'flex';
+                        } else {
+                            document.getElementById('bannedOverlay').style.display = 'none';
+                        }
+                        // Если нет имени — показываем онбординг
+                        if (!profile.name && !profile.banned) {
+                            showOnboarding();
                         }
                         saveLocalData();
                         render();
@@ -1264,7 +1482,13 @@
         }
     }
 
+    function autoSync() { saveLocalData(); syncToFirebase(); }
+
+    // ============================================================
+    //  ПОКУПКА
+    // ============================================================
     window.buyItem = function(name) {
+        if (checkBan()) return;
         const item = shopItems.find(i => i.name === name);
         if (!item) return alert('Товар не найден!');
         const isFree = item.free === true;
@@ -1297,10 +1521,167 @@
         }
     };
 
+    // ============================================================
+    //  ВАУЧЕРЫ
+    // ============================================================
+    window.generateVoucher = function() {
+        const rewardType = document.getElementById('voucherRewardType').value;
+        const amount = parseInt(document.getElementById('voucherAmount').value) || 0;
+        const brawlerName = document.getElementById('voucherBrawler').value;
+
+        if (rewardType === 'gems' && amount <= 0) return alert('Введите количество гемов!');
+        if (rewardType === 'coins' && amount <= 0) return alert('Введите количество монет!');
+        if (rewardType === 'brawler' && !brawlerName) return alert('Выберите бойца!');
+
+        const code = 'VOUCHER_' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const voucher = {
+            code,
+            rewardType,
+            amount,
+            brawlerName,
+            used: false,
+            usedBy: null,
+            createdAt: Date.now()
+        };
+        vouchers.push(voucher);
+        autoSync();
+        renderAdmin();
+        alert(`✅ Ваучер создан!\nКод: ${code}\nНаграда: ${rewardType === 'gems' ? '💎 '+amount : rewardType === 'coins' ? '🪙 '+amount : '👤 '+brawlerName}`);
+        // Показываем код
+        const container = document.getElementById('voucherResult');
+        if (container) {
+            container.innerHTML = `
+                <div class="voucher-code">
+                    <span class="code">${code}</span>
+                    <button class="copy-btn" onclick="copyVoucher('${code}')">📋 Копировать</button>
+                </div>
+            `;
+        }
+    };
+
+    window.copyVoucher = function(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            alert('✅ Код скопирован!');
+        }).catch(() => {
+            prompt('Скопируйте код вручную:', code);
+        });
+    };
+
+    window.activateVoucher = function() {
+        const codeInput = document.getElementById('voucherActivateInput');
+        const code = codeInput.value.trim().toUpperCase();
+        if (!code) return alert('Введите код ваучера!');
+
+        const voucher = vouchers.find(v => v.code === code);
+        if (!voucher) return alert('❌ Неверный код!');
+        if (voucher.used) return alert('❌ Этот ваучер уже использован!');
+
+        // Активируем
+        voucher.used = true;
+        voucher.usedBy = playerId;
+
+        if (voucher.rewardType === 'gems') {
+            profile.gems += voucher.amount;
+            alert(`✅ Вы получили ${voucher.amount} 💎 Гемов!`);
+        } else if (voucher.rewardType === 'coins') {
+            profile.coins += voucher.amount;
+            alert(`✅ Вы получили ${voucher.amount} 🪙 Монет!`);
+        } else if (voucher.rewardType === 'brawler') {
+            if (profile.brawlers && profile.brawlers.includes(voucher.brawlerName)) {
+                alert(`⚠️ У вас уже есть боец ${voucher.brawlerName}!`);
+                return;
+            }
+            if (!profile.brawlers) profile.brawlers = [];
+            profile.brawlers.push(voucher.brawlerName);
+            alert(`✅ Вы получили бойца ${voucher.brawlerName}!`);
+        }
+
+        autoSync();
+        render();
+        codeInput.value = '';
+        alert('🎉 Ваучер успешно активирован!');
+    };
+
+    // ============================================================
+    //  АДМИНКА: ВЫДАЧА РЕСУРСОВ И БАН
+    // ============================================================
+    window.adminGiveResources = function() {
+        const playerIdInput = document.getElementById('adminPlayerId');
+        const resourceType = document.getElementById('adminResourceType').value;
+        const amount = parseInt(document.getElementById('adminResourceAmount').value) || 0;
+
+        if (!playerIdInput.value.trim()) return alert('Введите ID игрока!');
+        if (amount <= 0) return alert('Введите количество!');
+
+        db.ref('players/' + playerIdInput.value.trim()).once('value').then((snap) => {
+            const player = snap.val();
+            if (!player) return alert('❌ Игрок не найден!');
+
+            if (resourceType === 'gems') {
+                player.gems = (player.gems || 0) + amount;
+            } else if (resourceType === 'coins') {
+                player.coins = (player.coins || 0) + amount;
+            }
+
+            db.ref('players/' + playerIdInput.value.trim()).set(player);
+            alert(`✅ Выдано ${amount} ${resourceType === 'gems' ? '💎 гемов' : '🪙 монет'} игроку ${player.name || playerIdInput.value.trim()}`);
+            playerIdInput.value = '';
+            document.getElementById('adminResourceAmount').value = '';
+        });
+    };
+
+    window.adminBanPlayer = function() {
+        const playerIdInput = document.getElementById('banPlayerId');
+        const id = playerIdInput.value.trim();
+        if (!id) return alert('Введите ID игрока!');
+
+        db.ref('players/' + id).once('value').then((snap) => {
+            const player = snap.val();
+            if (!player) return alert('❌ Игрок не найден!');
+
+            if (confirm(`Забанить игрока ${player.name || id}?`)) {
+                player.banned = true;
+                db.ref('players/' + id).set(player);
+                alert(`✅ Игрок ${player.name || id} забанен!`);
+                playerIdInput.value = '';
+            }
+        });
+    };
+
+    window.adminUnbanPlayer = function() {
+        const playerIdInput = document.getElementById('unbanPlayerId');
+        const id = playerIdInput.value.trim();
+        if (!id) return alert('Введите ID игрока!');
+
+        db.ref('players/' + id).once('value').then((snap) => {
+            const player = snap.val();
+            if (!player) return alert('❌ Игрок не найден!');
+
+            if (confirm(`Разбанить игрока ${player.name || id}?`)) {
+                player.banned = false;
+                db.ref('players/' + id).set(player);
+                alert(`✅ Игрок ${player.name || id} разбанен!`);
+                playerIdInput.value = '';
+            }
+        });
+    };
+
+    // ============================================================
+    //  UI
+    // ============================================================
     const content = document.getElementById('content');
     const menuBtns = document.querySelectorAll('.menu button');
 
     function render() {
+        if (checkBan()) {
+            content.innerHTML = `<div class="empty-state"><span>🚫</span>Доступ запрещён</div>`;
+            return;
+        }
+        if (!profile.name && !document.getElementById('onboardingOverlay').style.display === 'flex') {
+            showOnboarding();
+            return;
+        }
+
         const tab = currentMainTab;
         const cloudHtml = `
             <div class="cloud-panel">
@@ -1389,18 +1770,23 @@
         document.querySelector('[data-tab="brawlers"]').classList.add('active');
     }
 
-    window.openBrawlerDetail = function(name) {
-        selectedBrawlerForDetail = name;
-        render();
-    };
-    window.closeBrawlerDetail = function() {
-        selectedBrawlerForDetail = null;
-        render();
-    };
+    window.openBrawlerDetail = function(name) { selectedBrawlerForDetail = name; render(); };
+    window.closeBrawlerDetail = function() { selectedBrawlerForDetail = null; render(); };
 
     // ===== МАГАЗИН =====
     function renderShop(cloudHtml) {
         let html = cloudHtml;
+        // Поле активации ваучера
+        html += `
+            <div class="form-card" style="margin-bottom:10px;">
+                <h3 style="color:#f5c842;margin-bottom:8px;">🎟️ Активировать ваучер</h3>
+                <div style="display:flex;gap:8px;">
+                    <input type="text" id="voucherActivateInput" placeholder="Введите код" style="flex:1;margin-bottom:0;">
+                    <button class="submit-btn" onclick="activateVoucher()" style="width:auto;padding:8px 20px;">Активировать</button>
+                </div>
+            </div>
+        `;
+
         if (!shopItems.length) {
             html += `<div class="empty-state"><span>🛒</span>Магазин пуст</div>`;
         } else {
@@ -1442,6 +1828,7 @@
                     <div class="stat-item"><div class="value coins">${profile.coins}</div><div class="label">🪙 Монеты</div></div>
                 </div>
                 <button class="save-btn" onclick="saveProfile()">💾 Сохранить профиль</button>
+                <div style="margin-top:12px;font-size:11px;color:#555577;">ID: ${playerId}</div>
             </div>
         `;
         content.innerHTML = html;
@@ -1526,18 +1913,23 @@
     window.cancelSearch = function() { searchCancelled = true; clearTimeout(searchTimer); battleState = 'select'; render(); };
     window.resetBattle = function() { clearTimeout(searchTimer); battleState = 'select'; selectedBrawler = null; opponent = null; render(); };
 
-    // ===== АДМИНКА =====
+    // ============================================================
+    //  АДМИНКА
+    // ============================================================
     function renderAdmin(cloudHtml) {
         let html = cloudHtml + `
             <div class="admin-tabs">
                 <button class="${adminSubTab === 'shop' ? 'active-tab' : ''}" data-sub="shop">🛒 Магазин</button>
                 <button class="${adminSubTab === 'brawlers' ? 'active-tab' : ''}" data-sub="brawlers">🦸 Бойцы</button>
+                <button class="${adminSubTab === 'vouchers' ? 'active-tab' : ''}" data-sub="vouchers">🎟️ Ваучеры</button>
+                <button class="${adminSubTab === 'players' ? 'active-tab' : ''}" data-sub="players">👥 Игроки</button>
                 <button class="${adminSubTab === 'leaderboard' ? 'active-tab' : ''}" data-sub="leaderboard">🏆 Лидерборд</button>
                 <button class="${adminSubTab === 'settings' ? 'active-tab' : ''}" data-sub="settings">⚙️ Настройки</button>
             </div>
             <div class="admin-panel">
         `;
 
+        // ===== МАГАЗИН =====
         if (adminSubTab === 'shop') {
             html += `
                 <div class="form-card">
@@ -1570,7 +1962,10 @@
                     </div>
                 `).join('')}</div>
             `;
-        } else if (adminSubTab === 'brawlers') {
+        }
+
+        // ===== БОЙЦЫ =====
+        else if (adminSubTab === 'brawlers') {
             html += `
                 <div class="form-card">
                     <h3 style="color:#f5c842;margin-bottom:10px;">➕ Добавить бойца</h3>
@@ -1590,7 +1985,68 @@
                     </div>
                 `).join('')}</div>
             `;
-        } else if (adminSubTab === 'leaderboard') {
+        }
+
+        // ===== ВАУЧЕРЫ =====
+        else if (adminSubTab === 'vouchers') {
+            html += `
+                <div class="form-card">
+                    <h3 style="color:#f5c842;margin-bottom:10px;">🎟️ Создать ваучер</h3>
+                    <select id="voucherRewardType" onchange="toggleVoucherFields()">
+                        <option value="gems">💎 Гемы</option>
+                        <option value="coins">🪙 Монеты</option>
+                        <option value="brawler">👤 Боец</option>
+                    </select>
+                    <div id="voucherAmountField">
+                        <input type="number" id="voucherAmount" placeholder="Количество" value="100">
+                    </div>
+                    <div id="voucherBrawlerField" style="display:none;">
+                        <select id="voucherBrawler">${brawlers.map(b => `<option value="${b.name}">${b.name}</option>`).join('')}${brawlers.length === 0 ? '<option value="">Нет бойцов</option>' : ''}</select>
+                    </div>
+                    <button class="submit-btn" onclick="generateVoucher()">🎟️ Сгенерировать ваучер</button>
+                    <div id="voucherResult" style="margin-top:10px;"></div>
+                </div>
+                <div class="list-admin">
+                    <h4 style="color:#aaa;margin-bottom:6px;">📋 Созданные ваучеры</h4>
+                    ${vouchers.length === 0 ? '<div class="empty-state" style="padding:10px;font-size:14px;">Нет ваучеров</div>' : vouchers.map((v, idx) => `
+                        <div class="shop-item-admin" style="border-left-color:${v.used ? '#d43f3f' : '#2ecc71'};">
+                            <div style="width:40px;height:40px;border-radius:40px;background:#1a1a3a;display:flex;align-items:center;justify-content:center;font-size:20px;">${v.used ? '❌' : '✅'}</div>
+                            <div class="info">
+                                <div class="name">${v.code}</div>
+                                <div class="desc">${v.rewardType === 'gems' ? '💎 '+v.amount : v.rewardType === 'coins' ? '🪙 '+v.amount : '👤 '+v.brawlerName} ${v.used ? '• Использован' : '• Активен'}</div>
+                            </div>
+                            <button class="del-btn" onclick="deleteVoucher(${idx})">✕</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // ===== ИГРОКИ =====
+        else if (adminSubTab === 'players') {
+            html += `
+                <div class="form-card">
+                    <h3 style="color:#f5c842;margin-bottom:10px;">💎 Выдать ресурсы</h3>
+                    <input type="text" id="adminPlayerId" placeholder="ID игрока">
+                    <select id="adminResourceType"><option value="gems">💎 Гемы</option><option value="coins">🪙 Монеты</option></select>
+                    <input type="number" id="adminResourceAmount" placeholder="Количество" value="100">
+                    <button class="submit-btn" onclick="adminGiveResources()">💰 Выдать</button>
+                </div>
+                <div class="form-card">
+                    <h3 style="color:#d43f3f;margin-bottom:10px;">🚫 Бан игрока</h3>
+                    <input type="text" id="banPlayerId" placeholder="ID игрока">
+                    <button class="submit-btn" onclick="adminBanPlayer()" style="background:#d43f3f;color:#fff;">⛔ Забанить</button>
+                </div>
+                <div class="form-card">
+                    <h3 style="color:#2ecc71;margin-bottom:10px;">✅ Разбан игрока</h3>
+                    <input type="text" id="unbanPlayerId" placeholder="ID игрока">
+                    <button class="submit-btn" onclick="adminUnbanPlayer()" style="background:#2ecc71;">🔓 Разбанить</button>
+                </div>
+            `;
+        }
+
+        // ===== ЛИДЕРБОРД =====
+        else if (adminSubTab === 'leaderboard') {
             html += `<h3 style="color:#f5c842;margin-bottom:10px;">🏆 Лидерборд</h3><div id="leaderboardContainer"></div>`;
             db.ref('players').once('value').then((snapshot) => {
                 const players = snapshot.val();
@@ -1614,7 +2070,10 @@
                     document.getElementById('leaderboardContainer').innerHTML = `<div class="empty-state"><span>📭</span>Нет игроков</div>`;
                 }
             });
-        } else if (adminSubTab === 'settings') {
+        }
+
+        // ===== НАСТРОЙКИ =====
+        else if (adminSubTab === 'settings') {
             html += `
                 <div style="padding:10px 0;text-align:center;color:#aaa;">Управление сервером</div>
                 ${serverRunning 
@@ -1623,6 +2082,7 @@
                 }
             `;
         }
+
         html += `</div>`;
         content.innerHTML = html;
         menuBtns.forEach(b => b.classList.remove('active'));
@@ -1631,15 +2091,25 @@
         document.querySelectorAll('.admin-tabs button').forEach(btn => {
             btn.addEventListener('click', function() { adminSubTab = this.dataset.sub; renderAdmin(cloudHtml); });
         });
+
         window.toggleCategoryFields = function() {
             const category = document.getElementById('shopCategory').value;
             document.getElementById('resourcesFields').className = 'category-fields' + (category === 'resources' ? ' visible' : '');
             document.getElementById('brawlerFields').className = 'category-fields' + (category === 'brawler' ? ' visible' : '');
         };
         setTimeout(window.toggleCategoryFields, 100);
+
+        window.toggleVoucherFields = function() {
+            const type = document.getElementById('voucherRewardType').value;
+            document.getElementById('voucherAmountField').style.display = (type === 'gems' || type === 'coins') ? 'block' : 'none';
+            document.getElementById('voucherBrawlerField').style.display = type === 'brawler' ? 'block' : 'none';
+        };
+        setTimeout(window.toggleVoucherFields, 100);
     }
 
-    // ===== АДМИН-ФУНКЦИИ =====
+    // ============================================================
+    //  АДМИН-ФУНКЦИИ
+    // ============================================================
     window.addShopItem = function() {
         const name = document.getElementById('shopName').value.trim();
         const desc = document.getElementById('shopDesc').value.trim();
@@ -1682,6 +2152,7 @@
             }
         }
     };
+
     window.deleteShopItem = function(idx) { shopItems.splice(idx, 1); autoSync(); render(); };
     window.addBrawlerFull = function() {
         const name = document.getElementById('bName').value.trim();
@@ -1707,12 +2178,14 @@
     };
     window.deleteBrawler = function(idx) { brawlers.splice(idx, 1); autoSync(); render(); };
 
+    window.deleteVoucher = function(idx) { vouchers.splice(idx, 1); autoSync(); renderAdmin(); };
+
     window.startServer = function() { serverRunning = true; autoSync(); render(); };
     window.stopServer = function() { serverRunning = false; autoSync(); render(); };
 
-    function autoSync() { saveLocalData(); syncToFirebase(); }
-
-    // ===== МЕНЮ =====
+    // ============================================================
+    //  МЕНЮ
+    // ============================================================
     menuBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const tab = this.dataset.tab;
@@ -1732,10 +2205,22 @@
         });
     });
 
-    // ===== ЗАПУСК =====
+    // ============================================================
+    //  ЗАПУСК
+    // ============================================================
     loadFromFirebase();
     document.getElementById('passwordOverlay').style.display = 'none';
-    render();
+
+    // Проверяем онбординг после загрузки
+    setTimeout(() => {
+        if (!profile.name && !profile.banned) {
+            showOnboarding();
+        }
+        if (profile.banned) {
+            document.getElementById('bannedOverlay').style.display = 'flex';
+        }
+        render();
+    }, 500);
 </script>
 </body>
 </html>
