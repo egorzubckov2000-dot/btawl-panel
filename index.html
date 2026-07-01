@@ -911,6 +911,21 @@
             margin-bottom: 8px;
             text-align: center;
         }
+        .free-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            color: #aaaacc;
+            font-size: 14px;
+        }
+        .free-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #f5c842;
+            cursor: pointer;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -1009,7 +1024,7 @@
     const randomNames = ['🔥 Гром', '💥 Вспышка', '🌀 Тень', '⚡ Молния', '🌟 Звезда', '💀 Кошмар'];
     let isSyncing = false;
 
-    // Уникальный ID игрока (генерируется один раз)
+    // Уникальный ID игрока
     let playerId = localStorage.getItem('brawl_playerId');
     if (!playerId) {
         playerId = 'player_' + Math.random().toString(36).substring(2, 10);
@@ -1053,8 +1068,8 @@
             { name: 'Кольт', desc: 'Двойные револьверы', rarity: 'Редкий', image: '', damage: 80, hp: 300, minPower: 1, maxPower: 10 }
         ];
         shopItems = [
-            { name: 'Ящик x10', desc: '10 ящиков с наградами', image: '', reward: 'Ящики', category: 'resources', resourceType: 'gems', amount: 80 },
-            { name: 'Скин Дракон', desc: 'Эксклюзивный скин для Кольта', image: '', reward: 'Скин', category: 'brawler', brawlerName: 'Кольт', cost: 149 }
+            { name: 'Ящик x10', desc: '10 ящиков с наградами', image: '', reward: 'Ящики', category: 'resources', resourceType: 'gems', amount: 80, free: false },
+            { name: 'Скин Дракон', desc: 'Эксклюзивный скин для Кольта', image: '', reward: 'Скин', category: 'brawler', brawlerName: 'Кольт', cost: 149, free: false }
         ];
         serverRunning = true;
         profile = { name: 'Игрок', gems: 0, coins: 0, brawlers: [] };
@@ -1062,7 +1077,7 @@
     }
 
     // ============================================================
-    //  FIREBASE СИНХРОНИЗАЦИЯ (С ПРОФИЛЕМ ПО ID)
+    //  FIREBASE СИНХРОНИЗАЦИЯ
     // ============================================================
     function syncToFirebase() {
         if (isSyncing) return;
@@ -1070,7 +1085,6 @@
         const data = { brawlers, shopItems, serverRunning, profile };
         db.ref('data').set(data)
             .then(() => {
-                // Сохраняем профиль отдельно по ID
                 db.ref('players/' + playerId).set(profile);
                 console.log('✅ Данные отправлены в Firebase');
                 updateCloudUI(true);
@@ -1092,7 +1106,6 @@
                     brawlers = data.brawlers || [];
                     shopItems = data.shopItems || [];
                     serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
-                    // Загружаем профиль отдельно
                     db.ref('players/' + playerId).once('value').then((snap) => {
                         const playerData = snap.val();
                         if (playerData) {
@@ -1112,35 +1125,38 @@
     }
 
     // ============================================================
-    //  ПОКУПКА
+    //  ПОКУПКА (С УЧЁТОМ БЕСПЛАТНОСТИ)
     // ============================================================
     window.buyItem = function(name) {
         const item = shopItems.find(i => i.name === name);
         if (!item) return alert('Товар не найден!');
 
+        // Проверяем, бесплатный ли товар
+        const isFree = item.free === true;
+
         if (item.category === 'brawler') {
-            // Проверяем, есть ли уже такой боец
             if (profile.brawlers && profile.brawlers.includes(item.brawlerName)) {
                 return alert(`⚠️ У вас уже есть боец ${item.brawlerName}!`);
             }
-            // Проверяем, хватает ли гемов
-            if (profile.gems < item.cost) {
+            // Если НЕ бесплатно — проверяем гемы
+            if (!isFree && profile.gems < item.cost) {
                 return alert(`❌ Не хватает гемов! Нужно ${item.cost} 💎, у вас ${profile.gems}`);
             }
-            // Списываем гемы и добавляем бойца
-            profile.gems -= item.cost;
+            if (!isFree) {
+                profile.gems -= item.cost;
+            }
             if (!profile.brawlers) profile.brawlers = [];
             profile.brawlers.push(item.brawlerName);
-            alert(`✅ Вы купили бойца ${item.brawlerName}!`);
+            alert(`✅ Вы купили бойца ${item.brawlerName}${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
             autoSync();
             render();
         } else if (item.category === 'resources') {
             if (item.resourceType === 'gems') {
                 profile.gems += item.amount;
-                alert(`✅ Вы получили ${item.amount} 💎 Гемов!`);
+                alert(`✅ Вы получили ${item.amount} 💎 Гемов${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
             } else if (item.resourceType === 'coins') {
                 profile.coins += item.amount;
-                alert(`✅ Вы получили ${item.amount} 🪙 Монет!`);
+                alert(`✅ Вы получили ${item.amount} 🪙 Монет${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
             }
             autoSync();
             render();
@@ -1228,18 +1244,20 @@
             html += `<div class="shop-grid">`;
             shopItems.forEach(item => {
                 const isOwned = item.category === 'brawler' && profile.brawlers && profile.brawlers.includes(item.brawlerName);
+                const isFree = item.free === true;
+                const priceLabel = isFree ? '🎁 БЕСПЛАТНО' : (item.category === 'brawler' ? `💎 ${item.cost}` : '');
                 html += `
                     <div class="shop-item">
                         ${item.image ? `<img src="${item.image}">` : `<div style="width:60px;height:60px;border-radius:40px;background:#1a1a3a;display:flex;align-items:center;justify-content:center;font-size:28px;">📦</div>`}
                         <div class="info">
-                            <div class="name">${item.name} ${isOwned ? '✅' : ''}</div>
+                            <div class="name">${item.name} ${isOwned ? '✅' : ''} ${isFree ? '🎁' : ''}</div>
                             <div class="desc">${item.desc || ''}</div>
                             <div class="reward">🎁 ${item.reward || 'Награда'}</div>
-                            ${item.category === 'brawler' ? `<div style="font-size:11px;color:#4fc3f7;">👤 ${item.brawlerName} • 💎 ${item.cost}</div>` : ''}
-                            ${item.category === 'resources' ? `<div style="font-size:11px;color:#ffd54f;">📦 ${item.resourceType === 'gems' ? '💎' : '🪙'} ${item.amount}</div>` : ''}
+                            ${item.category === 'brawler' ? `<div style="font-size:11px;color:#4fc3f7;">👤 ${item.brawlerName} • ${priceLabel}</div>` : ''}
+                            ${item.category === 'resources' ? `<div style="font-size:11px;color:#ffd54f;">📦 ${item.resourceType === 'gems' ? '💎' : '🪙'} ${item.amount} ${isFree ? '🎁 БЕСПЛАТНО' : ''}</div>` : ''}
                         </div>
                         <button class="buy-btn" onclick="buyItem('${item.name}')" ${isOwned ? 'disabled style="opacity:0.5;"' : ''}>
-                            ${isOwned ? '✅' : 'Купить'}
+                            ${isOwned ? '✅' : (isFree ? '🎁 Получить' : 'Купить')}
                         </button>
                     </div>
                 `;
@@ -1354,6 +1372,11 @@
                         <option value="brawler">👤 Персонаж</option>
                     </select>
                     
+                    <div class="free-toggle">
+                        <input type="checkbox" id="shopFree">
+                        <label for="shopFree">🎁 Бесплатно</label>
+                    </div>
+
                     <div id="resourcesFields" class="category-fields visible">
                         <div class="hint">Выберите тип ресурса и укажите количество</div>
                         <select id="resourceType">
@@ -1379,7 +1402,7 @@
                         <div class="shop-item-admin">
                             ${item.image ? `<img src="${item.image}">` : `<div style="width:50px;height:50px;border-radius:40px;background:#1a1a3a;display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`}
                             <div class="info">
-                                <div class="name">${item.name}</div>
+                                <div class="name">${item.name} ${item.free ? '🎁' : ''}</div>
                                 <div class="desc">${item.desc || ''}</div>
                                 <div class="reward">${item.category === 'brawler' ? '👤 Персонаж' : '📦 Ресурсы'}</div>
                             </div>
@@ -1435,16 +1458,16 @@
             `;
         } else if (adminSubTab === 'leaderboard') {
             html += `<h3 style="color:#f5c842;margin-bottom:12px;">🏆 Лидерборд</h3>`;
-            // Загружаем всех игроков из Firebase
             db.ref('players').once('value').then((snapshot) => {
                 const players = snapshot.val();
                 if (players) {
                     const list = Object.values(players);
                     list.sort((a, b) => (b.gems || 0) - (a.gems || 0));
+                    let boardHtml = '';
                     list.forEach((p, idx) => {
                         const rankClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
                         const emoji = idx === 0 ? '👑' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx+1}`;
-                        html += `
+                        boardHtml += `
                             <div class="leaderboard-card">
                                 <div class="rank ${rankClass}">${emoji}</div>
                                 <div class="info">
@@ -1455,12 +1478,10 @@
                             </div>
                         `;
                     });
+                    document.getElementById('leaderboardContainer').innerHTML = boardHtml;
                 } else {
-                    html += `<div class="empty-state"><span>📭</span>Нет игроков</div>`;
+                    document.getElementById('leaderboardContainer').innerHTML = `<div class="empty-state"><span>📭</span>Нет игроков</div>`;
                 }
-                // Вставляем лидерборд в контент
-                const listContainer = document.getElementById('leaderboardContainer');
-                if (listContainer) listContainer.innerHTML = html;
             });
             html += `<div id="leaderboardContainer"></div>`;
         } else if (adminSubTab === 'settings') {
@@ -1529,6 +1550,7 @@
         const name = document.getElementById('shopName').value.trim();
         const desc = document.getElementById('shopDesc').value.trim();
         const category = document.getElementById('shopCategory').value;
+        const isFree = document.getElementById('shopFree').checked;
         const fileInput = document.getElementById('shopImage');
 
         if (!name) return alert('Введите название товара!');
@@ -1541,13 +1563,13 @@
             if (fileInput.files && fileInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    shopItems.push({ name, desc, image: e.target.result, reward, category, resourceType, amount });
+                    shopItems.push({ name, desc, image: e.target.result, reward, category, resourceType, amount, free: isFree });
                     autoSync();
                     render();
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
-                shopItems.push({ name, desc, image: '', reward, category, resourceType, amount });
+                shopItems.push({ name, desc, image: '', reward, category, resourceType, amount, free: isFree });
                 autoSync();
                 render();
             }
@@ -1555,18 +1577,18 @@
             const brawlerName = document.getElementById('brawlerSelect').value;
             const cost = parseInt(document.getElementById('brawlerCost').value) || 0;
             if (!brawlerName) return alert('Выберите бойца!');
-            if (cost <= 0) return alert('Введите стоимость в гемах!');
-            const reward = `${brawlerName} (${cost} 💎)`;
+            if (!isFree && cost <= 0) return alert('Введите стоимость в гемах!');
+            const reward = `${brawlerName} (${isFree ? 'БЕСПЛАТНО' : cost + ' 💎'})`;
             if (fileInput.files && fileInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    shopItems.push({ name, desc, image: e.target.result, reward, category, brawlerName, cost });
+                    shopItems.push({ name, desc, image: e.target.result, reward, category, brawlerName, cost, free: isFree });
                     autoSync();
                     render();
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
-                shopItems.push({ name, desc, image: '', reward, category, brawlerName, cost });
+                shopItems.push({ name, desc, image: '', reward, category, brawlerName, cost, free: isFree });
                 autoSync();
                 render();
             }
