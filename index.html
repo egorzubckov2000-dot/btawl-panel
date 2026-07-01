@@ -3,594 +3,89 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Brawl Stars — Автосинхронизация</title>
+    <title>Brawl Stars — Firebase синхронизация</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== ВЕСЬ ТВОЙ CSS ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-        html,
-        body {
-            height: 100%;
-            width: 100%;
-            background: #0b0b1a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        .app {
-            width: 100%;
-            max-width: 430px;
-            height: 100vh;
-            max-height: 860px;
-            background: #14142e;
-            padding: 20px 16px;
-            display: flex;
-            flex-direction: column;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            flex-shrink: 0;
-        }
-        .header h1 {
-            color: #f5c842;
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: 1px;
-        }
-        .header span {
-            background: #f5c842;
-            color: #0b0b1a;
-            padding: 2px 14px;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 12px;
-        }
-        .online-badge {
-            background: #2ecc71;
-            color: #0b0b1a;
-            padding: 2px 12px;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .online-badge::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: #0b0b1a;
-            border-radius: 50%;
-            display: inline-block;
-            animation: pulse-dot 1.5s ease-in-out infinite;
-        }
-        @keyframes pulse-dot {
-            0%,
-            100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        .offline-badge {
-            background: #d43f3f;
-            color: #fff;
-            padding: 2px 12px;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 10px;
-        }
-        #content {
-            flex: 1;
-            background: #1a1a3a;
-            border-radius: 24px;
-            padding: 18px 14px;
-            border: 1px solid #f5c84233;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-        .cloud-panel {
-            background: #0f0f2a;
-            border-radius: 20px;
-            padding: 12px 16px;
-            margin-bottom: 12px;
-            border: 1px solid #f5c84244;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .cloud-panel .status {
-            color: #aaaacc;
-            font-size: 13px;
-        }
-        .cloud-panel .status .connected {
-            color: #2ecc71;
-            font-weight: 700;
-        }
-        .cloud-panel .status .disconnected {
-            color: #d43f3f;
-            font-weight: 700;
-        }
-        .cloud-panel button {
-            background: #f5c842;
-            border: none;
-            padding: 6px 16px;
-            border-radius: 40px;
-            font-weight: 700;
-            color: #0b0b1a;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .cloud-panel input {
-            background: #1a1a3a;
-            border: 1px solid #555577;
-            border-radius: 40px;
-            padding: 6px 14px;
-            color: #eee;
-            font-size: 12px;
-            outline: none;
-            flex: 1;
-            min-width: 80px;
-        }
-        .cloud-panel input:focus {
-            border-color: #f5c842;
-        }
-        .menu {
-            display: flex;
-            justify-content: space-around;
-            background: #0f0f28;
-            border-radius: 60px;
-            padding: 8px 6px;
-            border: 1px solid #f5c84233;
-            flex-shrink: 0;
-            margin-top: 12px;
-        }
-        .menu button {
-            background: transparent;
-            border: none;
-            color: #777799;
-            font-weight: 700;
-            font-size: 13px;
-            padding: 10px 6px;
-            border-radius: 40px;
-            cursor: pointer;
-            flex: 1;
-            text-align: center;
-            transition: 0.2s;
-        }
-        .menu button.active {
-            background: #f5c842;
-            color: #0b0b1a;
-            box-shadow: 0 0 24px #f5c84277;
-        }
-        .menu button:hover {
-            color: #fff;
-        }
-        .empty-state {
-            color: #8888aa;
-            text-align: center;
-            padding: 30px 0;
-            font-size: 18px;
-            margin: auto 0;
-        }
-        .empty-state span {
-            display: block;
-            font-size: 52px;
-            margin-bottom: 12px;
-        }
-        .admin-tabs {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 14px;
-            flex-shrink: 0;
-            background: #0f0f28;
-            padding: 4px;
-            border-radius: 40px;
-        }
-        .admin-tabs button {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: #777799;
-            font-weight: 700;
-            font-size: 13px;
-            padding: 8px 0;
-            border-radius: 40px;
-            transition: 0.2s;
-            cursor: pointer;
-        }
-        .admin-tabs button.active-tab {
-            background: #f5c842;
-            color: #0b0b1a;
-            box-shadow: 0 0 20px #f5c84255;
-        }
-        .admin-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            flex: 1;
-        }
-        .brawler-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: #0f0f2a;
-            padding: 16px;
-            border-radius: 20px;
-            border: 1px solid #f5c84233;
-        }
-        .brawler-form input,
-        .brawler-form textarea,
-        .brawler-form select {
-            background: #1a1a3a;
-            border: 1px solid #555577;
-            border-radius: 40px;
-            padding: 10px 16px;
-            color: #eee;
-            font-size: 14px;
-            outline: none;
-            transition: 0.15s;
-        }
-        .brawler-form input:focus,
-        .brawler-form textarea:focus,
-        .brawler-form select:focus {
-            border-color: #f5c842;
-        }
-        .brawler-form textarea {
-            border-radius: 20px;
-            resize: vertical;
-            min-height: 60px;
-        }
-        .brawler-form .file-label {
-            background: #1a1a3a;
-            border: 1px dashed #f5c84288;
-            border-radius: 40px;
-            padding: 10px 16px;
-            color: #aaaacc;
-            cursor: pointer;
-            text-align: center;
-            transition: 0.15s;
-        }
-        .brawler-form .file-label:hover {
-            border-color: #f5c842;
-            background: #f5c84211;
-        }
-        .brawler-form .file-label input {
-            display: none;
-        }
-        .brawler-form .form-row {
-            display: flex;
-            gap: 10px;
-        }
-        .brawler-form .form-row input {
-            flex: 1;
-        }
-        .brawler-form .submit-btn {
-            background: #f5c842;
-            border: none;
-            padding: 12px;
-            border-radius: 60px;
-            font-weight: 700;
-            color: #0b0b1a;
-            cursor: pointer;
-            font-size: 16px;
-            transition: 0.15s;
-        }
-        .brawler-form .submit-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 30px #f5c84255;
-        }
-        .brawler-card-full {
-            background: #0f0f2a;
-            border-radius: 20px;
-            padding: 12px 16px;
-            border-left: 4px solid #f5c842;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0;
-                transform: translateY(-8px); }
-            to { opacity: 1;
-                transform: translateY(0); }
-        }
-        .brawler-card-full img {
-            width: 50px;
-            height: 50px;
-            border-radius: 40px;
-            object-fit: cover;
-            background: #1a1a3a;
-            border: 2px solid #f5c84255;
-        }
-        .brawler-card-full .info {
-            flex: 1;
-        }
-        .brawler-card-full .info .name {
-            color: #eee;
-            font-weight: 700;
-            font-size: 16px;
-        }
-        .brawler-card-full .info .rarity {
-            font-size: 12px;
-            color: #f5c842;
-            background: #f5c84222;
-            padding: 0 10px;
-            border-radius: 40px;
-            display: inline-block;
-        }
-        .brawler-card-full .info .desc {
-            color: #8888aa;
-            font-size: 13px;
-            margin-top: 2px;
-        }
-        .brawler-card-full .stats {
-            display: flex;
-            gap: 8px;
-            font-size: 12px;
-            color: #aaaacc;
-            flex-wrap: wrap;
-        }
-        .brawler-card-full .stats span {
-            background: #1a1a3a;
-            padding: 2px 10px;
-            border-radius: 40px;
-        }
-        .brawler-card-full .del-btn {
-            background: #d43f3f;
-            border: none;
-            color: #fff;
-            width: 30px;
-            height: 30px;
-            border-radius: 40px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-        .list-admin {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            overflow-y: auto;
-            flex: 1;
-            margin-top: 4px;
-        }
-        .add-row {
-            display: flex;
-            gap: 8px;
-        }
-        .add-row input {
-            flex: 1;
-            padding: 10px 14px;
-            border-radius: 40px;
-            border: none;
-            background: #0f0f2a;
-            color: #fff;
-            outline: 1px solid #f5c84255;
-            font-size: 14px;
-        }
-        .add-row button {
-            background: #f5c842;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 40px;
-            font-weight: 700;
-            color: #0b0b1a;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .item {
-            display: flex;
-            align-items: center;
-            background: #0f0f2a;
-            padding: 8px 12px 8px 16px;
-            border-radius: 40px;
-            border-left: 4px solid #f5c842;
-            gap: 8px;
-        }
-        .item .name {
-            flex: 1;
-            color: #eee;
-            font-weight: 600;
-            font-size: 15px;
-            background: transparent;
-            border: none;
-            outline: none;
-            padding: 4px 0;
-        }
-        .item .name:focus {
-            border-bottom: 2px solid #f5c842;
-        }
-        .item .del {
-            background: #d43f3f;
-            border: none;
-            color: #fff;
-            width: 30px;
-            height: 30px;
-            border-radius: 40px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-        .stop-btn {
-            background: #d43f3f;
-            border: none;
-            padding: 14px;
-            border-radius: 60px;
-            font-weight: 800;
-            font-size: 18px;
-            color: #fff;
-            cursor: pointer;
-            box-shadow: 0 0 20px #d43f3f66;
-            transition: 0.15s;
-            margin-top: 8px;
-            letter-spacing: 1px;
-            flex-shrink: 0;
-        }
-        .stop-btn:hover {
-            transform: scale(1.02);
-            background: #ff2f2f;
-        }
-        .stop-btn:disabled {
-            background: #555;
-            box-shadow: none;
-            transform: none;
-        }
-        .maintenance {
-            background: #2a1a1a;
-            border: 2px solid #f5c84288;
-            border-radius: 24px;
-            padding: 40px 20px;
-            text-align: center;
-            margin: auto 0;
-        }
-        .maintenance span {
-            font-size: 56px;
-            display: block;
-            margin-bottom: 12px;
-        }
-        .maintenance h2 {
-            color: #f5c842;
-            font-size: 24px;
-            font-weight: 700;
-        }
-        .maintenance p {
-            color: #aaaacc;
-            margin-top: 8px;
-            font-size: 15px;
-        }
-        .maintenance .start-btn {
-            margin-top: 20px;
-            background: #2ecc71;
-            border: none;
-            padding: 14px 40px;
-            border-radius: 60px;
-            font-weight: 800;
-            font-size: 18px;
-            color: #0b0b1a;
-            cursor: pointer;
-            box-shadow: 0 0 30px #2ecc7166;
-            transition: 0.15s;
-        }
-        .maintenance .start-btn:hover {
-            transform: scale(1.03);
-            background: #3dff8a;
-        }
-        .brawl-select {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            height: 100%;
-        }
-        .brawl-select .brawler-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            overflow-y: auto;
-            flex: 1;
-            align-content: flex-start;
-        }
-        .brawl-select .brawler-card {
-            background: #0f0f2a;
-            padding: 12px 16px;
-            border-radius: 40px;
-            border: 2px solid #555577;
-            color: #eee;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.15s;
-            font-size: 14px;
-            min-width: 80px;
-            text-align: center;
-        }
-        .brawl-select .brawler-card:hover {
-            border-color: #f5c842;
-            transform: scale(1.03);
-        }
-        .brawl-select .brawler-card.selected {
-            border-color: #f5c842;
-            background: #f5c84222;
-            box-shadow: 0 0 20px #f5c84244;
-        }
-        .brawl-select .search-status {
-            text-align: center;
-            color: #aaaacc;
-            padding: 20px 0;
-        }
-        .brawl-select .search-status .spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #555577;
-            border-top: 4px solid #f5c842;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 12px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .brawl-select .cancel-btn {
-            background: #555;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 40px;
-            color: #fff;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-        .brawl-select .result-box {
-            background: #0f0f2a;
-            border-radius: 24px;
-            padding: 24px;
-            text-align: center;
-            border: 2px solid #2ecc71;
-            margin: auto 0;
-        }
-        .brawl-select .result-box .vs {
-            font-size: 28px;
-            color: #f5c842;
-            margin: 8px 0;
-        }
-        .brawl-select .result-box .player-name {
-            font-size: 22px;
-            font-weight: 700;
-            color: #eee;
-        }
-        .brawl-select .result-box .found-tag {
-            color: #2ecc71;
-            font-size: 14px;
-            background: #2ecc7122;
-            padding: 2px 14px;
-            border-radius: 40px;
-            display: inline-block;
-            margin-top: 4px;
-        }
-        .brawl-select .back-btn {
-            background: #f5c842;
-            border: none;
-            padding: 12px;
-            border-radius: 60px;
-            font-weight: 700;
-            color: #0b0b1a;
-            cursor: pointer;
-            margin-top: 12px;
-            font-size: 16px;
-        }
+        /* ===== ВЕСЬ CSS ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        html, body { height: 100%; width: 100%; background: #0b0b1a; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .app { width: 100%; max-width: 430px; height: 100vh; max-height: 860px; background: #14142e; padding: 20px 16px; display: flex; flex-direction: column; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0; }
+        .header h1 { color: #f5c842; font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+        .header span { background: #f5c842; color: #0b0b1a; padding: 2px 14px; border-radius: 40px; font-weight: 700; font-size: 12px; }
+        .online-badge { background: #2ecc71; color: #0b0b1a; padding: 2px 12px; border-radius: 40px; font-weight: 700; font-size: 10px; display: flex; align-items: center; gap: 4px; }
+        .online-badge::before { content: ''; width: 6px; height: 6px; background: #0b0b1a; border-radius: 50%; display: inline-block; animation: pulse-dot 1.5s ease-in-out infinite; }
+        @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .offline-badge { background: #d43f3f; color: #fff; padding: 2px 12px; border-radius: 40px; font-weight: 700; font-size: 10px; }
+        #content { flex: 1; background: #1a1a3a; border-radius: 24px; padding: 18px 14px; border: 1px solid #f5c84233; overflow-y: auto; display: flex; flex-direction: column; }
+        .cloud-panel { background: #0f0f2a; border-radius: 20px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #f5c84244; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .cloud-panel .status { color: #aaaacc; font-size: 13px; }
+        .cloud-panel .status .connected { color: #2ecc71; font-weight: 700; }
+        .cloud-panel .status .disconnected { color: #d43f3f; font-weight: 700; }
+        .cloud-panel button { background: #f5c842; border: none; padding: 6px 16px; border-radius: 40px; font-weight: 700; color: #0b0b1a; cursor: pointer; font-size: 12px; }
+        .menu { display: flex; justify-content: space-around; background: #0f0f28; border-radius: 60px; padding: 8px 6px; border: 1px solid #f5c84233; flex-shrink: 0; margin-top: 12px; }
+        .menu button { background: transparent; border: none; color: #777799; font-weight: 700; font-size: 13px; padding: 10px 6px; border-radius: 40px; cursor: pointer; flex: 1; text-align: center; transition: 0.2s; }
+        .menu button.active { background: #f5c842; color: #0b0b1a; box-shadow: 0 0 24px #f5c84277; }
+        .menu button:hover { color: #fff; }
+        .empty-state { color: #8888aa; text-align: center; padding: 30px 0; font-size: 18px; margin: auto 0; }
+        .empty-state span { display: block; font-size: 52px; margin-bottom: 12px; }
+        .admin-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-shrink: 0; background: #0f0f28; padding: 4px; border-radius: 40px; }
+        .admin-tabs button { flex: 1; background: transparent; border: none; color: #777799; font-weight: 700; font-size: 13px; padding: 8px 0; border-radius: 40px; transition: 0.2s; cursor: pointer; }
+        .admin-tabs button.active-tab { background: #f5c842; color: #0b0b1a; box-shadow: 0 0 20px #f5c84255; }
+        .admin-panel { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+        .brawler-form { display: flex; flex-direction: column; gap: 10px; background: #0f0f2a; padding: 16px; border-radius: 20px; border: 1px solid #f5c84233; }
+        .brawler-form input, .brawler-form textarea, .brawler-form select { background: #1a1a3a; border: 1px solid #555577; border-radius: 40px; padding: 10px 16px; color: #eee; font-size: 14px; outline: none; transition: 0.15s; }
+        .brawler-form input:focus, .brawler-form textarea:focus, .brawler-form select:focus { border-color: #f5c842; }
+        .brawler-form textarea { border-radius: 20px; resize: vertical; min-height: 60px; }
+        .brawler-form .file-label { background: #1a1a3a; border: 1px dashed #f5c84288; border-radius: 40px; padding: 10px 16px; color: #aaaacc; cursor: pointer; text-align: center; transition: 0.15s; }
+        .brawler-form .file-label:hover { border-color: #f5c842; background: #f5c84211; }
+        .brawler-form .file-label input { display: none; }
+        .brawler-form .form-row { display: flex; gap: 10px; }
+        .brawler-form .form-row input { flex: 1; }
+        .brawler-form .submit-btn { background: #f5c842; border: none; padding: 12px; border-radius: 60px; font-weight: 700; color: #0b0b1a; cursor: pointer; font-size: 16px; transition: 0.15s; }
+        .brawler-form .submit-btn:hover { transform: scale(1.02); box-shadow: 0 0 30px #f5c84255; }
+        .brawler-card-full { background: #0f0f2a; border-radius: 20px; padding: 12px 16px; border-left: 4px solid #f5c842; display: flex; align-items: center; gap: 12px; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .brawler-card-full img { width: 50px; height: 50px; border-radius: 40px; object-fit: cover; background: #1a1a3a; border: 2px solid #f5c84255; }
+        .brawler-card-full .info { flex: 1; }
+        .brawler-card-full .info .name { color: #eee; font-weight: 700; font-size: 16px; }
+        .brawler-card-full .info .rarity { font-size: 12px; color: #f5c842; background: #f5c84222; padding: 0 10px; border-radius: 40px; display: inline-block; }
+        .brawler-card-full .info .desc { color: #8888aa; font-size: 13px; margin-top: 2px; }
+        .brawler-card-full .stats { display: flex; gap: 8px; font-size: 12px; color: #aaaacc; flex-wrap: wrap; }
+        .brawler-card-full .stats span { background: #1a1a3a; padding: 2px 10px; border-radius: 40px; }
+        .brawler-card-full .del-btn { background: #d43f3f; border: none; color: #fff; width: 30px; height: 30px; border-radius: 40px; font-weight: 700; cursor: pointer; font-size: 16px; flex-shrink: 0; }
+        .list-admin { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; margin-top: 4px; }
+        .add-row { display: flex; gap: 8px; }
+        .add-row input { flex: 1; padding: 10px 14px; border-radius: 40px; border: none; background: #0f0f2a; color: #fff; outline: 1px solid #f5c84255; font-size: 14px; }
+        .add-row button { background: #f5c842; border: none; padding: 10px 18px; border-radius: 40px; font-weight: 700; color: #0b0b1a; cursor: pointer; font-size: 14px; }
+        .item { display: flex; align-items: center; background: #0f0f2a; padding: 8px 12px 8px 16px; border-radius: 40px; border-left: 4px solid #f5c842; gap: 8px; }
+        .item .name { flex: 1; color: #eee; font-weight: 600; font-size: 15px; background: transparent; border: none; outline: none; padding: 4px 0; }
+        .item .name:focus { border-bottom: 2px solid #f5c842; }
+        .item .del { background: #d43f3f; border: none; color: #fff; width: 30px; height: 30px; border-radius: 40px; font-weight: 700; cursor: pointer; font-size: 16px; flex-shrink: 0; }
+        .stop-btn { background: #d43f3f; border: none; padding: 14px; border-radius: 60px; font-weight: 800; font-size: 18px; color: #fff; cursor: pointer; box-shadow: 0 0 20px #d43f3f66; transition: 0.15s; margin-top: 8px; letter-spacing: 1px; flex-shrink: 0; }
+        .stop-btn:hover { transform: scale(1.02); background: #ff2f2f; }
+        .stop-btn:disabled { background: #555; box-shadow: none; transform: none; }
+        .maintenance { background: #2a1a1a; border: 2px solid #f5c84288; border-radius: 24px; padding: 40px 20px; text-align: center; margin: auto 0; }
+        .maintenance span { font-size: 56px; display: block; margin-bottom: 12px; }
+        .maintenance h2 { color: #f5c842; font-size: 24px; font-weight: 700; }
+        .maintenance p { color: #aaaacc; margin-top: 8px; font-size: 15px; }
+        .maintenance .start-btn { margin-top: 20px; background: #2ecc71; border: none; padding: 14px 40px; border-radius: 60px; font-weight: 800; font-size: 18px; color: #0b0b1a; cursor: pointer; box-shadow: 0 0 30px #2ecc7166; transition: 0.15s; }
+        .maintenance .start-btn:hover { transform: scale(1.03); background: #3dff8a; }
+        .brawl-select { display: flex; flex-direction: column; gap: 12px; height: 100%; }
+        .brawl-select .brawler-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; overflow-y: auto; flex: 1; align-content: flex-start; }
+        .brawl-select .brawler-card { background: #0f0f2a; padding: 12px 16px; border-radius: 40px; border: 2px solid #555577; color: #eee; font-weight: 600; cursor: pointer; transition: 0.15s; font-size: 14px; min-width: 80px; text-align: center; }
+        .brawl-select .brawler-card:hover { border-color: #f5c842; transform: scale(1.03); }
+        .brawl-select .brawler-card.selected { border-color: #f5c842; background: #f5c84222; box-shadow: 0 0 20px #f5c84244; }
+        .brawl-select .search-status { text-align: center; color: #aaaacc; padding: 20px 0; }
+        .brawl-select .search-status .spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid #555577; border-top: 4px solid #f5c842; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .brawl-select .cancel-btn { background: #555; border: none; padding: 10px 24px; border-radius: 40px; color: #fff; font-weight: 700; cursor: pointer; margin-top: 8px; }
+        .brawl-select .result-box { background: #0f0f2a; border-radius: 24px; padding: 24px; text-align: center; border: 2px solid #2ecc71; margin: auto 0; }
+        .brawl-select .result-box .vs { font-size: 28px; color: #f5c842; margin: 8px 0; }
+        .brawl-select .result-box .player-name { font-size: 22px; font-weight: 700; color: #eee; }
+        .brawl-select .result-box .found-tag { color: #2ecc71; font-size: 14px; background: #2ecc7122; padding: 2px 14px; border-radius: 40px; display: inline-block; margin-top: 4px; }
+        .brawl-select .back-btn { background: #f5c842; border: none; padding: 12px; border-radius: 60px; font-weight: 700; color: #0b0b1a; cursor: pointer; margin-top: 12px; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -612,13 +107,36 @@
 </div>
 <script>
     // ============================================================
-    //  АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ ЧЕРЕЗ LOCALSTORAGE + JSON
-    //  С РУЧНЫМ ВВОДОМ ID КОМНАТЫ (без серверов)
+    //  ВСТАВЬ СВОЙ КОНФИГ FIREBASE (СКОПИРУЙ ИЗ КОНСОЛИ)
     // ============================================================
-    // Каждый пользователь вводит свой уникальный ID комнаты
-    // Все устройства с одинаковым ID синхронизируются через localStorage
-    // (данные хранятся в localStorage, но синхронизация через JSON-экспорт/импорт)
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyB_IDn4_u5W1G82CrjXSMz6SAwXhkdnktc",
+  authDomain: "brawl-stars-panel.firebaseapp.com",
+  databaseURL: "https://brawl-stars-panel-default-rtdb.firebaseio.com",
+  projectId: "brawl-stars-panel",
+  storageBucket: "brawl-stars-panel.firebasestorage.app",
+  messagingSenderId: "458936707927",
+  appId: "1:458936707927:web:2abf0144fc135277ee6c12"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
     // ============================================================
+    //  ИНИЦИАЛИЗАЦИЯ FIREBASE
+    // ============================================================
+    try {
+        firebase.initializeApp(firebaseConfig);
+    } catch (e) {
+        console.warn('Firebase уже инициализирован:', e);
+    }
+    const db = firebase.database();
 
     // Данные
     let brawlers = [];
@@ -632,13 +150,14 @@
     let searchTimer = null;
     let searchCancelled = false;
     const randomNames = ['🔥 Гром', '💥 Вспышка', '🌀 Тень', '⚡ Молния', '🌟 Звезда', '💀 Кошмар'];
+    let isSyncing = false;
 
     // ============================================================
     //  LOCALSTORAGE
     // ============================================================
     function loadLocalData() {
         try {
-            const raw = localStorage.getItem('brawlData');
+            const raw = localStorage.getItem('brawlData_firebase');
             if (raw) {
                 const data = JSON.parse(raw);
                 brawlers = data.brawlers || [];
@@ -652,12 +171,7 @@
 
     function saveLocalData() {
         const data = { brawlers, shopItems, serverRunning };
-        localStorage.setItem('brawlData', JSON.stringify(data));
-        // Обновляем поле экспорта
-        const exportArea = document.getElementById('exportData');
-        if (exportArea) {
-            exportArea.value = JSON.stringify(data, null, 2);
-        }
+        localStorage.setItem('brawlData_firebase', JSON.stringify(data));
     }
 
     if (!loadLocalData()) {
@@ -671,53 +185,65 @@
     }
 
     // ============================================================
-    //  ФУНКЦИИ ИМПОРТА/ЭКСПОРТА
+    //  FIREBASE СИНХРОНИЗАЦИЯ (АВТОМАТИЧЕСКАЯ)
     // ============================================================
-    function exportData() {
+    function syncToFirebase() {
+        if (isSyncing) return;
+        isSyncing = true;
         const data = { brawlers, shopItems, serverRunning };
-        const json = JSON.stringify(data, null, 2);
-        const exportArea = document.getElementById('exportData');
-        if (exportArea) {
-            exportArea.value = json;
-            exportArea.select();
-            document.execCommand('copy');
-            alert('✅ Данные скопированы в буфер обмена!');
+        db.ref('data').set(data)
+            .then(() => {
+                console.log('✅ Данные отправлены в Firebase');
+                updateCloudUI(true);
+                isSyncing = false;
+            })
+            .catch(error => {
+                console.error('❌ Ошибка отправки:', error);
+                updateCloudUI(false);
+                isSyncing = false;
+            });
+    }
+
+    function loadFromFirebase() {
+        db.ref('data').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const localData = JSON.parse(localStorage.getItem('brawlData_firebase') || '{}');
+                if (JSON.stringify(localData) !== JSON.stringify(data)) {
+                    brawlers = data.brawlers || [];
+                    shopItems = data.shopItems || [];
+                    serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
+                    saveLocalData();
+                    render();
+                    console.log('📥 Данные загружены из Firebase');
+                }
+                updateCloudUI(true);
+            }
+        }, (error) => {
+            console.error('❌ Ошибка загрузки из Firebase:', error);
+            updateCloudUI(false);
+        });
+    }
+
+    function updateCloudUI(connected) {
+        const badge = document.getElementById('connectionBadge');
+        if (connected) {
+            badge.className = 'online-badge';
+            badge.textContent = '🟢 ☁️';
+        } else {
+            badge.className = 'offline-badge';
+            badge.textContent = '🔴 ☁️';
+        }
+        const statusEl = document.getElementById('cloudStatus');
+        if (statusEl) {
+            statusEl.textContent = connected ? '🟢 Синхронизация активна' : '🔴 Офлайн';
+            statusEl.className = connected ? 'connected' : 'disconnected';
         }
     }
 
-    function importData() {
-        const importArea = document.getElementById('importData');
-        if (!importArea) return;
-        try {
-            const raw = importArea.value.trim();
-            if (!raw) {
-                alert('❌ Вставь JSON-данные в поле!');
-                return;
-            }
-            const data = JSON.parse(raw);
-            if (!data.brawlers || !data.shopItems) {
-                alert('❌ Неверный формат данных!');
-                return;
-            }
-            brawlers = data.brawlers || [];
-            shopItems = data.shopItems || [];
-            serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
-            saveLocalData();
-            importArea.value = '';
-            alert('✅ Данные успешно импортированы!');
-            render();
-        } catch (e) {
-            alert('❌ Ошибка импорта: ' + e.message);
-        }
-    }
-
-    // ============================================================
-    //  АВТОМАТИЧЕСКАЯ ЗАГРУЗКА ИЗ LOCALSTORAGE (при открытии)
-    // ============================================================
-    function autoLoad() {
-        loadLocalData();
-        render();
-        console.log('🔄 Данные загружены из localStorage');
+    function autoSync() {
+        saveLocalData();
+        syncToFirebase();
     }
 
     // ============================================================
@@ -728,22 +254,15 @@
 
     function render() {
         const tab = currentMainTab;
-        const syncHtml = `
+        const cloudHtml = `
             <div class="cloud-panel">
-                <div class="status">📁 Синхронизация: <span class="connected">локальная (ручная)</span></div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <button onclick="exportData()">📤 Экспорт</button>
-                    <button onclick="importData()">📥 Импорт</button>
-                </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
-                <textarea id="exportData" readonly style="background:#0f0f2a;border:1px solid #555577;border-radius:12px;padding:8px;color:#eee;font-size:11px;resize:vertical;min-height:40px;outline:none;">${JSON.stringify({ brawlers, shopItems, serverRunning }, null, 2)}</textarea>
-                <textarea id="importData" placeholder="Вставь сюда JSON для импорта" style="background:#0f0f2a;border:1px solid #555577;border-radius:12px;padding:8px;color:#eee;font-size:11px;resize:vertical;min-height:40px;outline:none;"></textarea>
+                <div class="status">☁️ Синхронизация: <span id="cloudStatus" class="connected">🟢 Синхронизация активна</span></div>
+                <button onclick="forceSync()">🔄 Синхронизировать</button>
             </div>
         `;
 
         if (!serverRunning) {
-            let html = syncHtml + `<div class="maintenance"><span>🔧</span><h2>Технические работы</h2><p>Сервер остановлен</p>`;
+            let html = cloudHtml + `<div class="maintenance"><span>🔧</span><h2>Технические работы</h2><p>Сервер остановлен</p>`;
             if (tab === 'admin') html += `<button class="start-btn" onclick="startServer()">🚀 ЗАПУСТИТЬ</button>`;
             html += `</div>`;
             content.innerHTML = html;
@@ -753,14 +272,14 @@
             return;
         }
 
-        if (tab === 'battle') { renderBattle(syncHtml); return; }
-        if (tab === 'brawlers') { renderBrawlers(syncHtml); return; }
-        if (tab === 'shop') { renderShop(syncHtml); return; }
-        renderAdmin(syncHtml);
+        if (tab === 'battle') { renderBattle(cloudHtml); return; }
+        if (tab === 'brawlers') { renderBrawlers(cloudHtml); return; }
+        if (tab === 'shop') { renderShop(cloudHtml); return; }
+        renderAdmin(cloudHtml);
     }
 
-    function renderBrawlers(syncHtml) {
-        let html = syncHtml;
+    function renderBrawlers(cloudHtml) {
+        let html = cloudHtml;
         if (!brawlers.length) { html += `<div class="empty-state"><span>🦸</span>Нет бойцов</div>`; } else {
             html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
             brawlers.forEach(b => {
@@ -776,8 +295,8 @@
         document.querySelector('[data-tab="brawlers"]').classList.add('active');
     }
 
-    function renderShop(syncHtml) {
-        let html = syncHtml;
+    function renderShop(cloudHtml) {
+        let html = cloudHtml;
         if (!shopItems.length) { html += `<div class="empty-state"><span>🛒</span>Магазин пуст</div>`; } else {
             html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
             shopItems.forEach(item => {
@@ -790,8 +309,8 @@
         document.querySelector('[data-tab="shop"]').classList.add('active');
     }
 
-    function renderBattle(syncHtml) {
-        let html = syncHtml + `<div class="brawl-select">`;
+    function renderBattle(cloudHtml) {
+        let html = cloudHtml + `<div class="brawl-select">`;
         if (battleState === 'select') {
             html += `<h3 style="color:#f5c842;margin-bottom:8px;">Выбери бойца</h3><div class="brawler-grid">`;
             if (!brawlers.length) { html += `<div style="color:#888;padding:20px;">Нет бойцов</div>`; } else {
@@ -813,8 +332,8 @@
         document.querySelector('[data-tab="battle"]').classList.add('active');
     }
 
-    function renderAdmin(syncHtml) {
-        let html = syncHtml + `<div class="admin-tabs">
+    function renderAdmin(cloudHtml) {
+        let html = cloudHtml + `<div class="admin-tabs">
                 <button class="${adminSubTab === 'brawlers' ? 'active-tab' : ''}" data-sub="brawlers">🦸 Бойцы</button>
                 <button class="${adminSubTab === 'shop' ? 'active-tab' : ''}" data-sub="shop">🛒 Товары</button>
                 <button class="${adminSubTab === 'settings' ? 'active-tab' : ''}" data-sub="settings">⚙️ Настройки</button>
@@ -905,42 +424,46 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 brawlers.push({ name, desc, rarity, image: e.target.result, damage, hp, minPower, maxPower });
-                saveLocalData();
+                autoSync();
                 render();
             };
             reader.readAsDataURL(fileInput.files[0]);
         } else {
             brawlers.push({ name, desc, rarity, image: '', damage, hp, minPower, maxPower });
-            saveLocalData();
+            autoSync();
             render();
         }
     };
     window.deleteBrawler = function(idx) { brawlers.splice(idx, 1);
-        saveLocalData();
+        autoSync();
         render(); };
     window.adminAddShop = function() {
         const val = document.getElementById('shopInput').value.trim();
         if (!val) return;
         shopItems.push(val);
-        saveLocalData();
+        autoSync();
         render();
     };
     window.adminDeleteShop = function(idx) { shopItems.splice(idx, 1);
-        saveLocalData();
+        autoSync();
         render(); };
     window.adminEdit = function(el) {
         const idx = parseInt(el.dataset.index);
         const val = el.value.trim();
         if (!val) return;
         shopItems[idx] = val;
-        saveLocalData();
+        autoSync();
     };
     window.startServer = function() { serverRunning = true;
-        saveLocalData();
+        autoSync();
         render(); };
     window.stopServer = function() { serverRunning = false;
-        saveLocalData();
+        autoSync();
         render(); };
+    window.forceSync = function() {
+        syncToFirebase();
+        alert('✅ Данные отправлены в облако!');
+    };
 
     // ============================================================
     //  МЕНЮ
@@ -961,7 +484,13 @@
     // ============================================================
     //  ЗАПУСК
     // ============================================================
-    autoLoad();
+    loadFromFirebase();
+
+    setInterval(() => {
+        console.log('🔄 Проверка обновлений...');
+    }, 10000);
+
+    render();
 </script>
 </body>
 </html>
