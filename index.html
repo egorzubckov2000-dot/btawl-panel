@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Brawl Stars</title>
+    <title>Brawl Stars — Бой</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== ВСЕ СТИЛИ ===== */
+        /* ===== БАЗА ===== */
         * {
             margin: 0;
             padding: 0;
@@ -35,7 +35,7 @@
             flex-direction: column;
             position: relative;
         }
-        @media (min-width: 600px) {
+        @media (min-width:600px) {
             .app {
                 max-width: 500px;
                 height: 95vh;
@@ -45,19 +45,14 @@
                 padding: 20px 18px;
             }
         }
-        @media (max-width: 430px) {
+        @media (max-width:430px) {
             .app {
                 padding: 12px 10px;
                 height: 100vh;
                 max-height: 860px;
             }
-            .header h1 {
-                font-size: 22px;
-            }
-            .menu button {
-                font-size: 11px;
-                padding: 8px 4px;
-            }
+            .header h1 { font-size: 22px; }
+            .menu button { font-size: 11px; padding: 8px 4px; }
         }
         .header {
             display: flex;
@@ -130,11 +125,8 @@
             flex-direction: column;
             animation: fadeIn 0.4s ease;
         }
-        @media (max-width: 430px) {
-            #content {
-                padding: 12px 10px;
-                border-radius: 18px;
-            }
+        @media (max-width:430px) {
+            #content { padding: 12px 10px; border-radius: 18px; }
         }
         .cloud-panel {
             background: #0f0f2a;
@@ -352,7 +344,175 @@
             background: #4fc3f722;
         }
 
-        /* ===== БОЙЦЫ ===== */
+        /* ===== БОЕВАЯ СИСТЕМА ===== */
+        .battle-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 10px;
+        }
+        .battle-field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-height: 100px;
+        }
+        .battle-player {
+            background: #0f0f2a;
+            border-radius: 20px;
+            padding: 14px;
+            text-align: center;
+            flex: 1;
+            border: 2px solid #555577;
+            transition: 0.3s ease;
+        }
+        .battle-player.active {
+            border-color: #f5c842;
+            box-shadow: 0 0 30px #f5c84244;
+        }
+        .battle-player .name {
+            color: #eee;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .battle-player .hp {
+            color: #ff6b6b;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .battle-player .brawler-icon {
+            font-size: 48px;
+            display: block;
+            margin: 4px 0;
+        }
+        .battle-vs {
+            color: #f5c842;
+            font-size: 24px;
+            font-weight: 800;
+        }
+        .battle-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .battle-actions button {
+            padding: 12px 24px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s ease;
+            flex: 1;
+            max-width: 150px;
+        }
+        .battle-actions .attack {
+            background: #d43f3f;
+            color: #fff;
+        }
+        .battle-actions .attack:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #d43f3f66;
+        }
+        .battle-actions .defend {
+            background: #4fc3f7;
+            color: #0b0b1a;
+        }
+        .battle-actions .defend:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #4fc3f766;
+        }
+        .battle-actions button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .battle-log {
+            background: #0f0f2a;
+            border-radius: 16px;
+            padding: 10px 14px;
+            min-height: 60px;
+            max-height: 120px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .battle-log .log-entry {
+            color: #ccccee;
+            font-size: 13px;
+            padding: 2px 0;
+            border-bottom: 1px solid #1a1a3a;
+        }
+        .battle-log .log-entry .highlight {
+            color: #f5c842;
+            font-weight: 700;
+        }
+        .battle-log .log-entry .damage {
+            color: #ff6b6b;
+            font-weight: 700;
+        }
+        .battle-log .log-entry .heal {
+            color: #51cf66;
+            font-weight: 700;
+        }
+        .battle-status {
+            text-align: center;
+            color: #aaaacc;
+            font-size: 14px;
+            padding: 6px;
+            background: #0f0f2a;
+            border-radius: 12px;
+        }
+        .battle-status .waiting {
+            color: #f5c842;
+        }
+        .battle-status .fighting {
+            color: #ff6b6b;
+            animation: pulse-fight 1s ease-in-out infinite;
+        }
+        @keyframes pulse-fight {
+            0%,
+            100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .battle-result {
+            text-align: center;
+            padding: 20px;
+            background: #0f0f2a;
+            border-radius: 20px;
+            border: 2px solid #f5c842;
+            animation: scaleIn 0.4s ease;
+        }
+        .battle-result .winner {
+            font-size: 32px;
+            font-weight: 800;
+            color: #f5c842;
+        }
+        .battle-result .trophies {
+            font-size: 18px;
+            color: #2ecc71;
+            margin-top: 4px;
+        }
+        .battle-result .back-btn {
+            background: #f5c842;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 60px;
+            font-weight: 700;
+            color: #0b0b1a;
+            cursor: pointer;
+            transition: 0.3s ease;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+        .battle-result .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #f5c84255;
+        }
+
+        /* ===== ОСТАЛЬНЫЕ СТИЛИ (СОКРАЩЕННО) ===== */
         .brawler-list {
             display: flex;
             flex-direction: column;
@@ -481,8 +641,6 @@
             transform: scale(1.05);
             background: #777799;
         }
-
-        /* ===== МАГАЗИН ===== */
         .shop-grid {
             display: flex;
             flex-direction: column;
@@ -548,8 +706,6 @@
             transform: scale(1.08);
             box-shadow: 0 0 30px #f5c84255;
         }
-
-        /* ===== ПРОФИЛЬ ===== */
         .profile-card {
             background: #0f0f2a;
             border-radius: 24px;
@@ -586,6 +742,7 @@
             justify-content: center;
             gap: 24px;
             margin-top: 12px;
+            flex-wrap: wrap;
         }
         .profile-card .stat-item {
             text-align: center;
@@ -606,6 +763,9 @@
         .profile-card .stat-item .value.coins {
             color: #ffd54f;
         }
+        .profile-card .stat-item .value.trophies {
+            color: #f5c842;
+        }
         .profile-card .save-btn {
             background: #f5c842;
             border: none;
@@ -623,7 +783,7 @@
             box-shadow: 0 0 30px #f5c84255;
         }
 
-        /* ===== АДМИНКА ===== */
+        /* ===== АДМИНКА (СОКРАЩЕННО) ===== */
         .admin-tabs {
             display: flex;
             gap: 4px;
@@ -834,8 +994,6 @@
             font-weight: 700;
             font-size: 16px;
         }
-
-        /* ===== ВАУЧЕРЫ ===== */
         .voucher-code {
             background: #0f0f2a;
             border-radius: 16px;
@@ -866,8 +1024,6 @@
             background: #777799;
             transform: scale(1.05);
         }
-
-        /* ===== КНОПКИ СЕРВЕРА ===== */
         .server-btn {
             border: none;
             padding: 14px;
@@ -910,7 +1066,6 @@
         .server-btn .icon {
             font-size: 20px;
         }
-
         .maintenance {
             background: #2a1a1a;
             border: 2px solid #f5c84288;
@@ -945,7 +1100,6 @@
             margin-top: 6px;
             font-size: 14px;
         }
-
         .brawl-select {
             display: flex;
             flex-direction: column;
@@ -1019,34 +1173,6 @@
             transform: scale(1.05);
             background: #777;
         }
-        .brawl-select .result-box {
-            background: #0f0f2a;
-            border-radius: 24px;
-            padding: 20px;
-            text-align: center;
-            border: 2px solid #2ecc71;
-            margin: auto 0;
-            animation: scaleIn 0.4s ease;
-        }
-        .brawl-select .result-box .vs {
-            font-size: 24px;
-            color: #f5c842;
-            margin: 6px 0;
-        }
-        .brawl-select .result-box .player-name {
-            font-size: 20px;
-            font-weight: 700;
-            color: #eee;
-        }
-        .brawl-select .result-box .found-tag {
-            color: #2ecc71;
-            font-size: 13px;
-            background: #2ecc7122;
-            padding: 2px 14px;
-            border-radius: 40px;
-            display: inline-block;
-            margin-top: 4px;
-        }
         .brawl-select .back-btn {
             background: #f5c842;
             border: none;
@@ -1063,7 +1189,6 @@
             transform: scale(1.05);
             box-shadow: 0 0 30px #f5c84255;
         }
-
         .password-overlay {
             position: fixed;
             top: 0;
@@ -1143,7 +1268,6 @@
             25% { transform: translateX(-8px); }
             75% { transform: translateX(8px); }
         }
-
         .category-fields {
             display: none;
             animation: fadeIn 0.3s ease;
@@ -1372,7 +1496,7 @@
     });
 
     // ============================================================
-    //  FIREBASE КОНФИГ
+    //  FIREBASE
     // ============================================================
     const firebaseConfig = {
         apiKey: "AIzaSyB_IDn4_u5W1G82CrjXSMz6SAwXhkdnktc",
@@ -1396,25 +1520,26 @@
     let serverRunning = true;
     let currentMainTab = 'brawlers';
     let adminSubTab = 'shop';
-    let battleState = 'select';
+    let battleState = 'select'; // select | waiting | fighting | result
     let selectedBrawler = null;
-    let opponent = null;
-    let searchTimer = null;
-    let searchCancelled = false;
-    const randomNames = ['🔥 Гром', '💥 Вспышка', '🌀 Тень', '⚡ Молния', '🌟 Звезда', '💀 Кошмар'];
     let isSyncing = false;
     let selectedBrawlerForDetail = null;
 
-    // ============================================================
-    //  СОХРАНЕНИЕ ИГРОКА
-    // ============================================================
+    // Данные боя
+    let battleData = null;
+    let battleId = null;
+    let battleInterval = null;
+    let botTimer = null;
+    let isBotReplaced = false;
+
+    // ID игрока
     let playerId = localStorage.getItem('brawl_playerId');
     if (!playerId) {
         playerId = 'player_' + Math.random().toString(36).substring(2, 10);
         localStorage.setItem('brawl_playerId', playerId);
     }
 
-    let profile = { name: '', gems: 0, coins: 0, brawlers: [], banned: false };
+    let profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
 
     // ============================================================
     //  LOCALSTORAGE
@@ -1428,7 +1553,7 @@
                 shopItems = data.shopItems || [];
                 vouchers = data.vouchers || [];
                 serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
-                profile = data.profile || { name: '', gems: 0, coins: 0, brawlers: [], banned: false };
+                profile = data.profile || { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
                 return true;
             }
         } catch (e) {}
@@ -1451,7 +1576,7 @@
         ];
         vouchers = [];
         serverRunning = true;
-        profile = { name: '', gems: 0, coins: 0, brawlers: [], banned: false };
+        profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
         saveLocalData();
     }
 
@@ -1477,6 +1602,7 @@
             profile.brawlers = ['Шелли'];
             profile.gems = 50;
             profile.coins = 100;
+            profile.trophies = 0;
         }
         saveLocalData();
         syncToFirebase();
@@ -1503,7 +1629,7 @@
     window.createNewAccount = function() {
         playerId = 'player_' + Math.random().toString(36).substring(2, 10);
         localStorage.setItem('brawl_playerId', playerId);
-        profile = { name: '', gems: 0, coins: 0, brawlers: [], banned: false };
+        profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
         saveLocalData();
         syncToFirebase();
         document.getElementById('bannedOverlay').style.display = 'none';
@@ -1707,7 +1833,7 @@
     };
 
     // ============================================================
-    //  АДМИНКА: ИГРОКИ
+    //  ИГРОКИ (АДМИНКА)
     // ============================================================
     let playersList = [];
 
@@ -1865,6 +1991,211 @@
     }
 
     // ============================================================
+    //  БОЕВАЯ СИСТЕМА
+    // ============================================================
+    const randomNames = ['🔥 Гром', '💥 Вспышка', '🌀 Тень', '⚡ Молния', '🌟 Звезда', '💀 Кошмар', '🛡️ Щит', '🗡️ Клинок', '🏹 Стрела', '🧨 Фейерверк'];
+
+    function startBattle(brawlerName) {
+        if (checkBan()) return;
+        if (!brawlerName) return;
+
+        const brawler = brawlers.find(b => b.name === brawlerName);
+        if (!brawler) return alert('Боец не найден!');
+
+        // Проверяем, есть ли боец у игрока
+        if (!profile.brawlers || !profile.brawlers.includes(brawlerName)) {
+            return alert('⚠️ У вас нет этого бойца!');
+        }
+
+        // Создаём бой
+        battleId = 'battle_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        const playerHP = 100 + brawler.hp * 0.1;
+        const playerDamage = brawler.damage * 0.5;
+
+        // Второй игрок (или бот)
+        const opponentName = randomNames[Math.floor(Math.random() * randomNames.length)];
+        const opponentHP = 100 + Math.random() * 50;
+        const opponentDamage = 50 + Math.random() * 50;
+
+        battleData = {
+            id: battleId,
+            playerId: playerId,
+            playerName: profile.name || 'Игрок',
+            playerBrawler: brawlerName,
+            playerHP: Math.floor(playerHP),
+            playerMaxHP: Math.floor(playerHP),
+            playerDamage: Math.floor(playerDamage),
+            opponentId: 'bot_' + Math.random().toString(36).substring(2, 6),
+            opponentName: opponentName,
+            opponentHP: Math.floor(opponentHP),
+            opponentMaxHP: Math.floor(opponentHP),
+            opponentDamage: Math.floor(opponentDamage),
+            isBot: true, // Пока бот, но если подключится игрок, заменим
+            currentTurn: 'player', // player или opponent
+            started: Date.now(),
+            finished: false,
+            winner: null,
+            log: ['⚔️ Бой начался!']
+        };
+
+        // Сохраняем в Firebase
+        db.ref('battles/' + battleId).set(battleData);
+
+        // Подписываемся на обновления боя
+        listenBattle(battleId);
+
+        battleState = 'fighting';
+        renderBattle();
+    }
+
+    function listenBattle(battleId) {
+        db.ref('battles/' + battleId).on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                battleData = data;
+                // Если бой закончился
+                if (battleData.finished) {
+                    finishBattle(battleData);
+                }
+                renderBattle();
+            }
+        });
+    }
+
+    function makeMove(action) {
+        if (!battleData || battleData.finished) return;
+        if (battleData.currentTurn !== 'player') {
+            // Если не твой ход, но прошло 5 секунд — бот может ходить
+            return;
+        }
+
+        // Отправляем ход в Firebase
+        const move = {
+            action: action,
+            timestamp: Date.now()
+        };
+        db.ref('battles/' + battleId + '/moves').push(move);
+    }
+
+    function processMove(move) {
+        if (!battleData || battleData.finished) return;
+
+        const isPlayer = battleData.currentTurn === 'player';
+        const attacker = isPlayer ? 'player' : 'opponent';
+        const defender = isPlayer ? 'opponent' : 'player';
+
+        let damage = 0;
+        let actionText = '';
+
+        if (move.action === 'attack') {
+            damage = Math.floor(isPlayer ? battleData.playerDamage * (0.8 + Math.random() * 0.4) : battleData.opponentDamage * (0.8 + Math.random() * 0.4));
+            actionText = isPlayer ? '⚔️ Атака' : '⚔️ Атака';
+        } else if (move.action === 'defend') {
+            const heal = Math.floor((isPlayer ? battleData.playerMaxHP : battleData.opponentMaxHP) * 0.15);
+            if (isPlayer) {
+                battleData.playerHP = Math.min(battleData.playerMaxHP, battleData.playerHP + heal);
+            } else {
+                battleData.opponentHP = Math.min(battleData.opponentMaxHP, battleData.opponentHP + heal);
+            }
+            actionText = isPlayer ? '🛡️ Защита' : '🛡️ Защита';
+            const name = isPlayer ? battleData.playerName : battleData.opponentName;
+            battleData.log.push(`🛡️ ${name} восстановил ${heal} HP`);
+            // Меняем ход
+            battleData.currentTurn = isPlayer ? 'opponent' : 'player';
+            db.ref('battles/' + battleId).set(battleData);
+            return;
+        }
+
+        if (damage > 0) {
+            if (isPlayer) {
+                battleData.opponentHP = Math.max(0, battleData.opponentHP - damage);
+            } else {
+                battleData.playerHP = Math.max(0, battleData.playerHP - damage);
+            }
+            const attackerName = isPlayer ? battleData.playerName : battleData.opponentName;
+            const defenderName = isPlayer ? battleData.opponentName : battleData.playerName;
+            battleData.log.push(`💥 ${attackerName} нанёс ${damage} урона ${defenderName}`);
+        }
+
+        // Проверяем, не закончился ли бой
+        if (battleData.playerHP <= 0 || battleData.opponentHP <= 0) {
+            battleData.finished = true;
+            battleData.winner = battleData.playerHP > 0 ? 'player' : 'opponent';
+            battleData.log.push(`🏆 ${battleData.winner === 'player' ? battleData.playerName : battleData.opponentName} победил!`);
+            // +10 кубков победителю
+            if (battleData.winner === 'player') {
+                profile.trophies = (profile.trophies || 0) + 10;
+                autoSync();
+            }
+            db.ref('battles/' + battleId).set(battleData);
+            return;
+        }
+
+        // Меняем ход
+        battleData.currentTurn = isPlayer ? 'opponent' : 'player';
+        db.ref('battles/' + battleId).set(battleData);
+    }
+
+    function finishBattle(data) {
+        if (data.winner === 'player') {
+            battleState = 'result';
+            renderBattle();
+        } else {
+            battleState = 'result';
+            renderBattle();
+        }
+        // Отписываемся от боя
+        db.ref('battles/' + battleId).off();
+        // Очищаем таймеры
+        if (botTimer) clearTimeout(botTimer);
+    }
+
+    // Слушаем ходы
+    function listenMoves(battleId) {
+        db.ref('battles/' + battleId + '/moves').on('child_added', (snapshot) => {
+            const move = snapshot.val();
+            // Игнорируем свои ходы (уже обработаны)
+            // Обрабатываем ход только если это не наш ход
+            if (battleData && !battleData.finished) {
+                // Если это ход оппонента и сейчас ход оппонента — обрабатываем
+                if (battleData.currentTurn === 'opponent') {
+                    processMove(move);
+                }
+            }
+        });
+    }
+
+    function botMove() {
+        if (!battleData || battleData.finished) return;
+        if (battleData.currentTurn !== 'opponent') return;
+
+        // Бот выбирает случайное действие
+        const actions = ['attack', 'attack', 'attack', 'defend'];
+        const action = actions[Math.floor(Math.random() * actions.length)];
+
+        const move = {
+            action: action,
+            timestamp: Date.now(),
+            isBot: true
+        };
+        db.ref('battles/' + battleId + '/moves').push(move);
+    }
+
+    // Начинаем слушать ходы при создании боя
+    function startBattleListening(battleId) {
+        listenMoves(battleId);
+        // Таймер для бота
+        if (botTimer) clearInterval(botTimer);
+        botTimer = setInterval(() => {
+            if (battleData && !battleData.finished) {
+                if (battleData.currentTurn === 'opponent') {
+                    botMove();
+                }
+            }
+        }, 3000);
+    }
+
+    // ============================================================
     //  UI
     // ============================================================
     const content = document.getElementById('content');
@@ -1918,6 +2249,122 @@
         if (tab === 'profile') { renderProfile(cloudHtml); return; }
         if (tab === 'chat') { renderChat(cloudHtml); return; }
     }
+
+    // ===== БОЙ =====
+    function renderBattle(cloudHtml) {
+        let html = cloudHtml;
+
+        if (battleState === 'select') {
+            html += `
+                <div class="brawl-select">
+                    <h3 style="color:#f5c842;margin-bottom:8px;">Выбери бойца для боя</h3>
+                    <div class="brawler-grid">
+                        ${(profile.brawlers && profile.brawlers.length) ? 
+                            brawlers.filter(b => profile.brawlers.includes(b.name)).map(b => `
+                                <div class="brawler-card ${selectedBrawler === b.name ? 'selected' : ''}" onclick="selectBrawlerForBattle('${b.name}')">
+                                    ${b.name}
+                                </div>
+                            `).join('') :
+                            '<div style="color:#888;padding:20px;">Купите бойца в магазине!</div>'
+                        }
+                    </div>
+                    ${selectedBrawler ? `<button class="back-btn" onclick="startBattle('${selectedBrawler}')">⚔️ НАЧАТЬ БОЙ</button>` : ''}
+                </div>
+            `;
+            content.innerHTML = html;
+            menuBtns.forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-tab="battle"]').classList.add('active');
+            return;
+        }
+
+        if (battleState === 'fighting' && battleData) {
+            const isPlayerTurn = battleData.currentTurn === 'player';
+            const playerHPPercent = Math.round((battleData.playerHP / battleData.playerMaxHP) * 100);
+            const opponentHPPercent = Math.round((battleData.opponentHP / battleData.opponentMaxHP) * 100);
+
+            html += `
+                <div class="battle-container">
+                    <div class="battle-status">
+                        ${isPlayerTurn ? '🔥 <span class="fighting">Ваш ход!</span>' : '⏳ <span class="waiting">Ход противника...</span>'}
+                    </div>
+                    <div class="battle-field">
+                        <div class="battle-player ${isPlayerTurn ? 'active' : ''}">
+                            <span class="brawler-icon">⚡</span>
+                            <div class="name">${battleData.playerName}</div>
+                            <div class="hp">❤️ ${battleData.playerHP}/${battleData.playerMaxHP}</div>
+                            <div style="background:#1a1a3a;border-radius:10px;height:8px;margin-top:4px;">
+                                <div style="background:${playerHPPercent > 50 ? '#51cf66' : playerHPPercent > 25 ? '#f5c842' : '#d43f3f'};height:8px;border-radius:10px;width:${playerHPPercent}%;transition:0.3s;"></div>
+                            </div>
+                        </div>
+                        <div class="battle-vs">⚔️</div>
+                        <div class="battle-player ${!isPlayerTurn ? 'active' : ''}">
+                            <span class="brawler-icon">${battleData.isBot ? '🤖' : '👤'}</span>
+                            <div class="name">${battleData.opponentName}</div>
+                            <div class="hp">❤️ ${battleData.opponentHP}/${battleData.opponentMaxHP}</div>
+                            <div style="background:#1a1a3a;border-radius:10px;height:8px;margin-top:4px;">
+                                <div style="background:${opponentHPPercent > 50 ? '#51cf66' : opponentHPPercent > 25 ? '#f5c842' : '#d43f3f'};height:8px;border-radius:10px;width:${opponentHPPercent}%;transition:0.3s;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="battle-actions">
+                        <button class="attack" onclick="makeMove('attack')" ${!isPlayerTurn ? 'disabled' : ''}>⚔️ Атака</button>
+                        <button class="defend" onclick="makeMove('defend')" ${!isPlayerTurn ? 'disabled' : ''}>🛡️ Защита</button>
+                    </div>
+                    <div class="battle-log">
+                        ${battleData.log.slice(-5).map(log => `
+                            <div class="log-entry">${log}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            content.innerHTML = html;
+            menuBtns.forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-tab="battle"]').classList.add('active');
+            // Запускаем прослушивание ходов
+            if (!document.querySelector('.battle-container').dataset.listening) {
+                document.querySelector('.battle-container').dataset.listening = 'true';
+                startBattleListening(battleId);
+            }
+            return;
+        }
+
+        if (battleState === 'result' && battleData) {
+            const isWin = battleData.winner === 'player';
+            html += `
+                <div class="battle-result">
+                    <div class="winner">${isWin ? '🎉 ПОБЕДА!' : '💀 ПОРАЖЕНИЕ'}</div>
+                    ${isWin ? `<div class="trophies">🏆 +10 кубков!</div>` : '<div style="color:#8888aa;margin-top:4px;">Попробуй снова!</div>'}
+                    <div style="color:#aaaacc;font-size:14px;margin-top:8px;">
+                        ${battleData.playerName} (${battleData.playerHP} HP) vs ${battleData.opponentName} (${battleData.opponentHP} HP)
+                    </div>
+                    <button class="back-btn" onclick="resetBattle()">⬅️ Назад</button>
+                </div>
+            `;
+            content.innerHTML = html;
+            menuBtns.forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-tab="battle"]').classList.add('active');
+            return;
+        }
+
+        // Fallback
+        html += `<div class="empty-state"><span>⚔️</span>Что-то пошло не так...</div>`;
+        content.innerHTML = html;
+    }
+
+    window.selectBrawlerForBattle = function(name) {
+        selectedBrawler = name;
+        render();
+    };
+
+    window.resetBattle = function() {
+        if (battleInterval) clearInterval(battleInterval);
+        if (botTimer) clearInterval(botTimer);
+        battleState = 'select';
+        battleData = null;
+        battleId = null;
+        selectedBrawler = null;
+        render();
+    };
 
     // ===== БОЙЦЫ =====
     function renderBrawlers(cloudHtml) {
@@ -2024,6 +2471,7 @@
                 <div class="stats">
                     <div class="stat-item"><div class="value gems">${profile.gems}</div><div class="label">💎 Гемы</div></div>
                     <div class="stat-item"><div class="value coins">${profile.coins}</div><div class="label">🪙 Монеты</div></div>
+                    <div class="stat-item"><div class="value trophies">${profile.trophies || 0}</div><div class="label">🏆 Кубки</div></div>
                 </div>
                 <button class="save-btn" onclick="saveProfile()">💾 Сохранить профиль</button>
                 <div style="margin-top:12px;font-size:11px;color:#555577;">ID: ${playerId}</div>
@@ -2041,75 +2489,6 @@
         renderProfile();
         alert('✅ Профиль сохранён!');
     };
-
-    // ===== БОЙ =====
-    function renderBattle(cloudHtml) {
-        let html = cloudHtml + `<div class="brawl-select">`;
-        if (battleState === 'select') {
-            html += `<h3 style="color:#f5c842;margin-bottom:8px;">Выбери бойца</h3><div class="brawler-grid">`;
-            const ownedBrawlers = (profile.brawlers && profile.brawlers.length) ? brawlers.filter(b => profile.brawlers.includes(b.name)) : [];
-            if (!ownedBrawlers.length) {
-                html += `<div style="color:#888;padding:20px;">Купите бойца в магазине!</div>`;
-            } else {
-                ownedBrawlers.forEach(b => {
-                    const sel = (selectedBrawler === b.name) ? 'selected' : '';
-                    html += `<div class="brawler-card ${sel}" onclick="selectBrawler('${b.name}')">${b.name}</div>`;
-                });
-            }
-            html += `</div>`;
-            if (selectedBrawler) html += `<button class="back-btn" onclick="startSearch()">🔍 ИГРАТЬ</button>`;
-        } else if (battleState === 'searching') {
-            html += `
-                <div class="search-status">
-                    <div class="spinner"></div>
-                    <h3 style="color:#f5c842;">Поиск...</h3>
-                    <button class="cancel-btn" onclick="cancelSearch()">❌ Отмена</button>
-                </div>
-            `;
-        } else if (battleState === 'result') {
-            html += `
-                <div class="result-box">
-                    <div style="font-size:48px;">👤</div>
-                    <div class="player-name">${opponent}</div>
-                    <div class="vs">⚔️ VS ⚔️</div>
-                    <div style="font-size:20px;color:#eee;">${selectedBrawler}</div>
-                    <button class="back-btn" onclick="resetBattle()">⬅️ Назад</button>
-                </div>
-            `;
-        }
-        html += `</div>`;
-        content.innerHTML = html;
-        menuBtns.forEach(b => b.classList.remove('active'));
-        document.querySelector('[data-tab="battle"]').classList.add('active');
-    }
-
-    window.selectBrawler = function(name) { selectedBrawler = name; render(); };
-    window.startSearch = function() {
-        if (!selectedBrawler) return;
-        battleState = 'searching';
-        searchCancelled = false;
-        render();
-        if (searchTimer) clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => {
-            if (!searchCancelled && battleState === 'searching') {
-                opponent = randomNames[Math.floor(Math.random() * randomNames.length)];
-                battleState = 'result';
-                render();
-            }
-        }, 5000);
-        if (Math.random() < 0.3) {
-            setTimeout(() => {
-                if (!searchCancelled && battleState === 'searching') {
-                    clearTimeout(searchTimer);
-                    opponent = randomNames[Math.floor(Math.random() * randomNames.length)];
-                    battleState = 'result';
-                    render();
-                }
-            }, 1000 + Math.random() * 2500);
-        }
-    };
-    window.cancelSearch = function() { searchCancelled = true; clearTimeout(searchTimer); battleState = 'select'; render(); };
-    window.resetBattle = function() { clearTimeout(searchTimer); battleState = 'select'; selectedBrawler = null; opponent = null; render(); };
 
     // ===== ЧАТ =====
     function renderChat(cloudHtml) {
@@ -2130,7 +2509,6 @@
         content.innerHTML = html;
         menuBtns.forEach(b => b.classList.remove('active'));
         document.querySelector('[data-tab="chat"]').classList.add('active');
-        // Загружаем чат
         loadChat();
     }
 
@@ -2268,7 +2646,7 @@
                 const players = snapshot.val();
                 if (players) {
                     const list = Object.values(players);
-                    list.sort((a, b) => (b.gems || 0) - (a.gems || 0));
+                    list.sort((a, b) => (b.trophies || 0) - (a.trophies || 0));
                     let boardHtml = '';
                     list.forEach((p, idx) => {
                         const rankClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
@@ -2276,8 +2654,8 @@
                         boardHtml += `
                             <div class="leaderboard-card">
                                 <div class="rank ${rankClass}">${emoji}</div>
-                                <div class="info"><div class="name">${p.name || 'Аноним'}</div><div class="stats">💎 ${p.gems || 0} • 🪙 ${p.coins || 0}</div></div>
-                                <div class="gems">${p.gems || 0} 💎</div>
+                                <div class="info"><div class="name">${p.name || 'Аноним'}</div><div class="stats">🏆 ${p.trophies || 0} • 💎 ${p.gems || 0}</div></div>
+                                <div class="gems">🏆 ${p.trophies || 0}</div>
                             </div>
                         `;
                     });
@@ -2411,13 +2789,16 @@
                 document.getElementById('passwordOverlay').style.display = 'flex';
                 return;
             }
-            if (currentMainTab !== 'battle' && battleState !== 'select') {
-                clearTimeout(searchTimer);
-                battleState = 'select';
-                selectedBrawler = null;
-                opponent = null;
-            }
             if (tab !== 'brawlers') { selectedBrawlerForDetail = null; }
+            // Если выходим из боя — сбрасываем
+            if (tab !== 'battle' && battleState !== 'select') {
+                if (battleInterval) clearInterval(battleInterval);
+                if (botTimer) clearInterval(botTimer);
+                battleState = 'select';
+                battleData = null;
+                battleId = null;
+                selectedBrawler = null;
+            }
             currentMainTab = tab;
             render();
         });
