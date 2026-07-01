@@ -1180,6 +1180,116 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
+        /* ===== ЧАТ ===== */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 8px;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 4px;
+            min-height: 200px;
+            max-height: 400px;
+        }
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: #0f0f2a;
+            border-radius: 10px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #f5c84255;
+            border-radius: 10px;
+        }
+        .chat-message {
+            background: #0f0f2a;
+            border-radius: 16px;
+            padding: 8px 14px;
+            border-left: 3px solid #f5c842;
+            animation: slideIn 0.3s ease;
+        }
+        .chat-message .msg-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+        .chat-message .msg-name {
+            font-weight: 700;
+            color: #f5c842;
+            font-size: 13px;
+        }
+        .chat-message .msg-time {
+            font-size: 10px;
+            color: #555577;
+        }
+        .chat-message .msg-text {
+            color: #ccccee;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+        .chat-message.own {
+            border-left-color: #4fc3f7;
+        }
+        .chat-message.own .msg-name {
+            color: #4fc3f7;
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .chat-input-row input {
+            flex: 1;
+            background: #1a1a3a;
+            border: 1px solid #555577;
+            border-radius: 40px;
+            padding: 10px 16px;
+            color: #eee;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s ease;
+        }
+        .chat-input-row input:focus {
+            border-color: #f5c842;
+            box-shadow: 0 0 20px #f5c84222;
+        }
+        .chat-input-row button {
+            background: #f5c842;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 700;
+            color: #0b0b1a;
+            cursor: pointer;
+            transition: 0.3s ease;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .chat-input-row button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #f5c84255;
+        }
+        .chat-empty {
+            color: #8888aa;
+            text-align: center;
+            padding: 30px 0;
+            font-size: 16px;
+            margin: auto 0;
+        }
+        .chat-empty span {
+            display: block;
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
@@ -1197,6 +1307,7 @@
         <button data-tab="shop">🛍️ Магазин</button>
         <button data-tab="battle">⚡ Бой</button>
         <button data-tab="profile">👤 Профиль</button>
+        <button data-tab="chat">💬 Чат</button>
         <button data-tab="admin">⚙️ Админка</button>
     </div>
 </div>
@@ -1295,7 +1406,7 @@
     let selectedBrawlerForDetail = null;
 
     // ============================================================
-    //  СОХРАНЕНИЕ ИГРОКА (ID В LOCALSTORAGE)
+    //  СОХРАНЕНИЕ ИГРОКА
     // ============================================================
     let playerId = localStorage.getItem('brawl_playerId');
     if (!playerId) {
@@ -1345,7 +1456,7 @@
     }
 
     // ============================================================
-    //  ОНБОРДИНГ (ПОКАЗЫВАЕМ ТОЛЬКО ЕСЛИ НЕТ ИМЕНИ)
+    //  ОНБОРДИНГ
     // ============================================================
     function showOnboarding() {
         if (!profile.name) {
@@ -1435,13 +1546,11 @@
                     shopItems = data.shopItems || [];
                     vouchers = data.vouchers || [];
                     serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
-                    // Загружаем профиль по ID
                     db.ref('players/' + playerId).once('value').then((snap) => {
                         const playerData = snap.val();
                         if (playerData) {
                             profile = playerData;
                         }
-                        // Если профиль есть, но нет имени — показываем онбординг
                         if (!profile.name && !profile.banned) {
                             showOnboarding();
                         }
@@ -1598,7 +1707,7 @@
     };
 
     // ============================================================
-    //  АДМИНКА: ВЫДАЧА РЕСУРСОВ И БАН (СПИСОК ИГРОКОВ)
+    //  АДМИНКА: ИГРОКИ
     // ============================================================
     let playersList = [];
 
@@ -1695,6 +1804,67 @@
     };
 
     // ============================================================
+    //  ЧАТ
+    // ============================================================
+    window.sendMessage = function() {
+        if (checkBan()) return;
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const msg = {
+            playerId: playerId,
+            name: profile.name || 'Аноним',
+            text: text,
+            timestamp: Date.now()
+        };
+
+        db.ref('chat').push(msg);
+        input.value = '';
+    };
+
+    document.getElementById('chatInput')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { sendMessage(); }
+    });
+
+    function loadChat() {
+        db.ref('chat').orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
+            const messages = snapshot.val();
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+
+            if (!messages) {
+                container.innerHTML = `
+                    <div class="chat-empty">
+                        <span>💬</span>
+                        Сообщений пока нет<br>
+                        <span style="font-size:12px;color:#555577;">Будь первым!</span>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            const msgs = Object.values(messages).reverse();
+            msgs.forEach(msg => {
+                const isOwn = msg.playerId === playerId;
+                const time = new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                html += `
+                    <div class="chat-message ${isOwn ? 'own' : ''}">
+                        <div class="msg-header">
+                            <span class="msg-name">${msg.name || 'Аноним'}</span>
+                            <span class="msg-time">${time}</span>
+                        </div>
+                        <div class="msg-text">${msg.text}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        });
+    }
+
+    // ============================================================
     //  UI
     // ============================================================
     const content = document.getElementById('content');
@@ -1746,6 +1916,7 @@
         if (tab === 'brawlers') { renderBrawlers(cloudHtml); return; }
         if (tab === 'shop') { renderShop(cloudHtml); return; }
         if (tab === 'profile') { renderProfile(cloudHtml); return; }
+        if (tab === 'chat') { renderChat(cloudHtml); return; }
     }
 
     // ===== БОЙЦЫ =====
@@ -1940,11 +2111,33 @@
     window.cancelSearch = function() { searchCancelled = true; clearTimeout(searchTimer); battleState = 'select'; render(); };
     window.resetBattle = function() { clearTimeout(searchTimer); battleState = 'select'; selectedBrawler = null; opponent = null; render(); };
 
+    // ===== ЧАТ =====
+    function renderChat(cloudHtml) {
+        const html = cloudHtml + `
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-empty">
+                        <span>💬</span>
+                        Загрузка сообщений...
+                    </div>
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatInput" placeholder="Введите сообщение..." maxlength="200" />
+                    <button onclick="sendMessage()">📤</button>
+                </div>
+            </div>
+        `;
+        content.innerHTML = html;
+        menuBtns.forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-tab="chat"]').classList.add('active');
+        // Загружаем чат
+        loadChat();
+    }
+
     // ============================================================
     //  АДМИНКА
     // ============================================================
     function renderAdmin(cloudHtml) {
-        // Загружаем список игроков
         loadPlayersList();
 
         let html = cloudHtml + `
@@ -1959,7 +2152,6 @@
             <div class="admin-panel">
         `;
 
-        // ===== МАГАЗИН =====
         if (adminSubTab === 'shop') {
             html += `
                 <div class="form-card">
@@ -1992,10 +2184,7 @@
                     </div>
                 `).join('')}</div>
             `;
-        }
-
-        // ===== БОЙЦЫ =====
-        else if (adminSubTab === 'brawlers') {
+        } else if (adminSubTab === 'brawlers') {
             html += `
                 <div class="form-card">
                     <h3 style="color:#f5c842;margin-bottom:10px;">➕ Добавить бойца</h3>
@@ -2015,10 +2204,7 @@
                     </div>
                 `).join('')}</div>
             `;
-        }
-
-        // ===== ВАУЧЕРЫ =====
-        else if (adminSubTab === 'vouchers') {
+        } else if (adminSubTab === 'vouchers') {
             html += `
                 <div class="form-card">
                     <h3 style="color:#f5c842;margin-bottom:10px;">🎟️ Создать ваучер</h3>
@@ -2050,10 +2236,7 @@
                     `).join('')}
                 </div>
             `;
-        }
-
-        // ===== ИГРОКИ (СПИСОК) =====
-        else if (adminSubTab === 'players') {
+        } else if (adminSubTab === 'players') {
             html += `
                 <div class="form-card">
                     <h3 style="color:#f5c842;margin-bottom:10px;">💎 Выдать ресурсы</h3>
@@ -2079,10 +2262,7 @@
                     <button class="submit-btn" onclick="adminUnbanPlayer()" style="background:#2ecc71;">🔓 Разбанить</button>
                 </div>
             `;
-        }
-
-        // ===== ЛИДЕРБОРД =====
-        else if (adminSubTab === 'leaderboard') {
+        } else if (adminSubTab === 'leaderboard') {
             html += `<h3 style="color:#f5c842;margin-bottom:10px;">🏆 Лидерборд</h3><div id="leaderboardContainer"></div>`;
             db.ref('players').once('value').then((snapshot) => {
                 const players = snapshot.val();
@@ -2106,10 +2286,7 @@
                     document.getElementById('leaderboardContainer').innerHTML = `<div class="empty-state"><span>📭</span>Нет игроков</div>`;
                 }
             });
-        }
-
-        // ===== НАСТРОЙКИ =====
-        else if (adminSubTab === 'settings') {
+        } else if (adminSubTab === 'settings') {
             html += `
                 <div style="padding:10px 0;text-align:center;color:#aaa;">Управление сервером</div>
                 ${serverRunning 
@@ -2145,7 +2322,6 @@
         };
         setTimeout(window.toggleVoucherFields, 100);
 
-        // Обновляем списки игроков после рендера
         setTimeout(updatePlayerSelects, 200);
     }
 
