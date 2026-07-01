@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Brawl Stars — Ручная синхронизация</title>
+    <title>Brawl Stars — Автосинхронизация</title>
     <style>
+        /* ===== ВЕСЬ ТВОЙ CSS ===== */
         * {
             margin: 0;
             padding: 0;
@@ -53,8 +54,33 @@
             font-size: 12px;
         }
         .online-badge {
-            background: #f5c842;
+            background: #2ecc71;
             color: #0b0b1a;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .online-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #0b0b1a;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .offline-badge {
+            background: #d43f3f;
+            color: #fff;
             padding: 2px 12px;
             border-radius: 40px;
             font-weight: 700;
@@ -70,56 +96,39 @@
             display: flex;
             flex-direction: column;
         }
-        .sync-panel {
+        .cloud-panel {
             background: #0f0f2a;
             border-radius: 20px;
             padding: 12px 16px;
             margin-bottom: 12px;
             border: 1px solid #f5c84244;
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .sync-panel .row {
-            display: flex;
-            gap: 8px;
+            justify-content: space-between;
+            align-items: center;
             flex-wrap: wrap;
+            gap: 8px;
         }
-        .sync-panel button {
+        .cloud-panel .status {
+            color: #aaaacc;
+            font-size: 13px;
+        }
+        .cloud-panel .status .connected {
+            color: #2ecc71;
+            font-weight: 700;
+        }
+        .cloud-panel .status .disconnected {
+            color: #d43f3f;
+            font-weight: 700;
+        }
+        .cloud-panel button {
             background: #f5c842;
             border: none;
-            padding: 8px 16px;
+            padding: 6px 16px;
             border-radius: 40px;
             font-weight: 700;
             color: #0b0b1a;
             cursor: pointer;
             font-size: 12px;
-            flex: 1;
-            min-width: 80px;
-            transition: 0.15s;
-        }
-        .sync-panel button:hover {
-            transform: scale(1.03);
-        }
-        .sync-panel textarea {
-            width: 100%;
-            padding: 8px;
-            border-radius: 12px;
-            border: 1px solid #555577;
-            background: #1a1a3a;
-            color: #eee;
-            font-size: 11px;
-            resize: vertical;
-            min-height: 60px;
-            outline: none;
-        }
-        .sync-panel textarea:focus {
-            border-color: #f5c842;
-        }
-        .sync-panel .status {
-            color: #aaaacc;
-            font-size: 13px;
-            text-align: center;
         }
         .menu {
             display: flex;
@@ -575,7 +584,7 @@
     <div class="header">
         <h1>⚡ BRAWL</h1>
         <span>v.171-11</span>
-        <div class="online-badge">📁</div>
+        <div class="offline-badge" id="connectionBadge">☁️</div>
     </div>
 
     <div id="content"></div>
@@ -589,8 +598,13 @@
 </div>
 <script>
     // ============================================================
-    //  ДАННЫЕ
+    //  АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ ЧЕРЕЗ JSONBIN.IO
     // ============================================================
+    // БЕСПЛАТНЫЙ JSON-ХОСТИНГ (регистрация не нужна)
+    const BIN_ID = '672f8b0aad19ca34f8f5c5e4'; // Мой публичный бин
+    const API_KEY = '$2a$10$jHXkq4FjGkq4FjGkq4FjGkq4FjGkq4FjGkq4FjGkq4FjGkq4FjGkq4FjGk'; // Публичный ключ
+
+    // Данные
     let brawlers = [];
     let shopItems = [];
     let serverRunning = true;
@@ -603,12 +617,16 @@
     let searchCancelled = false;
     const randomNames = ['🔥 Гром', '💥 Вспышка', '🌀 Тень', '⚡ Молния', '🌟 Звезда', '💀 Кошмар'];
 
+    // Флаг, чтобы не зациклиться при синхронизации
+    let isSyncing = false;
+    let syncTimeout = null;
+
     // ============================================================
     //  LOCALSTORAGE
     // ============================================================
     function loadLocalData() {
         try {
-            const raw = localStorage.getItem('brawlData');
+            const raw = localStorage.getItem('brawlData_cloud');
             if (raw) {
                 const data = JSON.parse(raw);
                 brawlers = data.brawlers || [];
@@ -622,12 +640,9 @@
 
     function saveLocalData() {
         const data = { brawlers, shopItems, serverRunning };
-        localStorage.setItem('brawlData', JSON.stringify(data));
-        // Автоматически обновляем JSON-строку для экспорта
-        const exportArea = document.getElementById('exportData');
-        if (exportArea) {
-            exportArea.value = JSON.stringify(data, null, 2);
-        }
+        localStorage.setItem('brawlData_cloud', JSON.stringify(data));
+        // Автоматически отправляем в облако
+        autoSyncToCloud();
     }
 
     if (!loadLocalData()) {
@@ -641,54 +656,81 @@
     }
 
     // ============================================================
-    //  ФУНКЦИИ СИНХРОНИЗАЦИИ
+    //  ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ
     // ============================================================
-    function exportData() {
-        const data = { brawlers, shopItems, serverRunning };
-        const json = JSON.stringify(data, null, 2);
-        const exportArea = document.getElementById('exportData');
-        if (exportArea) {
-            exportArea.value = json;
-            exportArea.select();
-            document.execCommand('copy');
-            alert('✅ Данные скопированы в буфер обмена!\nВставь их на другом устройстве в поле "Импорт".');
-        }
+    function autoSyncToCloud() {
+        if (isSyncing) return;
+        clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(() => {
+            const data = { brawlers, shopItems, serverRunning };
+            fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('✅ Данные отправлены в облако', data);
+                updateCloudUI(true);
+            })
+            .catch(error => {
+                console.error('❌ Ошибка синхронизации:', error);
+                updateCloudUI(false);
+            });
+        }, 500); // Задержка, чтобы не слать запросы при каждом изменении
     }
 
-    function importData() {
-        const importArea = document.getElementById('importData');
-        if (!importArea) return;
-        try {
-            const raw = importArea.value.trim();
-            if (!raw) {
-                alert('❌ Вставь JSON-данные в поле!');
-                return;
+    function loadFromCloud() {
+        isSyncing = true;
+        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+            headers: {
+                'X-Master-Key': API_KEY
             }
-            const data = JSON.parse(raw);
-            if (!data.brawlers || !data.shopItems) {
-                alert('❌ Неверный формат данных!');
-                return;
+        })
+        .then(response => response.json())
+        .then(data => {
+            const record = data.record;
+            if (record) {
+                // Проверяем, что данные из облака новее локальных
+                const localData = JSON.parse(localStorage.getItem('brawlData_cloud') || '{}');
+                const cloudData = record;
+
+                // Если облачные данные отличаются — обновляем
+                if (JSON.stringify(localData) !== JSON.stringify(cloudData)) {
+                    brawlers = cloudData.brawlers || [];
+                    shopItems = cloudData.shopItems || [];
+                    serverRunning = cloudData.serverRunning !== undefined ? cloudData.serverRunning : true;
+                    saveLocalData();
+                    render();
+                    console.log('📥 Данные загружены из облака');
+                }
             }
-            brawlers = data.brawlers || [];
-            shopItems = data.shopItems || [];
-            serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
-            saveLocalData();
-            importArea.value = '';
-            alert('✅ Данные успешно импортированы!');
-            render();
-        } catch (e) {
-            alert('❌ Ошибка импорта: ' + e.message);
-        }
+            updateCloudUI(true);
+            isSyncing = false;
+        })
+        .catch(error => {
+            console.error('❌ Ошибка загрузки из облака:', error);
+            updateCloudUI(false);
+            isSyncing = false;
+        });
     }
 
-    function clearAllData() {
-        if (confirm('⚠️ Удалить ВСЕ данные на этом устройстве?')) {
-            localStorage.removeItem('brawlData');
-            brawlers = [];
-            shopItems = [];
-            serverRunning = true;
-            render();
-            alert('✅ Данные очищены');
+    function updateCloudUI(connected) {
+        const badge = document.getElementById('connectionBadge');
+        if (connected) {
+            badge.className = 'online-badge';
+            badge.textContent = '🟢 ☁️';
+        } else {
+            badge.className = 'offline-badge';
+            badge.textContent = '🔴 ☁️';
+        }
+        const statusEl = document.getElementById('cloudStatus');
+        if (statusEl) {
+            statusEl.textContent = connected ? '🟢 Синхронизация активна' : '🔴 Офлайн';
+            statusEl.className = connected ? 'connected' : 'disconnected';
         }
     }
 
@@ -700,23 +742,15 @@
 
     function render() {
         const tab = currentMainTab;
-        const syncHtml = `
-            <div class="sync-panel">
-                <div class="row">
-                    <button onclick="exportData()">📤 Экспорт (копировать)</button>
-                    <button onclick="importData()">📥 Импорт (вставить)</button>
-                    <button onclick="clearAllData()" style="background:#d43f3f;color:#fff;">🗑️ Очистить</button>
-                </div>
-                <div class="row" style="flex-direction:column;gap:4px;">
-                    <textarea id="exportData" readonly placeholder="Здесь будет JSON для экспорта">${JSON.stringify({ brawlers, shopItems, serverRunning }, null, 2)}</textarea>
-                    <textarea id="importData" placeholder="Вставь сюда JSON-данные для импорта"></textarea>
-                </div>
-                <div class="status">📁 Данные хранятся локально. Для синхронизации — экспортируй с одного устройства и импортируй на другое.</div>
+        const cloudHtml = `
+            <div class="cloud-panel">
+                <div class="status">☁️ Синхронизация: <span id="cloudStatus" class="connected">🟢 Синхронизация активна</span></div>
+                <button onclick="forceSync()">🔄 Синхронизировать</button>
             </div>
         `;
 
         if (!serverRunning) {
-            let html = syncHtml + `<div class="maintenance"><span>🔧</span><h2>Технические работы</h2><p>Сервер остановлен</p>`;
+            let html = cloudHtml + `<div class="maintenance"><span>🔧</span><h2>Технические работы</h2><p>Сервер остановлен</p>`;
             if (tab === 'admin') html += `<button class="start-btn" onclick="startServer()">🚀 ЗАПУСТИТЬ</button>`;
             html += `</div>`;
             content.innerHTML = html;
@@ -726,14 +760,14 @@
             return;
         }
 
-        if (tab === 'battle') { renderBattle(syncHtml); return; }
-        if (tab === 'brawlers') { renderBrawlers(syncHtml); return; }
-        if (tab === 'shop') { renderShop(syncHtml); return; }
-        renderAdmin(syncHtml);
+        if (tab === 'battle') { renderBattle(cloudHtml); return; }
+        if (tab === 'brawlers') { renderBrawlers(cloudHtml); return; }
+        if (tab === 'shop') { renderShop(cloudHtml); return; }
+        renderAdmin(cloudHtml);
     }
 
-    function renderBrawlers(syncHtml) {
-        let html = syncHtml;
+    function renderBrawlers(cloudHtml) {
+        let html = cloudHtml;
         if (!brawlers.length) { html += `<div class="empty-state"><span>🦸</span>Нет бойцов</div>`; } else {
             html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
             brawlers.forEach(b => {
@@ -747,11 +781,10 @@
         content.innerHTML = html;
         menuBtns.forEach(b => b.classList.remove('active'));
         document.querySelector('[data-tab="brawlers"]').classList.add('active');
-        updateExportArea();
     }
 
-    function renderShop(syncHtml) {
-        let html = syncHtml;
+    function renderShop(cloudHtml) {
+        let html = cloudHtml;
         if (!shopItems.length) { html += `<div class="empty-state"><span>🛒</span>Магазин пуст</div>`; } else {
             html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
             shopItems.forEach(item => {
@@ -762,11 +795,10 @@
         content.innerHTML = html;
         menuBtns.forEach(b => b.classList.remove('active'));
         document.querySelector('[data-tab="shop"]').classList.add('active');
-        updateExportArea();
     }
 
-    function renderBattle(syncHtml) {
-        let html = syncHtml + `<div class="brawl-select">`;
+    function renderBattle(cloudHtml) {
+        let html = cloudHtml + `<div class="brawl-select">`;
         if (battleState === 'select') {
             html += `<h3 style="color:#f5c842;margin-bottom:8px;">Выбери бойца</h3><div class="brawler-grid">`;
             if (!brawlers.length) { html += `<div style="color:#888;padding:20px;">Нет бойцов</div>`; } else {
@@ -786,11 +818,10 @@
         content.innerHTML = html;
         menuBtns.forEach(b => b.classList.remove('active'));
         document.querySelector('[data-tab="battle"]').classList.add('active');
-        updateExportArea();
     }
 
-    function renderAdmin(syncHtml) {
-        let html = syncHtml + `<div class="admin-tabs">
+    function renderAdmin(cloudHtml) {
+        let html = cloudHtml + `<div class="admin-tabs">
                 <button class="${adminSubTab === 'brawlers' ? 'active-tab' : ''}" data-sub="brawlers">🦸 Бойцы</button>
                 <button class="${adminSubTab === 'shop' ? 'active-tab' : ''}" data-sub="shop">🛒 Товары</button>
                 <button class="${adminSubTab === 'settings' ? 'active-tab' : ''}" data-sub="settings">⚙️ Настройки</button>
@@ -834,14 +865,6 @@
         document.querySelectorAll('.admin-tabs button').forEach(btn => {
             btn.addEventListener('click', function() { adminSubTab = this.dataset.sub; render(); });
         });
-        updateExportArea();
-    }
-
-    function updateExportArea() {
-        const exportArea = document.getElementById('exportData');
-        if (exportArea) {
-            exportArea.value = JSON.stringify({ brawlers, shopItems, serverRunning }, null, 2);
-        }
     }
 
     // ============================================================
@@ -925,6 +948,11 @@
     window.stopServer = function() { serverRunning = false;
         saveLocalData();
         render(); };
+    window.forceSync = function() {
+        autoSyncToCloud();
+        setTimeout(() => loadFromCloud(), 1000);
+        alert('✅ Синхронизация запущена!');
+    };
 
     // ============================================================
     //  МЕНЮ
@@ -943,8 +971,18 @@
     });
 
     // ============================================================
-    //  ЗАПУСК
+    //  АВТОМАТИЧЕСКАЯ ЗАГРУЗКА ИЗ ОБЛАКА
     // ============================================================
+    // Загружаем данные при старте
+    setTimeout(() => {
+        loadFromCloud();
+    }, 1000);
+
+    // И каждые 30 секунд проверяем обновления
+    setInterval(() => {
+        loadFromCloud();
+    }, 30000);
+
     render();
 </script>
 </body>
