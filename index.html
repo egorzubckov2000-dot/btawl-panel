@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Brawl Stars — PvP</title>
+    <title>Brawl Stars</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== ВСЕ СТИЛИ (ТЕ ЖЕ) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -36,20 +35,12 @@
             position: relative;
         }
         @media (min-width:600px) {
-            .app { max-width: 500px;
-                height: 95vh;
-                border-radius: 40px;
-                border: 1px solid #f5c84255;
-                box-shadow: 0 0 60px #f5c84222;
-                padding: 20px 18px; }
+            .app { max-width: 500px; height: 95vh; border-radius: 40px; border: 1px solid #f5c84255; box-shadow: 0 0 60px #f5c84222; padding: 20px 18px; }
         }
         @media (max-width:430px) {
-            .app { padding: 12px 10px;
-                height: 100vh;
-                max-height: 860px; }
+            .app { padding: 12px 10px; height: 100vh; max-height: 860px; }
             .header h1 { font-size: 22px; }
-            .menu button { font-size: 11px;
-                padding: 8px 4px; }
+            .menu button { font-size: 11px; padding: 8px 4px; }
         }
         .header {
             display: flex;
@@ -94,13 +85,11 @@
             animation: pulse-dot 1.5s ease-in-out infinite;
         }
         @keyframes pulse-dot {
-            0%,
-            100% { opacity: 1; }
+            0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
         @keyframes pulse-badge {
-            0%,
-            100% { transform: scale(1); }
+            0%, 100% { transform: scale(1); }
             50% { transform: scale(1.02); }
         }
         .offline-badge {
@@ -123,8 +112,7 @@
             animation: fadeIn 0.4s ease;
         }
         @media (max-width:430px) {
-            #content { padding: 12px 10px;
-                border-radius: 18px; }
+            #content { padding: 12px 10px; border-radius: 18px; }
         }
         .cloud-panel {
             background: #0f0f2a;
@@ -194,13 +182,12 @@
             animation: bounce-icon 2s ease-in-out infinite;
         }
         @keyframes bounce-icon {
-            0%,
-            100% { transform: translateY(0); }
+            0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-8px); }
         }
 
-        /* ===== ОНБОРДИНГ ===== */
-        .onboarding-overlay {
+        /* ===== ВХОД/РЕГИСТРАЦИЯ ===== */
+        .auth-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -213,7 +200,7 @@
             z-index: 2000;
             animation: fadeIn 0.5s ease;
         }
-        .onboarding-box {
+        .auth-box {
             background: #1a1a3a;
             padding: 30px 24px;
             border-radius: 30px;
@@ -227,48 +214,82 @@
             from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
         }
-        .onboarding-box h2 {
+        .auth-box h2 {
             color: #f5c842;
             font-size: 24px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
-        .onboarding-box p {
+        .auth-box p {
             color: #8888aa;
             font-size: 14px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
-        .onboarding-box input {
+        .auth-box input {
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 14px;
             border-radius: 40px;
             border: 1px solid #555577;
             background: #0f0f2a;
             color: #eee;
-            font-size: 16px;
+            font-size: 15px;
             outline: none;
             text-align: center;
             transition: 0.3s ease;
+            margin-bottom: 10px;
         }
-        .onboarding-box input:focus {
+        .auth-box input:focus {
             border-color: #f5c842;
             box-shadow: 0 0 30px #f5c84222;
         }
-        .onboarding-box button {
-            margin-top: 16px;
-            width: 100%;
+        .auth-box .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .auth-box .btn-group button {
+            flex: 1;
             padding: 12px;
             border-radius: 40px;
             border: none;
-            background: #f5c842;
-            color: #0b0b1a;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
             transition: 0.3s ease;
         }
-        .onboarding-box button:hover {
+        .auth-box .btn-group .login-btn {
+            background: #f5c842;
+            color: #0b0b1a;
+        }
+        .auth-box .btn-group .login-btn:hover {
             transform: scale(1.03);
             box-shadow: 0 0 30px #f5c84255;
+        }
+        .auth-box .btn-group .register-btn {
+            background: transparent;
+            color: #4fc3f7;
+            border: 2px solid #4fc3f7;
+        }
+        .auth-box .btn-group .register-btn:hover {
+            transform: scale(1.03);
+            background: #4fc3f722;
+        }
+        .auth-box .error {
+            color: #d43f3f;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+            animation: shake 0.4s ease;
+        }
+        .auth-box .success {
+            color: #2ecc71;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
         }
 
         /* ===== БАН ===== */
@@ -363,8 +384,7 @@
             align-items: center;
         }
         @keyframes pulse-search {
-            0%,
-            100% { border-color: #f5c84244; }
+            0%, 100% { border-color: #f5c84244; }
             50% { border-color: #f5c842; }
         }
         .pvp-search .spinner {
@@ -401,7 +421,6 @@
             transform: scale(1.05);
             background: #777;
         }
-
         .battle-field {
             display: flex;
             justify-content: space-between;
@@ -512,8 +531,7 @@
             animation: pulse-fight 1s ease-in-out infinite;
         }
         @keyframes pulse-fight {
-            0%,
-            100% { opacity: 1; }
+            0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
         .battle-result {
@@ -757,25 +775,6 @@
             margin-bottom: 8px;
             display: block;
         }
-        .profile-card .name-input {
-            background: #1a1a3a;
-            border: 1px solid #555577;
-            border-radius: 40px;
-            padding: 8px 14px;
-            color: #eee;
-            font-size: 16px;
-            font-weight: 700;
-            text-align: center;
-            outline: none;
-            width: 100%;
-            max-width: 200px;
-            margin: 0 auto 12px;
-            transition: 0.3s ease;
-        }
-        .profile-card .name-input:focus {
-            border-color: #f5c842;
-            box-shadow: 0 0 30px #f5c84222;
-        }
         .profile-card .stats {
             display: flex;
             justify-content: center;
@@ -805,21 +804,27 @@
         .profile-card .stat-item .value.trophies {
             color: #f5c842;
         }
-        .profile-card .save-btn {
-            background: #f5c842;
+        .profile-card .logout-btn {
+            background: #d43f3f;
             border: none;
             padding: 8px 24px;
             border-radius: 60px;
             font-weight: 700;
-            color: #0b0b1a;
+            color: #fff;
             cursor: pointer;
             transition: 0.3s ease;
             font-size: 14px;
             margin-top: 12px;
         }
-        .profile-card .save-btn:hover {
+        .profile-card .logout-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 30px #f5c84255;
+            box-shadow: 0 0 30px #d43f3f66;
+        }
+        .profile-card .nick {
+            color: #f5c842;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
         }
 
         /* ===== АДМИНКА ===== */
@@ -1115,8 +1120,7 @@
             animation: pulse-maintenance 2s ease-in-out infinite;
         }
         @keyframes pulse-maintenance {
-            0%,
-            100% { border-color: #f5c84288; }
+            0%, 100% { border-color: #f5c84288; }
             50% { border-color: #f5c842; }
         }
         .maintenance span {
@@ -1139,7 +1143,6 @@
             margin-top: 6px;
             font-size: 14px;
         }
-
         .brawl-select {
             display: flex;
             flex-direction: column;
@@ -1303,8 +1306,7 @@
             animation: shake 0.4s ease;
         }
         @keyframes shake {
-            0%,
-            100% { transform: translateX(0); }
+            0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-8px); }
             75% { transform: translateX(8px); }
         }
@@ -1476,13 +1478,19 @@
     </div>
 </div>
 
-<!-- ===== ОНБОРДИНГ ===== -->
-<div class="onboarding-overlay" id="onboardingOverlay">
-    <div class="onboarding-box">
-        <h2>👋 Добро пожаловать!</h2>
-        <p>Введите ваше имя, чтобы начать игру</p>
-        <input type="text" id="onboardingName" placeholder="Ваше имя" maxlength="20" />
-        <button onclick="finishOnboarding()">Начать игру 🚀</button>
+<!-- ===== ВХОД ===== -->
+<div class="auth-overlay" id="authOverlay">
+    <div class="auth-box">
+        <h2>⚡ BRAWL</h2>
+        <p id="authSubtitle">Войдите или зарегистрируйтесь</p>
+        <input type="text" id="authNick" placeholder="Никнейм" maxlength="20" />
+        <input type="password" id="authPassword" placeholder="Пароль" maxlength="30" />
+        <div class="error" id="authError">❌ Ошибка</div>
+        <div class="success" id="authSuccess">✅ Успешно!</div>
+        <div class="btn-group">
+            <button class="login-btn" onclick="login()">🔑 Войти</button>
+            <button class="register-btn" onclick="register()">📝 Регистрация</button>
+        </div>
     </div>
 </div>
 
@@ -1499,7 +1507,7 @@
     </div>
 </div>
 
-<!-- ===== ПАРОЛЬ ===== -->
+<!-- ===== ПАРОЛЬ АДМИНКИ ===== -->
 <div class="password-overlay" id="passwordOverlay">
     <div class="password-box">
         <h2>🔒 Админ-панель</h2>
@@ -1512,7 +1520,7 @@
 
 <script>
     // ============================================================
-    //  ПАРОЛЬ
+    //  ПАРОЛЬ АДМИНКИ
     // ============================================================
     const ADMIN_PASSWORD = 'admin123';
     let isAdmin = false;
@@ -1552,7 +1560,144 @@
     const db = firebase.database();
 
     // ============================================================
-    //  ДАННЫЕ
+    //  АВТОРИЗАЦИЯ
+    // ============================================================
+    let currentPlayerId = localStorage.getItem('brawl_playerId');
+    let isLoggedIn = false;
+    let profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false, password: '' };
+
+    function register() {
+        const nick = document.getElementById('authNick').value.trim();
+        const pass = document.getElementById('authPassword').value.trim();
+        const errorEl = document.getElementById('authError');
+        const successEl = document.getElementById('authSuccess');
+
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!nick || !pass) {
+            errorEl.textContent = '❌ Заполните все поля!';
+            errorEl.style.display = 'block';
+            return;
+        }
+        if (nick.length < 3) {
+            errorEl.textContent = '❌ Ник должен быть минимум 3 символа!';
+            errorEl.style.display = 'block';
+            return;
+        }
+        if (pass.length < 4) {
+            errorEl.textContent = '❌ Пароль должен быть минимум 4 символа!';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        // Проверяем, есть ли уже такой ник
+        db.ref('players').orderByChild('name').equalTo(nick).once('value').then((snap) => {
+            if (snap.exists()) {
+                errorEl.textContent = '❌ Этот ник уже занят!';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            // Создаём аккаунт
+            const playerId = 'player_' + Math.random().toString(36).substring(2, 10);
+            const newProfile = {
+                name: nick,
+                password: pass,
+                gems: 50,
+                coins: 100,
+                brawlers: ['Шелли'],
+                trophies: 0,
+                banned: false,
+                createdAt: Date.now()
+            };
+
+            db.ref('players/' + playerId).set(newProfile).then(() => {
+                successEl.textContent = '✅ Аккаунт создан! Войдите.';
+                successEl.style.display = 'block';
+                document.getElementById('authNick').value = '';
+                document.getElementById('authPassword').value = '';
+            });
+        });
+    }
+
+    function login() {
+        const nick = document.getElementById('authNick').value.trim();
+        const pass = document.getElementById('authPassword').value.trim();
+        const errorEl = document.getElementById('authError');
+        const successEl = document.getElementById('authSuccess');
+
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!nick || !pass) {
+            errorEl.textContent = '❌ Заполните все поля!';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        db.ref('players').orderByChild('name').equalTo(nick).once('value').then((snap) => {
+            if (!snap.exists()) {
+                errorEl.textContent = '❌ Пользователь не найден!';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            const data = snap.val();
+            const playerId = Object.keys(data)[0];
+            const player = data[playerId];
+
+            if (player.password !== pass) {
+                errorEl.textContent = '❌ Неверный пароль!';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            if (player.banned) {
+                errorEl.textContent = '❌ Вы забанены!';
+                errorEl.style.display = 'block';
+                document.getElementById('bannedOverlay').style.display = 'flex';
+                return;
+            }
+
+            // Вход выполнен
+            currentPlayerId = playerId;
+            localStorage.setItem('brawl_playerId', playerId);
+            profile = player;
+            isLoggedIn = true;
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('bannedOverlay').style.display = 'none';
+            successEl.textContent = '✅ Вход выполнен!';
+            successEl.style.display = 'block';
+            
+            // Загружаем остальные данные
+            loadGameData();
+            render();
+        });
+    }
+
+    function logout() {
+        if (confirm('Выйти из аккаунта?')) {
+            localStorage.removeItem('brawl_playerId');
+            currentPlayerId = null;
+            isLoggedIn = false;
+            profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false, password: '' };
+            document.getElementById('authOverlay').style.display = 'flex';
+            document.getElementById('authSubtitle').textContent = 'Войдите или зарегистрируйтесь';
+            render();
+        }
+    }
+
+    function checkAuth() {
+        if (!currentPlayerId) {
+            document.getElementById('authOverlay').style.display = 'flex';
+            return false;
+        }
+        return true;
+    }
+
+    // ============================================================
+    //  ЗАГРУЗКА ДАННЫХ ПОСЛЕ ВХОДА
     // ============================================================
     let brawlers = [];
     let shopItems = [];
@@ -1569,87 +1714,68 @@
     let searchRef = null;
     let searchTimeout = null;
 
-    // ID игрока
-    let playerId = localStorage.getItem('brawl_playerId');
-    if (!playerId) {
-        playerId = 'player_' + Math.random().toString(36).substring(2, 10);
-        localStorage.setItem('brawl_playerId', playerId);
-    }
-
-    let profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
-
-    // ============================================================
-    //  LOCALSTORAGE
-    // ============================================================
-    function loadLocalData() {
-        try {
-            const raw = localStorage.getItem('brawlData_firebase');
-            if (raw) {
-                const data = JSON.parse(raw);
+    function loadGameData() {
+        db.ref('data').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
                 brawlers = data.brawlers || [];
                 shopItems = data.shopItems || [];
                 vouchers = data.vouchers || [];
                 serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
-                profile = data.profile || { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
-                return true;
+                // Загружаем профиль снова (на случай обновлений)
+                if (currentPlayerId) {
+                    db.ref('players/' + currentPlayerId).once('value').then((snap) => {
+                        const p = snap.val();
+                        if (p) {
+                            profile = p;
+                            saveLocalProfile();
+                        }
+                        render();
+                    });
+                }
+                render();
+            }
+        });
+    }
+
+    function saveLocalProfile() {
+        localStorage.setItem('brawl_profile', JSON.stringify(profile));
+    }
+
+    // Загружаем профиль из localStorage при старте
+    function loadLocalProfile() {
+        try {
+            const raw = localStorage.getItem('brawl_profile');
+            if (raw) {
+                const p = JSON.parse(raw);
+                if (p && p.name) {
+                    profile = p;
+                    return true;
+                }
             }
         } catch (e) {}
         return false;
     }
 
-    function saveLocalData() {
-        const data = { brawlers, shopItems, vouchers, serverRunning, profile };
-        localStorage.setItem('brawlData_firebase', JSON.stringify(data));
-    }
-
-    if (!loadLocalData()) {
-        brawlers = [
-            { name: 'Шелли', desc: 'Дробовик, пробивает стены', rarity: 'Редкий', image: '', damage: 120, hp: 400, minPower: 1, maxPower: 10 },
-            { name: 'Кольт', desc: 'Двойные револьверы', rarity: 'Редкий', image: '', damage: 80, hp: 300, minPower: 1, maxPower: 10 }
-        ];
-        shopItems = [
-            { name: 'Ящик x10', desc: '10 ящиков с наградами', image: '', reward: 'Ящики', category: 'resources', resourceType: 'gems', amount: 80, free: false },
-            { name: 'Скин Дракон', desc: 'Эксклюзивный скин для Кольта', image: '', reward: 'Скин', category: 'brawler', brawlerName: 'Кольт', cost: 149, free: false }
-        ];
-        vouchers = [];
-        serverRunning = true;
-        profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
-        saveLocalData();
-    }
-
-    // ============================================================
-    //  ОНБОРДИНГ
-    // ============================================================
-    function showOnboarding() {
-        if (!profile.name) {
-            document.getElementById('onboardingOverlay').style.display = 'flex';
+    // Проверяем, есть ли сохранённый профиль
+    if (currentPlayerId) {
+        const saved = loadLocalProfile();
+        if (saved) {
+            // Проверяем, не забанен ли игрок
+            if (profile.banned) {
+                document.getElementById('bannedOverlay').style.display = 'flex';
+            } else {
+                isLoggedIn = true;
+                document.getElementById('authOverlay').style.display = 'none';
+                loadGameData();
+            }
+        } else {
+            // Если профиля нет — показываем вход
+            document.getElementById('authOverlay').style.display = 'flex';
         }
+    } else {
+        document.getElementById('authOverlay').style.display = 'flex';
     }
-
-    window.finishOnboarding = function() {
-        const input = document.getElementById('onboardingName');
-        const name = input.value.trim();
-        if (!name) {
-            input.style.borderColor = '#d43f3f';
-            input.placeholder = '⚠️ Введите имя!';
-            return;
-        }
-        profile.name = name;
-        if (!profile.brawlers || profile.brawlers.length === 0) {
-            profile.brawlers = ['Шелли'];
-            profile.gems = 50;
-            profile.coins = 100;
-            profile.trophies = 0;
-        }
-        saveLocalData();
-        syncToFirebase();
-        document.getElementById('onboardingOverlay').style.display = 'none';
-        render();
-    };
-
-    document.getElementById('onboardingName').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') { finishOnboarding(); }
-    });
 
     // ============================================================
     //  БАН
@@ -1664,13 +1790,16 @@
     }
 
     window.createNewAccount = function() {
-        playerId = 'player_' + Math.random().toString(36).substring(2, 10);
-        localStorage.setItem('brawl_playerId', playerId);
-        profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
-        saveLocalData();
-        syncToFirebase();
+        // Создаём новый аккаунт
         document.getElementById('bannedOverlay').style.display = 'none';
-        showOnboarding();
+        document.getElementById('authOverlay').style.display = 'flex';
+        document.getElementById('authSubtitle').textContent = 'Создайте новый аккаунт';
+        // Очищаем старые данные
+        localStorage.removeItem('brawl_playerId');
+        localStorage.removeItem('brawl_profile');
+        currentPlayerId = null;
+        isLoggedIn = false;
+        profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false, password: '' };
         render();
     };
 
@@ -1679,15 +1808,17 @@
     };
 
     // ============================================================
-    //  FIREBASE
+    //  FIREBASE СИНХРОНИЗАЦИЯ
     // ============================================================
     function syncToFirebase() {
-        if (isSyncing) return;
+        if (isSyncing || !currentPlayerId) return;
         isSyncing = true;
-        const data = { brawlers, shopItems, vouchers, serverRunning, profile };
+        const data = { brawlers, shopItems, vouchers, serverRunning };
         db.ref('data').set(data)
             .then(() => {
-                db.ref('players/' + playerId).set(profile);
+                if (currentPlayerId) {
+                    db.ref('players/' + currentPlayerId).set(profile);
+                }
                 console.log('✅ Данные отправлены в Firebase');
                 updateCloudUI(true);
                 isSyncing = false;
@@ -1697,54 +1828,6 @@
                 updateCloudUI(false);
                 isSyncing = false;
             });
-    }
-
-    function loadFromFirebase() {
-        db.ref('data').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                const localData = JSON.parse(localStorage.getItem('brawlData_firebase') || '{}');
-                if (JSON.stringify(localData) !== JSON.stringify(data)) {
-                    brawlers = data.brawlers || [];
-                    shopItems = data.shopItems || [];
-                    vouchers = data.vouchers || [];
-                    serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
-
-                    db.ref('players/' + playerId).once('value').then((snap) => {
-                        const playerData = snap.val();
-                        if (playerData) {
-                            profile = {
-                                name: playerData.name || profile.name || '',
-                                gems: playerData.gems !== undefined ? playerData.gems : (profile.gems || 0),
-                                coins: playerData.coins !== undefined ? playerData.coins : (profile.coins || 0),
-                                brawlers: playerData.brawlers || profile.brawlers || [],
-                                trophies: playerData.trophies !== undefined ? playerData.trophies : (profile.trophies || 0),
-                                banned: playerData.banned !== undefined ? playerData.banned : (profile.banned || false)
-                            };
-                        } else {
-                            syncToFirebase();
-                        }
-
-                        if (!profile.name) {
-                            showOnboarding();
-                        }
-                        if (profile.banned) {
-                            document.getElementById('bannedOverlay').style.display = 'flex';
-                        } else {
-                            document.getElementById('bannedOverlay').style.display = 'none';
-                        }
-
-                        saveLocalData();
-                        render();
-                        console.log('📥 Данные загружены из Firebase');
-                    });
-                }
-                updateCloudUI(true);
-            }
-        }, (error) => {
-            console.error('❌ Ошибка загрузки из Firebase:', error);
-            updateCloudUI(false);
-        });
     }
 
     function updateCloudUI(connected) {
@@ -1763,13 +1846,132 @@
         }
     }
 
-    function autoSync() { saveLocalData(); syncToFirebase(); }
+    function autoSync() {
+        saveLocalProfile();
+        syncToFirebase();
+    }
 
     // ============================================================
-    //  ПОИСК PVP
+    //  ПОКУПКА
+    // ============================================================
+    window.buyItem = function(name) {
+        if (checkBan() || !currentPlayerId) return;
+        const item = shopItems.find(i => i.name === name);
+        if (!item) return alert('Товар не найден!');
+        const isFree = item.free === true;
+
+        if (item.category === 'brawler') {
+            if (profile.brawlers && profile.brawlers.includes(item.brawlerName)) {
+                return alert(`⚠️ У вас уже есть боец ${item.brawlerName}!`);
+            }
+            if (!isFree && profile.gems < item.cost) {
+                return alert(`❌ Не хватает гемов! Нужно ${item.cost} 💎, у вас ${profile.gems}`);
+            }
+            if (!isFree) { profile.gems -= item.cost; }
+            if (!profile.brawlers) profile.brawlers = [];
+            profile.brawlers.push(item.brawlerName);
+            alert(`✅ Вы купили бойца ${item.brawlerName}${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
+            autoSync();
+            render();
+        } else if (item.category === 'resources') {
+            if (item.resourceType === 'gems') {
+                profile.gems += item.amount;
+                alert(`✅ Вы получили ${item.amount} 💎 Гемов${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
+            } else if (item.resourceType === 'coins') {
+                profile.coins += item.amount;
+                alert(`✅ Вы получили ${item.amount} 🪙 Монет${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
+            }
+            autoSync();
+            render();
+        } else {
+            alert(`✅ Вы купили: ${name}!`);
+        }
+    };
+
+    // ============================================================
+    //  ВАУЧЕРЫ
+    // ============================================================
+    window.generateVoucher = function() {
+        const rewardType = document.getElementById('voucherRewardType').value;
+        const amount = parseInt(document.getElementById('voucherAmount').value) || 0;
+        const brawlerName = document.getElementById('voucherBrawler').value;
+
+        if (rewardType === 'gems' && amount <= 0) return alert('Введите количество гемов!');
+        if (rewardType === 'coins' && amount <= 0) return alert('Введите количество монет!');
+        if (rewardType === 'brawler' && !brawlerName) return alert('Выберите бойца!');
+
+        const code = 'VOUCHER_' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const voucher = {
+            code,
+            rewardType,
+            amount,
+            brawlerName,
+            used: false,
+            usedBy: null,
+            createdAt: Date.now()
+        };
+        vouchers.push(voucher);
+        autoSync();
+        renderAdmin();
+        alert(`✅ Ваучер создан!\nКод: ${code}\nНаграда: ${rewardType === 'gems' ? '💎 '+amount : rewardType === 'coins' ? '🪙 '+amount : '👤 '+brawlerName}`);
+        const container = document.getElementById('voucherResult');
+        if (container) {
+            container.innerHTML = `
+                <div class="voucher-code">
+                    <span class="code">${code}</span>
+                    <button class="copy-btn" onclick="copyVoucher('${code}')">📋 Копировать</button>
+                </div>
+            `;
+        }
+    };
+
+    window.copyVoucher = function(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            alert('✅ Код скопирован!');
+        }).catch(() => {
+            prompt('Скопируйте код вручную:', code);
+        });
+    };
+
+    window.activateVoucher = function() {
+        const codeInput = document.getElementById('voucherActivateInput');
+        const code = codeInput.value.trim().toUpperCase();
+        if (!code) return alert('Введите код ваучера!');
+
+        const voucher = vouchers.find(v => v.code === code);
+        if (!voucher) return alert('❌ Неверный код!');
+        if (voucher.used) return alert('❌ Этот ваучер уже использован!');
+
+        voucher.used = true;
+        voucher.usedBy = currentPlayerId;
+
+        if (voucher.rewardType === 'gems') {
+            profile.gems += voucher.amount;
+            alert(`✅ Вы получили ${voucher.amount} 💎 Гемов!`);
+        } else if (voucher.rewardType === 'coins') {
+            profile.coins += voucher.amount;
+            alert(`✅ Вы получили ${voucher.amount} 🪙 Монет!`);
+        } else if (voucher.rewardType === 'brawler') {
+            if (profile.brawlers && profile.brawlers.includes(voucher.brawlerName)) {
+                alert(`⚠️ У вас уже есть боец ${voucher.brawlerName}!`);
+                return;
+            }
+            if (!profile.brawlers) profile.brawlers = [];
+            profile.brawlers.push(voucher.brawlerName);
+            alert(`✅ Вы получили бойца ${voucher.brawlerName}!`);
+        }
+
+        autoSync();
+        render();
+        codeInput.value = '';
+        alert('🎉 Ваучер успешно активирован!');
+    };
+
+    // ============================================================
+    //  PVP
     // ============================================================
     function findBattle() {
-        if (checkBan()) return;
+        if (checkBan() || !currentPlayerId) return;
         if (!selectedBrawler) return alert('Выберите бойца!');
         if (!profile.brawlers || !profile.brawlers.includes(selectedBrawler)) {
             return alert('⚠️ У вас нет этого бойца!');
@@ -1779,7 +1981,7 @@
         renderBattle();
 
         const searchData = {
-            playerId: playerId,
+            playerId: currentPlayerId,
             name: profile.name || 'Игрок',
             brawler: selectedBrawler,
             timestamp: Date.now(),
@@ -1794,7 +1996,7 @@
 
             const other = Object.keys(searches).find(key => {
                 const s = searches[key];
-                return s.playerId !== playerId && s.status === 'searching';
+                return s.playerId !== currentPlayerId && s.status === 'searching';
             });
 
             if (other) {
@@ -1804,7 +2006,6 @@
                     db.ref('pvp_search/' + searchRef.key).remove();
                 }
                 db.ref('pvp_search').off();
-
                 startPvpBattle(opponentData);
             }
         });
@@ -1828,9 +2029,6 @@
         renderBattle();
     }
 
-    // ============================================================
-    //  PVP БОЙ (ИСПРАВЛЕНО)
-    // ============================================================
     function startPvpBattle(opponentData) {
         const myBrawler = brawlers.find(b => b.name === selectedBrawler);
         const oppBrawler = brawlers.find(b => b.name === opponentData.brawler);
@@ -1846,7 +2044,7 @@
 
         battleData = {
             id: battleId,
-            player1Id: playerId,
+            player1Id: currentPlayerId,
             player1Name: profile.name || 'Игрок',
             player1Brawler: selectedBrawler,
             player1HP: Math.floor(playerHP),
@@ -1869,7 +2067,6 @@
         battleState = 'fighting';
         renderBattle();
 
-        // Слушаем обновления боя
         db.ref('battles/' + battleId).on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -1881,29 +2078,50 @@
             }
         });
 
-        // Слушаем ходы
+        listenForMoves();
+    }
+
+    function listenForMoves() {
         db.ref('battles/' + battleId + '/moves').on('child_added', (snapshot) => {
             const move = snapshot.val();
+            if (move.playerId === currentPlayerId) return;
             if (battleData && !battleData.finished) {
-                // Проверяем, чей ход и кто отправил
-                const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === playerId) ||
-                    (battleData.currentTurn === 'player2' && battleData.player2Id === playerId);
-
-                // Если это мой ход — игнорируем (мы уже отправили свой ход)
-                if (isMyTurn) return;
-
-                // Обрабатываем ход противника
                 processPvpMove(move);
             }
         });
     }
 
+    function makePvpMove(action) {
+        if (!battleData || battleData.finished) return;
+        const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === currentPlayerId) ||
+            (battleData.currentTurn === 'player2' && battleData.player2Id === currentPlayerId);
+        if (!isMyTurn) {
+            alert('⏳ Сейчас не ваш ход!');
+            return;
+        }
+
+        const attackBtn = document.querySelector('.attack');
+        const defendBtn = document.querySelector('.defend');
+        if (attackBtn) attackBtn.disabled = true;
+        if (defendBtn) defendBtn.disabled = true;
+
+        const move = { action: action, timestamp: Date.now(), playerId: currentPlayerId };
+        db.ref('battles/' + battleId + '/moves').push(move).then(() => {
+            console.log('✅ Ход отправлен:', action);
+            setTimeout(() => {
+                if (attackBtn) attackBtn.disabled = false;
+                if (defendBtn) defendBtn.disabled = false;
+            }, 500);
+        }).catch(err => {
+            console.error('❌ Ошибка отправки хода:', err);
+            if (attackBtn) attackBtn.disabled = false;
+            if (defendBtn) defendBtn.disabled = false;
+        });
+    }
+
     function processPvpMove(move) {
         if (!battleData || battleData.finished) return;
-
         const isPlayer1 = battleData.currentTurn === 'player1';
-        const attacker = isPlayer1 ? 'player1' : 'player2';
-        const defender = isPlayer1 ? 'player2' : 'player1';
         let damage = 0;
 
         if (move.action === 'attack') {
@@ -1911,6 +2129,11 @@
             const attackerName = isPlayer1 ? battleData.player1Name : battleData.player2Name;
             const defenderName = isPlayer1 ? battleData.player2Name : battleData.player1Name;
             battleData.log.push(`💥 ${attackerName} нанёс ${damage} урона ${defenderName}`);
+            if (isPlayer1) {
+                battleData.player2HP = Math.max(0, battleData.player2HP - damage);
+            } else {
+                battleData.player1HP = Math.max(0, battleData.player1HP - damage);
+            }
         } else if (move.action === 'defend') {
             const heal = Math.floor((isPlayer1 ? battleData.player1MaxHP : battleData.player2MaxHP) * 0.15);
             if (isPlayer1) {
@@ -1920,17 +2143,6 @@
             }
             const name = isPlayer1 ? battleData.player1Name : battleData.player2Name;
             battleData.log.push(`🛡️ ${name} восстановил ${heal} HP`);
-            battleData.currentTurn = isPlayer1 ? 'player2' : 'player1';
-            db.ref('battles/' + battleId).set(battleData);
-            return;
-        }
-
-        if (damage > 0) {
-            if (isPlayer1) {
-                battleData.player2HP = Math.max(0, battleData.player2HP - damage);
-            } else {
-                battleData.player1HP = Math.max(0, battleData.player1HP - damage);
-            }
         }
 
         if (battleData.player1HP <= 0 || battleData.player2HP <= 0) {
@@ -1939,12 +2151,13 @@
             const winnerName = battleData.winner === 'player1' ? battleData.player1Name : battleData.player2Name;
             battleData.log.push(`🏆 ${winnerName} победил!`);
 
-            if (battleData.winner === 'player1' && battleData.player1Id === playerId) {
+            if ((battleData.winner === 'player1' && battleData.player1Id === currentPlayerId) ||
+                (battleData.winner === 'player2' && battleData.player2Id === currentPlayerId)) {
                 profile.trophies = (profile.trophies || 0) + 10;
                 autoSync();
-            } else if (battleData.winner === 'player2' && battleData.player2Id === playerId) {
-                profile.trophies = (profile.trophies || 0) + 10;
-                autoSync();
+                alert('🏆 Вы победили! +10 кубков!');
+            } else {
+                alert('💀 Вы проиграли! Попробуйте снова!');
             }
 
             db.ref('battles/' + battleId).set(battleData);
@@ -1961,22 +2174,27 @@
         db.ref('battles/' + battleId).off();
     }
 
-    // ===== ОТПРАВКА ХОДА (ИСПРАВЛЕНО) =====
-    function makePvpMove(action) {
-        if (!battleData || battleData.finished) return;
+    window.selectBrawlerForBattle = function(name) {
+        selectedBrawler = name;
+        render();
+    };
 
-        // Проверяем, чей сейчас ход
-        const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === playerId) ||
-            (battleData.currentTurn === 'player2' && battleData.player2Id === playerId);
-
-        if (!isMyTurn) {
-            alert('⏳ Сейчас не ваш ход!');
-            return;
+    window.resetBattle = function() {
+        if (searchRef) {
+            db.ref('pvp_search/' + searchRef.key).remove();
+            searchRef = null;
         }
-
-        const move = { action: action, timestamp: Date.now() };
-        db.ref('battles/' + battleId + '/moves').push(move);
-    }
+        db.ref('pvp_search').off();
+        if (searchTimeout) clearTimeout(searchTimeout);
+        if (battleId) {
+            db.ref('battles/' + battleId).off();
+        }
+        battleState = 'select';
+        battleData = null;
+        battleId = null;
+        selectedBrawler = null;
+        render();
+    };
 
     // ============================================================
     //  UI
@@ -1985,12 +2203,12 @@
     const menuBtns = document.querySelectorAll('.menu button');
 
     function render() {
-        if (checkBan()) {
-            content.innerHTML = `<div class="empty-state"><span>🚫</span>Доступ запрещён</div>`;
+        if (!isLoggedIn && !currentPlayerId) {
+            document.getElementById('authOverlay').style.display = 'flex';
             return;
         }
-        if (!profile.name && !document.getElementById('onboardingOverlay').style.display === 'flex') {
-            showOnboarding();
+        if (checkBan()) {
+            content.innerHTML = `<div class="empty-state"><span>🚫</span>Доступ запрещён</div>`;
             return;
         }
 
@@ -2076,10 +2294,10 @@
         }
 
         if (battleState === 'fighting' && battleData) {
-            const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === playerId) ||
-                (battleData.currentTurn === 'player2' && battleData.player2Id === playerId);
+            const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === currentPlayerId) ||
+                (battleData.currentTurn === 'player2' && battleData.player2Id === currentPlayerId);
 
-            const isPlayer1 = battleData.player1Id === playerId;
+            const isPlayer1 = battleData.player1Id === currentPlayerId;
             const myName = isPlayer1 ? battleData.player1Name : battleData.player2Name;
             const oppName = isPlayer1 ? battleData.player2Name : battleData.player1Name;
             const myHP = isPlayer1 ? battleData.player1HP : battleData.player2HP;
@@ -2132,8 +2350,8 @@
         }
 
         if (battleState === 'result' && battleData) {
-            const isWin = (battleData.winner === 'player1' && battleData.player1Id === playerId) ||
-                (battleData.winner === 'player2' && battleData.player2Id === playerId);
+            const isWin = (battleData.winner === 'player1' && battleData.player1Id === currentPlayerId) ||
+                (battleData.winner === 'player2' && battleData.player2Id === currentPlayerId);
             html += `
                 <div class="battle-result">
                     <div class="winner">${isWin ? '🎉 ПОБЕДА!' : '💀 ПОРАЖЕНИЕ'}</div>
@@ -2153,28 +2371,6 @@
         html += `<div class="empty-state"><span>⚔️</span>Что-то пошло не так...</div>`;
         content.innerHTML = html;
     }
-
-    window.selectBrawlerForBattle = function(name) {
-        selectedBrawler = name;
-        render();
-    };
-
-    window.resetBattle = function() {
-        if (searchRef) {
-            db.ref('pvp_search/' + searchRef.key).remove();
-            searchRef = null;
-        }
-        db.ref('pvp_search').off();
-        if (searchTimeout) clearTimeout(searchTimeout);
-        if (battleId) {
-            db.ref('battles/' + battleId).off();
-        }
-        battleState = 'select';
-        battleData = null;
-        battleId = null;
-        selectedBrawler = null;
-        render();
-    };
 
     // ===== БОЙЦЫ =====
     function renderBrawlers(cloudHtml) {
@@ -2272,75 +2468,25 @@
         document.querySelector('[data-tab="shop"]').classList.add('active');
     }
 
-    // ===== ПОКУПКА =====
-    window.buyItem = function(name) {
-        if (checkBan()) return;
-        const item = shopItems.find(i => i.name === name);
-        if (!item) return alert('Товар не найден!');
-        const isFree = item.free === true;
-
-        if (item.category === 'brawler') {
-            if (profile.brawlers && profile.brawlers.includes(item.brawlerName)) {
-                return alert(`⚠️ У вас уже есть боец ${item.brawlerName}!`);
-            }
-            if (!isFree && profile.gems < item.cost) {
-                return alert(`❌ Не хватает гемов! Нужно ${item.cost} 💎, у вас ${profile.gems}`);
-            }
-            if (!isFree) { profile.gems -= item.cost; }
-            if (!profile.brawlers) profile.brawlers = [];
-            profile.brawlers.push(item.brawlerName);
-            alert(`✅ Вы купили бойца ${item.brawlerName}${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
-            autoSync();
-            render();
-        } else if (item.category === 'resources') {
-            if (item.resourceType === 'gems') {
-                profile.gems += item.amount;
-                alert(`✅ Вы получили ${item.amount} 💎 Гемов${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
-            } else if (item.resourceType === 'coins') {
-                profile.coins += item.amount;
-                alert(`✅ Вы получили ${item.amount} 🪙 Монет${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
-            }
-            autoSync();
-            render();
-        } else {
-            alert(`✅ Вы купили: ${name}!`);
-        }
-    };
-
-    // ===== ПРОФИЛЬ (С СОХРАНЕНИЕМ НИКА) =====
+    // ===== ПРОФИЛЬ =====
     function renderProfile(cloudHtml) {
         let html = cloudHtml + `
             <div class="profile-card">
                 <span class="avatar">👤</span>
-                <input class="name-input" id="profileName" value="${profile.name}" placeholder="Ваше имя" />
+                <div class="nick">${profile.name || 'Игрок'}</div>
+                <div style="font-size:12px;color:#555577;margin-bottom:8px;">ID: ${currentPlayerId || '—'}</div>
                 <div class="stats">
-                    <div class="stat-item"><div class="value gems">${profile.gems}</div><div class="label">💎 Гемы</div></div>
-                    <div class="stat-item"><div class="value coins">${profile.coins}</div><div class="label">🪙 Монеты</div></div>
+                    <div class="stat-item"><div class="value gems">${profile.gems || 0}</div><div class="label">💎 Гемы</div></div>
+                    <div class="stat-item"><div class="value coins">${profile.coins || 0}</div><div class="label">🪙 Монеты</div></div>
                     <div class="stat-item"><div class="value trophies">${profile.trophies || 0}</div><div class="label">🏆 Кубки</div></div>
                 </div>
-                <button class="save-btn" onclick="saveProfile()">💾 Сохранить профиль</button>
-                <div style="margin-top:12px;font-size:11px;color:#555577;">ID: ${playerId}</div>
+                <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
             </div>
         `;
         content.innerHTML = html;
         menuBtns.forEach(b => b.classList.remove('active'));
         document.querySelector('[data-tab="profile"]').classList.add('active');
     }
-
-    window.saveProfile = function() {
-        const nameInput = document.getElementById('profileName');
-        if (nameInput) {
-            const newName = nameInput.value.trim();
-            if (newName) {
-                profile.name = newName;
-                autoSync();
-                renderProfile();
-                alert('✅ Имя сохранено!');
-            } else {
-                alert('❌ Имя не может быть пустым!');
-            }
-        }
-    };
 
     // ===== ЧАТ =====
     function renderChat(cloudHtml) {
@@ -2364,93 +2510,14 @@
         loadChat();
     }
 
-    // ============================================================
-    //  ВАУЧЕРЫ, ЧАТ (ИСПРАВЛЕНО)
-    // ============================================================
-    window.generateVoucher = function() {
-        const rewardType = document.getElementById('voucherRewardType').value;
-        const amount = parseInt(document.getElementById('voucherAmount').value) || 0;
-        const brawlerName = document.getElementById('voucherBrawler').value;
-
-        if (rewardType === 'gems' && amount <= 0) return alert('Введите количество гемов!');
-        if (rewardType === 'coins' && amount <= 0) return alert('Введите количество монет!');
-        if (rewardType === 'brawler' && !brawlerName) return alert('Выберите бойца!');
-
-        const code = 'VOUCHER_' + Math.random().toString(36).substring(2, 8).toUpperCase();
-        const voucher = {
-            code,
-            rewardType,
-            amount,
-            brawlerName,
-            used: false,
-            usedBy: null,
-            createdAt: Date.now()
-        };
-        vouchers.push(voucher);
-        autoSync();
-        renderAdmin();
-        alert(`✅ Ваучер создан!\nКод: ${code}\nНаграда: ${rewardType === 'gems' ? '💎 '+amount : rewardType === 'coins' ? '🪙 '+amount : '👤 '+brawlerName}`);
-        const container = document.getElementById('voucherResult');
-        if (container) {
-            container.innerHTML = `
-                <div class="voucher-code">
-                    <span class="code">${code}</span>
-                    <button class="copy-btn" onclick="copyVoucher('${code}')">📋 Копировать</button>
-                </div>
-            `;
-        }
-    };
-
-    window.copyVoucher = function(code) {
-        navigator.clipboard.writeText(code).then(() => {
-            alert('✅ Код скопирован!');
-        }).catch(() => {
-            prompt('Скопируйте код вручную:', code);
-        });
-    };
-
-    window.activateVoucher = function() {
-        const codeInput = document.getElementById('voucherActivateInput');
-        const code = codeInput.value.trim().toUpperCase();
-        if (!code) return alert('Введите код ваучера!');
-
-        const voucher = vouchers.find(v => v.code === code);
-        if (!voucher) return alert('❌ Неверный код!');
-        if (voucher.used) return alert('❌ Этот ваучер уже использован!');
-
-        voucher.used = true;
-        voucher.usedBy = playerId;
-
-        if (voucher.rewardType === 'gems') {
-            profile.gems += voucher.amount;
-            alert(`✅ Вы получили ${voucher.amount} 💎 Гемов!`);
-        } else if (voucher.rewardType === 'coins') {
-            profile.coins += voucher.amount;
-            alert(`✅ Вы получили ${voucher.amount} 🪙 Монет!`);
-        } else if (voucher.rewardType === 'brawler') {
-            if (profile.brawlers && profile.brawlers.includes(voucher.brawlerName)) {
-                alert(`⚠️ У вас уже есть боец ${voucher.brawlerName}!`);
-                return;
-            }
-            if (!profile.brawlers) profile.brawlers = [];
-            profile.brawlers.push(voucher.brawlerName);
-            alert(`✅ Вы получили бойца ${voucher.brawlerName}!`);
-        }
-
-        autoSync();
-        render();
-        codeInput.value = '';
-        alert('🎉 Ваучер успешно активирован!');
-    };
-
     window.sendMessage = function() {
-        if (checkBan()) return;
+        if (checkBan() || !currentPlayerId) return;
         const input = document.getElementById('chatInput');
         const text = input.value.trim();
         if (!text) return;
 
         const msg = {
-            playerId: playerId,
+            playerId: currentPlayerId,
             name: profile.name || 'Аноним',
             text: text,
             timestamp: Date.now()
@@ -2484,7 +2551,7 @@
             let html = '';
             const msgs = Object.values(messages).reverse();
             msgs.forEach(msg => {
-                const isOwn = msg.playerId === playerId;
+                const isOwn = msg.playerId === currentPlayerId;
                 const time = new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
                 html += `
                     <div class="chat-message ${isOwn ? 'own' : ''}">
@@ -2502,7 +2569,7 @@
     }
 
     // ============================================================
-    //  АДМИНКА (СПИСОК ИГРОКОВ)
+    //  АДМИНКА
     // ============================================================
     let playersList = [];
 
@@ -2598,9 +2665,6 @@
         });
     };
 
-    // ============================================================
-    //  АДМИНКА (ПОЛНАЯ)
-    // ============================================================
     function renderAdmin(cloudHtml) {
         loadPlayersList();
 
@@ -2789,9 +2853,6 @@
         setTimeout(updatePlayerSelects, 200);
     }
 
-    // ============================================================
-    //  АДМИН-ФУНКЦИИ
-    // ============================================================
     window.addShopItem = function() {
         const name = document.getElementById('shopName').value.trim();
         const desc = document.getElementById('shopDesc').value.trim();
@@ -2859,7 +2920,6 @@
         }
     };
     window.deleteBrawler = function(idx) { brawlers.splice(idx, 1); autoSync(); render(); };
-
     window.deleteVoucher = function(idx) { vouchers.splice(idx, 1); autoSync(); renderAdmin(); };
 
     window.startServer = function() { serverRunning = true; autoSync(); render(); };
@@ -2899,18 +2959,31 @@
     // ============================================================
     //  ЗАПУСК
     // ============================================================
-    loadFromFirebase();
-    document.getElementById('passwordOverlay').style.display = 'none';
+    // Если есть сохранённый ID и профиль — загружаем данные
+    if (currentPlayerId && profile.name) {
+        isLoggedIn = true;
+        document.getElementById('authOverlay').style.display = 'none';
+        loadGameData();
+    }
 
-    setTimeout(() => {
-        if (!profile.name && !profile.banned) {
-            showOnboarding();
-        }
-        if (profile.banned) {
-            document.getElementById('bannedOverlay').style.display = 'flex';
-        }
-        render();
-    }, 500);
+    // Если нет профиля, но есть ID — пробуем загрузить
+    if (currentPlayerId && !profile.name) {
+        db.ref('players/' + currentPlayerId).once('value').then((snap) => {
+            const p = snap.val();
+            if (p) {
+                profile = p;
+                saveLocalProfile();
+                isLoggedIn = true;
+                document.getElementById('authOverlay').style.display = 'none';
+                loadGameData();
+            } else {
+                // Профиль не найден — показываем вход
+                document.getElementById('authOverlay').style.display = 'flex';
+            }
+        });
+    }
+
+    render();
 </script>
 </body>
 </html>
