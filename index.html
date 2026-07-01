@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Brawl Stars — P2P синхронизация</title>
-    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+    <title>Brawl Stars — P2P</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        /* ===== БАЗОВЫЙ СТИЛЬ ===== */
         * {
             margin: 0;
             padding: 0;
@@ -29,18 +28,9 @@
             height: 100vh;
             max-height: 860px;
             background: #14142e;
-            padding: 20px 16px 20px;
+            padding: 20px 16px;
             display: flex;
             flex-direction: column;
-            position: relative;
-        }
-        @media (min-width:500px) {
-            .app {
-                border-radius: 40px;
-                height: 95vh;
-                border: 1px solid #f5c84255;
-                box-shadow: 0 0 60px #f5c84222;
-            }
         }
         .header {
             display: flex;
@@ -103,11 +93,9 @@
             padding: 18px 14px;
             border: 1px solid #f5c84233;
             overflow-y: auto;
-            min-height: 0;
             display: flex;
             flex-direction: column;
         }
-        /* ===== ПАНЕЛЬ PEERJS ===== */
         .peer-panel {
             background: #0f0f2a;
             border-radius: 20px;
@@ -117,6 +105,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            flex-shrink: 0;
         }
         .peer-panel .row {
             display: flex;
@@ -173,7 +162,6 @@
             border-radius: 40px;
             font-size: 12px;
         }
-        /* ===== МЕНЮ ===== */
         .menu {
             display: flex;
             justify-content: space-around;
@@ -205,7 +193,6 @@
         .menu button:hover {
             color: #fff;
         }
-        /* ===== ОСТАЛЬНЫЕ СТИЛИ (БОЙ, АДМИНКА И Т.Д.) ===== */
         .empty-state {
             color: #8888aa;
             text-align: center;
@@ -648,7 +635,6 @@
     let peer = null;
     let connections = [];
     let myPeerId = '';
-    let isHost = false;
 
     // Данные
     let brawlers = [];
@@ -687,7 +673,7 @@
 
     if (!loadLocalData()) {
         brawlers = [
-            { name: 'Шелли', desc: 'Дробовик, пробивает стены', rarity: 'Редкий', image: '', damage: 120, hp: 400, minPower: 1, maxPower: 10 },
+            { name: 'Шелли', desc: 'Дробовик', rarity: 'Редкий', image: '', damage: 120, hp: 400, minPower: 1, maxPower: 10 },
             { name: 'Кольт', desc: 'Двойные револьверы', rarity: 'Редкий', image: '', damage: 80, hp: 300, minPower: 1, maxPower: 10 }
         ];
         shopItems = ['Ящик x10', 'Скин Дракон', 'Монеты 1000'];
@@ -696,7 +682,7 @@
     }
 
     // ============================================================
-    //  PEERJS ФУНКЦИИ
+    //  PEERJS ФУНКЦИИ (ОБНОВЛЁННЫЕ)
     // ============================================================
     function initPeer(roomId) {
         if (peer) {
@@ -704,29 +690,28 @@
             connections = [];
         }
 
-        peer = new Peer(roomId || undefined, {
-            debug: 0,
+        // Если roomId пустой — генерируем случайный
+        if (!roomId) {
+            roomId = 'room_' + Math.random().toString(36).substring(2, 8);
+        }
+
+        peer = new Peer(roomId, {
+            debug: 2,
             config: {
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' }
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' }
                 ]
             }
         });
 
         peer.on('open', function(id) {
             myPeerId = id;
-            isHost = !!roomId;
             document.getElementById('connectionBadge').className = 'online-badge';
             document.getElementById('connectionBadge').textContent = '🟢 P2P';
-            updatePeerUI('🟢 Подключено', true);
-
-            if (isHost) {
-                console.log('Хост создан, ID:', id);
-            }
-            if (!isHost && roomId) {
-                connectToPeer(roomId);
-            }
+            updatePeerUI('🟢 Подключено к сети', true);
+            console.log('Peer открыт, ID:', id);
         });
 
         peer.on('connection', function(conn) {
@@ -737,27 +722,33 @@
                 data: { brawlers, shopItems, serverRunning }
             });
             updatePeerUI(`🟢 Подключено (${connections.length} устройств)`, true);
+            console.log('Новое подключение:', conn.peer);
         });
 
         peer.on('error', function(err) {
             console.error('Peer error:', err);
             if (err.type === 'peer-unavailable') {
-                updatePeerUI('❌ Комната не найдена', false);
+                updatePeerUI('❌ Комната не найдена. Создай новую.', false);
                 document.getElementById('connectionBadge').className = 'offline-badge';
-                document.getElementById('connectionBadge').textContent = '❌ Офлайн';
+                document.getElementById('connectionBadge').textContent = '❌ Ошибка';
             }
         });
     }
 
     function connectToPeer(peerId) {
+        if (!peer) {
+            alert('Сначала создай или введи ID комнаты!');
+            return;
+        }
         const conn = peer.connect(peerId, { reliable: true });
         connections.push(conn);
         setupConnection(conn);
+        console.log('Подключаемся к:', peerId);
     }
 
     function setupConnection(conn) {
         conn.on('open', function() {
-            console.log('Соединение с:', conn.peer);
+            console.log('Соединение установлено с:', conn.peer);
             updatePeerUI(`🟢 Подключено (${connections.length} устройств)`, true);
             document.getElementById('connectionBadge').className = 'online-badge';
             document.getElementById('connectionBadge').textContent = '🟢 P2P';
@@ -779,15 +770,16 @@
 
     function sendDataToAll(data) {
         connections.forEach(conn => {
-            try { conn.send(data); } catch (e) {}
+            try { conn.send(data); } catch (e) { console.warn('Ошибка отправки:', e); }
         });
     }
 
     function sendDataToConnection(conn, data) {
-        try { conn.send(data); } catch (e) {}
+        try { conn.send(data); } catch (e) { console.warn('Ошибка отправки:', e); }
     }
 
     function handleIncomingData(data) {
+        console.log('Получены данные:', data);
         if (data.type === 'fullSync') {
             brawlers = data.data.brawlers || [];
             shopItems = data.data.shopItems || [];
@@ -934,4 +926,172 @@
                     <button class="submit-btn" onclick="addBrawlerFull()">➕ Добавить</button>
                 </div><div class="list-admin">`;
             brawlers.forEach((b, idx) => {
-                html
+                html += `<div class="brawler-card-full">
+                        ${b.image ? `<img src="${b.image}">` : `<div style="width:50px;height:50px;border-radius:40px;background:#1a1a3a;display:flex;align-items:center;justify-content:center;font-size:24px;">⚡</div>`}
+                        <div class="info"><div class="name">${b.name} <span class="rarity">${b.rarity}</span></div>
+                        <div class="desc">${b.desc || 'Нет описания'}</div>
+                        <div class="stats"><span>⚔️ ${b.damage}</span><span>❤️ ${b.hp}</span><span>📊 ${b.minPower}→${b.maxPower}</span></div></div>
+                        <button class="del-btn" onclick="deleteBrawler(${idx})">✕</button>
+                    </div>`;
+            });
+            html += `</div>`;
+        } else if (adminSubTab === 'shop') {
+            html += `<div class="add-row"><input type="text" id="shopInput" placeholder="Товар"><button onclick="adminAddShop()">➕</button></div><div class="list-admin">`;
+            shopItems.forEach((item, idx) => {
+                html += `<div class="item"><input class="name" type="text" value="${item}" data-index="${idx}" data-type="shop" onchange="adminEdit(this)"><button class="del" onclick="adminDeleteShop(${idx})">✕</button></div>`;
+            });
+            html += `</div>`;
+        } else if (adminSubTab === 'settings') {
+            html += `<div style="color:#aaa;padding:12px 0;text-align:center;">Управление сервером</div>
+                <button class="stop-btn" onclick="stopServer()">⛔ ОСТАНОВИТЬ СЕРВЕР</button>`;
+        }
+        html += `</div>`;
+        content.innerHTML = html;
+        menuBtns.forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-tab="admin"]').classList.add('active');
+
+        document.querySelectorAll('.admin-tabs button').forEach(btn => {
+            btn.addEventListener('click', function() { adminSubTab = this.dataset.sub; render(); });
+        });
+    }
+
+    // ============================================================
+    //  ФУНКЦИИ
+    // ============================================================
+    window.selectBrawler = function(name) { selectedBrawler = name; render(); };
+    window.startSearch = function() {
+        if (!selectedBrawler) return;
+        battleState = 'searching';
+        searchCancelled = false;
+        render();
+        if (searchTimer) clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            if (!searchCancelled && battleState === 'searching') {
+                opponent = randomNames[Math.floor(Math.random() * randomNames.length)];
+                battleState = 'result';
+                render();
+            }
+        }, 5000);
+        if (Math.random() < 0.3) {
+            setTimeout(() => {
+                if (!searchCancelled && battleState === 'searching') {
+                    clearTimeout(searchTimer);
+                    opponent = randomNames[Math.floor(Math.random() * randomNames.length)];
+                    battleState = 'result';
+                    render();
+                }
+            }, 1000 + Math.random() * 2500);
+        }
+    };
+    window.cancelSearch = function() { searchCancelled = true; clearTimeout(searchTimer); battleState = 'select'; render(); };
+    window.resetBattle = function() { clearTimeout(searchTimer); battleState = 'select'; selectedBrawler = null; opponent = null; render(); };
+
+    window.addBrawlerFull = function() {
+        const name = document.getElementById('bName').value.trim();
+        if (!name) return alert('Введите имя!');
+        const desc = document.getElementById('bDesc').value.trim();
+        const rarity = document.getElementById('bRarity').value;
+        const damage = parseInt(document.getElementById('bDamage').value) || 0;
+        const hp = parseInt(document.getElementById('bHp').value) || 0;
+        const minPower = parseInt(document.getElementById('bMinPower').value) || 0;
+        const maxPower = parseInt(document.getElementById('bMaxPower').value) || 0;
+        const fileInput = document.getElementById('bImage');
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                brawlers.push({ name, desc, rarity, image: e.target.result, damage, hp, minPower, maxPower });
+                saveLocalData();
+                broadcastUpdate('updateBrawlers', brawlers);
+                render();
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            brawlers.push({ name, desc, rarity, image: '', damage, hp, minPower, maxPower });
+            saveLocalData();
+            broadcastUpdate('updateBrawlers', brawlers);
+            render();
+        }
+    };
+    window.deleteBrawler = function(idx) { brawlers.splice(idx, 1);
+        saveLocalData();
+        broadcastUpdate('updateBrawlers', brawlers);
+        render(); };
+    window.adminAddShop = function() {
+        const val = document.getElementById('shopInput').value.trim();
+        if (!val) return;
+        shopItems.push(val);
+        saveLocalData();
+        broadcastUpdate('updateShop', shopItems);
+        render();
+    };
+    window.adminDeleteShop = function(idx) { shopItems.splice(idx, 1);
+        saveLocalData();
+        broadcastUpdate('updateShop', shopItems);
+        render(); };
+    window.adminEdit = function(el) {
+        const idx = parseInt(el.dataset.index);
+        const val = el.value.trim();
+        if (!val) return;
+        shopItems[idx] = val;
+        saveLocalData();
+        broadcastUpdate('updateShop', shopItems);
+    };
+    window.startServer = function() { serverRunning = true;
+        saveLocalData();
+        broadcastUpdate('updateServer', true);
+        render(); };
+    window.stopServer = function() { serverRunning = false;
+        saveLocalData();
+        broadcastUpdate('updateServer', false);
+        render(); };
+
+    window.createRoom = function() {
+        const room = 'room_' + Math.random().toString(36).substring(2, 8);
+        localStorage.setItem('peerRoom', room);
+        document.getElementById('roomInput').value = room;
+        initPeer(room);
+        render();
+        alert('✅ Комната создана! ID: ' + room + '\nСкопируй его на другое устройство.');
+    };
+
+    window.connectToRoom = function() {
+        const room = document.getElementById('roomInput').value.trim();
+        if (!room) return alert('Введите ID комнаты');
+        localStorage.setItem('peerRoom', room);
+        initPeer(room);
+        // Подключаемся к хосту
+        setTimeout(() => {
+            connectToPeer(room);
+        }, 500);
+        render();
+    };
+
+    // ============================================================
+    //  МЕНЮ
+    // ============================================================
+    menuBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (currentMainTab !== 'battle' && battleState !== 'select') {
+                clearTimeout(searchTimer);
+                battleState = 'select';
+                selectedBrawler = null;
+                opponent = null;
+            }
+            currentMainTab = this.dataset.tab;
+            render();
+        });
+    });
+
+    // Автоподключение при загрузке
+    const savedRoom = localStorage.getItem('peerRoom');
+    if (savedRoom) {
+        setTimeout(() => {
+            document.getElementById('roomInput').value = savedRoom;
+            initPeer(savedRoom);
+        }, 500);
+    }
+
+    render();
+</script>
+</body>
+</html>
