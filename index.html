@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
+        /* ===== БАЗА ===== */
         * {
             margin: 0;
             padding: 0;
@@ -194,6 +195,8 @@
             color: #fff;
             transform: scale(1.05);
         }
+
+        /* ===== ПУСТЫЕ СОСТОЯНИЯ ===== */
         .empty-state {
             color: #8888aa;
             text-align: center;
@@ -213,6 +216,8 @@
             100% { transform: translateY(0); }
             50% { transform: translateY(-8px); }
         }
+
+        /* ===== БОЙЦЫ ===== */
         .brawler-list {
             display: flex;
             flex-direction: column;
@@ -245,6 +250,150 @@
             border-radius: 40px;
             object-fit: cover;
         }
+
+        /* ===== МАГАЗИН ===== */
+        .shop-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .shop-item {
+            background: #0f0f2a;
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid #555577;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            transition: 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+        .shop-item:hover {
+            transform: scale(1.02);
+            border-color: #f5c842;
+            box-shadow: 0 0 30px #f5c84211;
+        }
+        .shop-item img {
+            width: 60px;
+            height: 60px;
+            border-radius: 40px;
+            object-fit: cover;
+            background: #1a1a3a;
+            border: 2px solid #f5c84255;
+        }
+        .shop-item .info {
+            flex: 1;
+        }
+        .shop-item .info .name {
+            color: #eee;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .shop-item .info .desc {
+            color: #8888aa;
+            font-size: 13px;
+        }
+        .shop-item .info .reward {
+            font-size: 12px;
+            color: #f5c842;
+            background: #f5c84222;
+            padding: 2px 12px;
+            border-radius: 40px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .shop-item .buy-btn {
+            background: #f5c842;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 700;
+            color: #0b0b1a;
+            cursor: pointer;
+            transition: 0.3s ease;
+            font-size: 14px;
+        }
+        .shop-item .buy-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 30px #f5c84255;
+        }
+
+        /* ===== ПРОФИЛЬ ===== */
+        .profile-card {
+            background: #0f0f2a;
+            border-radius: 24px;
+            padding: 24px 20px;
+            border: 1px solid #f5c84233;
+            text-align: center;
+            animation: scaleIn 0.4s ease;
+        }
+        .profile-card .avatar {
+            font-size: 72px;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .profile-card .name-input {
+            background: #1a1a3a;
+            border: 1px solid #555577;
+            border-radius: 40px;
+            padding: 10px 16px;
+            color: #eee;
+            font-size: 18px;
+            font-weight: 700;
+            text-align: center;
+            outline: none;
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto 16px;
+            transition: 0.3s ease;
+        }
+        .profile-card .name-input:focus {
+            border-color: #f5c842;
+            box-shadow: 0 0 30px #f5c84222;
+        }
+        .profile-card .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 16px;
+        }
+        .profile-card .stat-item {
+            text-align: center;
+        }
+        .profile-card .stat-item .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #f5c842;
+        }
+        .profile-card .stat-item .label {
+            font-size: 12px;
+            color: #8888aa;
+            margin-top: 4px;
+        }
+        .profile-card .stat-item .value.gems {
+            color: #4fc3f7;
+        }
+        .profile-card .stat-item .value.coins {
+            color: #ffd54f;
+        }
+        .profile-card .save-btn {
+            background: #f5c842;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 60px;
+            font-weight: 700;
+            color: #0b0b1a;
+            cursor: pointer;
+            transition: 0.3s ease;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+        .profile-card .save-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #f5c84255;
+        }
+
+        /* ===== АДМИН-ПАНЕЛЬ ===== */
         .admin-tabs {
             display: flex;
             gap: 6px;
@@ -415,71 +564,8 @@
             transform: scale(1.15);
             background: #ff2f2f;
         }
-        .shop-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .shop-item {
-            background: #0f0f2a;
-            border-radius: 20px;
-            padding: 16px;
-            border: 1px solid #555577;
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            transition: 0.3s ease;
-            animation: slideIn 0.3s ease;
-        }
-        .shop-item:hover {
-            transform: scale(1.02);
-            border-color: #f5c842;
-            box-shadow: 0 0 30px #f5c84211;
-        }
-        .shop-item img {
-            width: 60px;
-            height: 60px;
-            border-radius: 40px;
-            object-fit: cover;
-            background: #1a1a3a;
-            border: 2px solid #f5c84255;
-        }
-        .shop-item .info {
-            flex: 1;
-        }
-        .shop-item .info .name {
-            color: #eee;
-            font-weight: 700;
-            font-size: 16px;
-        }
-        .shop-item .info .desc {
-            color: #8888aa;
-            font-size: 13px;
-        }
-        .shop-item .info .reward {
-            font-size: 12px;
-            color: #f5c842;
-            background: #f5c84222;
-            padding: 2px 12px;
-            border-radius: 40px;
-            display: inline-block;
-            margin-top: 4px;
-        }
-        .shop-item .buy-btn {
-            background: #f5c842;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 40px;
-            font-weight: 700;
-            color: #0b0b1a;
-            cursor: pointer;
-            transition: 0.3s ease;
-            font-size: 14px;
-        }
-        .shop-item .buy-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 0 30px #f5c84255;
-        }
+
+        /* ===== СТАТУС СЕРВЕРА ===== */
         .maintenance {
             background: #2a1a1a;
             border: 2px solid #f5c84288;
@@ -515,135 +601,48 @@
             font-size: 15px;
         }
 
-        /* ===== ЗЕЛЁНАЯ КНОПКА ЗАПУСКА ===== */
-        .start-btn {
-            background: #2ecc71;
+        /* ===== КНОПКИ СЕРВЕРА ===== */
+        .server-btn {
             border: none;
-            padding: 14px 40px;
+            padding: 16px;
             border-radius: 60px;
             font-weight: 800;
             font-size: 18px;
-            color: #0b0b1a;
             cursor: pointer;
             transition: 0.3s ease;
-            box-shadow: 0 0 30px #2ecc7166;
             width: 100%;
-            max-width: 300px;
-            margin: 12px auto 0;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        .start-btn:hover {
-            transform: scale(1.05);
-            background: #3dff8a;
-            box-shadow: 0 0 50px #2ecc71aa;
+        .server-btn:hover {
+            transform: scale(1.03);
         }
-        .start-btn:active {
+        .server-btn:active {
             transform: scale(0.95);
         }
-
-        /* ===== КРАСНАЯ КНОПКА ОСТАНОВКИ ===== */
-        .stop-btn {
-            background: #d43f3f;
-            border: none;
-            padding: 14px;
-            border-radius: 60px;
-            font-weight: 800;
-            font-size: 18px;
+        .server-btn.stop {
+            background: linear-gradient(135deg, #d43f3f, #b71c1c);
             color: #fff;
-            cursor: pointer;
-            transition: 0.3s ease;
-            margin-top: 8px;
-            letter-spacing: 1px;
-            flex-shrink: 0;
-        }
-        .stop-btn:hover {
-            transform: scale(1.03);
-            background: #ff2f2f;
             box-shadow: 0 0 30px #d43f3f66;
         }
-
-        /* ===== ОКНО ПАРОЛЯ ===== */
-        .password-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            animation: fadeIn 0.4s ease;
+        .server-btn.stop:hover {
+            box-shadow: 0 0 50px #d43f3faa;
+            background: linear-gradient(135deg, #ff2f2f, #d43f3f);
         }
-        .password-box {
-            background: #1a1a3a;
-            padding: 40px 30px;
-            border-radius: 30px;
-            border: 2px solid #f5c842;
-            text-align: center;
-            max-width: 340px;
-            width: 90%;
-            animation: scaleIn 0.4s ease;
-        }
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .password-box h2 {
-            color: #f5c842;
-            font-size: 22px;
-            margin-bottom: 8px;
-        }
-        .password-box p {
-            color: #8888aa;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-        .password-box input {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 40px;
-            border: 1px solid #555577;
-            background: #0f0f2a;
-            color: #eee;
-            font-size: 16px;
-            outline: none;
-            text-align: center;
-            transition: 0.3s ease;
-        }
-        .password-box input:focus {
-            border-color: #f5c842;
-            box-shadow: 0 0 30px #f5c84222;
-        }
-        .password-box button {
-            margin-top: 16px;
-            width: 100%;
-            padding: 12px;
-            border-radius: 40px;
-            border: none;
-            background: #f5c842;
+        .server-btn.start {
+            background: linear-gradient(135deg, #2ecc71, #1a9c54);
             color: #0b0b1a;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s ease;
+            box-shadow: 0 0 30px #2ecc7166;
         }
-        .password-box button:hover {
-            transform: scale(1.03);
-            box-shadow: 0 0 30px #f5c84255;
+        .server-btn.start:hover {
+            box-shadow: 0 0 50px #2ecc71aa;
+            background: linear-gradient(135deg, #3dff8a, #2ecc71);
         }
-        .password-box .error {
-            color: #d43f3f;
-            font-size: 13px;
-            margin-top: 12px;
-            display: none;
-            animation: shake 0.4s ease;
-        }
-        @keyframes shake {
-            0%,
-            100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            75% { transform: translateX(8px); }
+        .server-btn .icon {
+            font-size: 24px;
         }
 
         /* ===== БОЙ ===== */
@@ -728,6 +727,10 @@
             margin: auto 0;
             animation: scaleIn 0.4s ease;
         }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
         .brawl-select .result-box .vs {
             font-size: 28px;
             color: #f5c842;
@@ -763,11 +766,101 @@
             transform: scale(1.05);
             box-shadow: 0 0 30px #f5c84255;
         }
-        .settings-panel {
+
+        /* ===== ПАРОЛЬ ===== */
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-            flex: 1;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.4s ease;
+        }
+        .password-box {
+            background: #1a1a3a;
+            padding: 40px 30px;
+            border-radius: 30px;
+            border: 2px solid #f5c842;
+            text-align: center;
+            max-width: 340px;
+            width: 90%;
+            animation: scaleIn 0.4s ease;
+        }
+        .password-box h2 {
+            color: #f5c842;
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+        .password-box p {
+            color: #8888aa;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .password-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 40px;
+            border: 1px solid #555577;
+            background: #0f0f2a;
+            color: #eee;
+            font-size: 16px;
+            outline: none;
+            text-align: center;
+            transition: 0.3s ease;
+        }
+        .password-box input:focus {
+            border-color: #f5c842;
+            box-shadow: 0 0 30px #f5c84222;
+        }
+        .password-box button {
+            margin-top: 16px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 40px;
+            border: none;
+            background: #f5c842;
+            color: #0b0b1a;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .password-box button:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px #f5c84255;
+        }
+        .password-box .error {
+            color: #d43f3f;
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+            animation: shake 0.4s ease;
+        }
+        @keyframes shake {
+            0%,
+            100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        /* ===== ПОЛЯ ДЛЯ КАТЕГОРИЙ ===== */
+        .category-fields {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .category-fields.visible {
+            display: block;
+        }
+        .category-fields .hint {
+            color: #8888aa;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-align: center;
         }
     </style>
 </head>
@@ -785,6 +878,7 @@
         <button class="active" data-tab="brawlers">⚔️ Бойцы</button>
         <button data-tab="shop">🛍️ Магазин</button>
         <button data-tab="battle">⚡ Бой</button>
+        <button data-tab="profile">👤 Профиль</button>
         <button data-tab="admin">⚙️ Админка</button>
     </div>
 </div>
@@ -830,17 +924,17 @@
     });
 
     // ============================================================
-    //  ВСТАВЬ СВОЙ КОНФИГ FIREBASE
+    //  ТВОЙ FIREBASE КОНФИГ (УЖЕ ВСТАВЛЕН)
     // ============================================================
-   const firebaseConfig = {
-  apiKey: "AIzaSyB_IDn4_u5W1G82CrjXSMz6SAwXhkdnktc",
-  authDomain: "brawl-stars-panel.firebaseapp.com",
-  databaseURL: "https://brawl-stars-panel-default-rtdb.firebaseio.com",
-  projectId: "brawl-stars-panel",
-  storageBucket: "brawl-stars-panel.firebasestorage.app",
-  messagingSenderId: "458936707927",
-  appId: "1:458936707927:web:2abf0144fc135277ee6c12"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyB_IDn4_u5W1G82CrjXSMz6SAwXhkdnktc",
+        authDomain: "brawl-stars-panel.firebaseapp.com",
+        databaseURL: "https://brawl-stars-panel-default-rtdb.firebaseio.com",
+        projectId: "brawl-stars-panel",
+        storageBucket: "brawl-stars-panel.firebasestorage.app",
+        messagingSenderId: "458936707927",
+        appId: "1:458936707927:web:2abf0144fc135277ee6c12"
+    };
 
     // ============================================================
     //  ИНИЦИАЛИЗАЦИЯ FIREBASE
@@ -866,6 +960,13 @@
     const randomNames = ['🔥 Гром', '💥 Вспышка', '🌀 Тень', '⚡ Молния', '🌟 Звезда', '💀 Кошмар'];
     let isSyncing = false;
 
+    // Данные профиля (по умолчанию — ноль)
+    let profile = {
+        name: 'Игрок',
+        gems: 0,
+        coins: 0
+    };
+
     // ============================================================
     //  LOCALSTORAGE
     // ============================================================
@@ -877,6 +978,7 @@
                 brawlers = data.brawlers || [];
                 shopItems = data.shopItems || [];
                 serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
+                profile = data.profile || { name: 'Игрок', gems: 0, coins: 0 };
                 return true;
             }
         } catch (e) {}
@@ -884,7 +986,7 @@
     }
 
     function saveLocalData() {
-        const data = { brawlers, shopItems, serverRunning };
+        const data = { brawlers, shopItems, serverRunning, profile };
         localStorage.setItem('brawlData_firebase', JSON.stringify(data));
     }
 
@@ -894,10 +996,11 @@
             { name: 'Кольт', desc: 'Двойные револьверы', rarity: 'Редкий', image: '', damage: 80, hp: 300, minPower: 1, maxPower: 10 }
         ];
         shopItems = [
-            { name: 'Ящик x10', desc: '10 ящиков с наградами', image: '', reward: 'Ящики' },
-            { name: 'Скин Дракон', desc: 'Эксклюзивный скин для Кольта', image: '', reward: 'Скин' }
+            { name: 'Ящик x10', desc: '10 ящиков с наградами', image: '', reward: 'Ящики', category: 'resources', resourceType: 'gems', amount: 80 },
+            { name: 'Скин Дракон', desc: 'Эксклюзивный скин для Кольта', image: '', reward: 'Скин', category: 'brawler', brawlerName: 'Кольт', cost: 149 }
         ];
         serverRunning = true;
+        profile = { name: 'Игрок', gems: 0, coins: 0 };
         saveLocalData();
     }
 
@@ -907,7 +1010,7 @@
     function syncToFirebase() {
         if (isSyncing) return;
         isSyncing = true;
-        const data = { brawlers, shopItems, serverRunning };
+        const data = { brawlers, shopItems, serverRunning, profile };
         db.ref('data').set(data)
             .then(() => {
                 console.log('✅ Данные отправлены в Firebase');
@@ -930,6 +1033,7 @@
                     brawlers = data.brawlers || [];
                     shopItems = data.shopItems || [];
                     serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
+                    profile = data.profile || { name: 'Игрок', gems: 0, coins: 0 };
                     saveLocalData();
                     render();
                     console.log('📥 Данные загружены из Firebase');
@@ -990,7 +1094,6 @@
             return;
         }
 
-        // Если сервер остановлен и это НЕ админка — показываем заглушку без кнопки
         if (!serverRunning) {
             let html = cloudHtml + `
                 <div class="maintenance">
@@ -1009,6 +1112,7 @@
         if (tab === 'battle') { renderBattle(cloudHtml); return; }
         if (tab === 'brawlers') { renderBrawlers(cloudHtml); return; }
         if (tab === 'shop') { renderShop(cloudHtml); return; }
+        if (tab === 'profile') { renderProfile(cloudHtml); return; }
     }
 
     function renderBrawlers(cloudHtml) {
@@ -1047,6 +1151,8 @@
                             <div class="name">${item.name}</div>
                             <div class="desc">${item.desc || ''}</div>
                             <div class="reward">🎁 ${item.reward || 'Награда'}</div>
+                            ${item.category === 'brawler' ? `<div style="font-size:11px;color:#4fc3f7;">👤 ${item.brawlerName} • 💎 ${item.cost}</div>` : ''}
+                            ${item.category === 'resources' ? `<div style="font-size:11px;color:#ffd54f;">📦 ${item.resourceType === 'gems' ? '💎' : '🪙'} ${item.amount}</div>` : ''}
                         </div>
                         <button class="buy-btn" onclick="buyItem('${item.name}')">Купить</button>
                     </div>
@@ -1060,7 +1166,52 @@
     }
 
     window.buyItem = function(name) {
-        alert(`✅ Вы купили: ${name}! (симуляция покупки)`);
+        const item = shopItems.find(i => i.name === name);
+        if (!item) return alert('Товар не найден!');
+        if (item.category === 'brawler') {
+            alert(`✅ Вы купили бойца ${item.brawlerName} за ${item.cost} 💎!`);
+            // Можно добавить логику выдачи бойца
+        } else if (item.category === 'resources') {
+            const resourceName = item.resourceType === 'gems' ? '💎 Гемы' : '🪙 Монеты';
+            alert(`✅ Вы получили ${item.amount} ${resourceName}!`);
+            // Можно добавить логику начисления ресурсов
+        } else {
+            alert(`✅ Вы купили: ${name}!`);
+        }
+    };
+
+    // ===== ПРОФИЛЬ =====
+    function renderProfile(cloudHtml) {
+        let html = cloudHtml + `
+            <div class="profile-card">
+                <span class="avatar">👤</span>
+                <input class="name-input" id="profileName" value="${profile.name}" placeholder="Ваше имя" />
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="value gems">${profile.gems}</div>
+                        <div class="label">💎 Гемы</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="value coins">${profile.coins}</div>
+                        <div class="label">🪙 Монеты</div>
+                    </div>
+                </div>
+                <button class="save-btn" onclick="saveProfile()">💾 Сохранить профиль</button>
+            </div>
+        `;
+        content.innerHTML = html;
+        menuBtns.forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-tab="profile"]').classList.add('active');
+    }
+
+    window.saveProfile = function() {
+        const nameInput = document.getElementById('profileName');
+        if (nameInput) {
+            profile.name = nameInput.value.trim() || 'Игрок';
+        }
+        autoSync();
+        renderProfile();
+        alert('✅ Профиль сохранён!');
     };
 
     function renderBattle(cloudHtml) {
@@ -1102,6 +1253,7 @@
         document.querySelector('[data-tab="battle"]').classList.add('active');
     }
 
+    // ===== АДМИНКА =====
     function renderAdmin(cloudHtml) {
         let html = cloudHtml + `
             <div class="admin-tabs">
@@ -1122,7 +1274,31 @@
                         📷 Загрузить картинку
                         <input type="file" id="shopImage" accept="image/*">
                     </label>
-                    <input type="text" id="shopReward" placeholder="Что выдаёт (скин, монеты, ящик, боец)">
+                    <select id="shopCategory" onchange="toggleCategoryFields()">
+                        <option value="resources">📦 Ресурсы</option>
+                        <option value="brawler">👤 Персонаж</option>
+                    </select>
+                    
+                    <!-- Поля для категории "Ресурсы" -->
+                    <div id="resourcesFields" class="category-fields visible">
+                        <div class="hint">Выберите тип ресурса и укажите количество</div>
+                        <select id="resourceType">
+                            <option value="gems">💎 Гемы</option>
+                            <option value="coins">🪙 Монеты</option>
+                        </select>
+                        <input type="number" id="resourceAmount" placeholder="Количество" value="100">
+                    </div>
+
+                    <!-- Поля для категории "Персонаж" -->
+                    <div id="brawlerFields" class="category-fields">
+                        <div class="hint">Выберите бойца и укажите стоимость в гемах</div>
+                        <select id="brawlerSelect">
+                            ${brawlers.map(b => `<option value="${b.name}">${b.name}</option>`).join('')}
+                            ${brawlers.length === 0 ? '<option value="">Нет бойцов</option>' : ''}
+                        </select>
+                        <input type="number" id="brawlerCost" placeholder="Стоимость (гемы)" value="149">
+                    </div>
+
                     <button class="submit-btn" onclick="addShopItem()">➕ Добавить</button>
                 </div>
                 <div class="list-admin">
@@ -1132,7 +1308,7 @@
                             <div class="info">
                                 <div class="name">${item.name}</div>
                                 <div class="desc">${item.desc || ''}</div>
-                                <div class="reward">🎁 ${item.reward || 'Награда'}</div>
+                                <div class="reward">${item.category === 'brawler' ? '👤 Персонаж' : '📦 Ресурсы'}</div>
                             </div>
                             <button class="del-btn" onclick="deleteShopItem(${idx})">✕</button>
                         </div>
@@ -1186,13 +1362,11 @@
             `;
         } else if (adminSubTab === 'settings') {
             html += `
-                <div class="settings-panel">
-                    <div style="color:#aaa;padding:12px 0;text-align:center;">Управление сервером</div>
-                    ${serverRunning 
-                        ? `<button class="stop-btn" onclick="stopServer()">⛔ ОСТАНОВИТЬ СЕРВЕР</button>`
-                        : `<button class="start-btn" onclick="startServer()">🚀 ЗАПУСТИТЬ СЕРВЕР</button>`
-                    }
-                </div>
+                <div style="padding:12px 0;text-align:center;color:#aaa;">Управление сервером</div>
+                ${serverRunning 
+                    ? `<button class="server-btn stop" onclick="stopServer()"><span class="icon">⛔</span> ОСТАНОВИТЬ СЕРВЕР</button>`
+                    : `<button class="server-btn start" onclick="startServer()"><span class="icon">🚀</span> ЗАПУСТИТЬ СЕРВЕР</button>`
+                }
             `;
         }
 
@@ -1207,6 +1381,15 @@
                 renderAdmin(cloudHtml);
             });
         });
+
+        // Показываем/скрываем поля в зависимости от выбранной категории
+        window.toggleCategoryFields = function() {
+            const category = document.getElementById('shopCategory').value;
+            document.getElementById('resourcesFields').className = 'category-fields' + (category === 'resources' ? ' visible' : '');
+            document.getElementById('brawlerFields').className = 'category-fields' + (category === 'brawler' ? ' visible' : '');
+        };
+        // Инициализация
+        setTimeout(window.toggleCategoryFields, 100);
     }
 
     // ============================================================
@@ -1244,24 +1427,50 @@
     window.addShopItem = function() {
         const name = document.getElementById('shopName').value.trim();
         const desc = document.getElementById('shopDesc').value.trim();
-        const reward = document.getElementById('shopReward').value.trim();
+        const category = document.getElementById('shopCategory').value;
         const fileInput = document.getElementById('shopImage');
+        let reward = '';
 
         if (!name) return alert('Введите название товара!');
-        if (!reward) return alert('Укажите, что выдаёт товар!');
 
-        if (fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                shopItems.push({ name, desc, image: e.target.result, reward });
+        if (category === 'resources') {
+            const resourceType = document.getElementById('resourceType').value;
+            const amount = parseInt(document.getElementById('resourceAmount').value) || 0;
+            if (amount <= 0) return alert('Введите количество ресурсов!');
+            reward = resourceType === 'gems' ? `${amount} 💎` : `${amount} 🪙`;
+            const image = fileInput.files && fileInput.files[0] ? '' : '';
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    shopItems.push({ name, desc, image: e.target.result, reward, category, resourceType, amount });
+                    autoSync();
+                    render();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                shopItems.push({ name, desc, image: '', reward, category, resourceType, amount });
                 autoSync();
                 render();
-            };
-            reader.readAsDataURL(fileInput.files[0]);
-        } else {
-            shopItems.push({ name, desc, image: '', reward });
-            autoSync();
-            render();
+            }
+        } else if (category === 'brawler') {
+            const brawlerName = document.getElementById('brawlerSelect').value;
+            const cost = parseInt(document.getElementById('brawlerCost').value) || 0;
+            if (!brawlerName) return alert('Выберите бойца!');
+            if (cost <= 0) return alert('Введите стоимость в гемах!');
+            reward = `${brawlerName} (${cost} 💎)`;
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    shopItems.push({ name, desc, image: e.target.result, reward, category, brawlerName, cost });
+                    autoSync();
+                    render();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                shopItems.push({ name, desc, image: '', reward, category, brawlerName, cost });
+                autoSync();
+                render();
+            }
         }
     };
 
@@ -1344,4 +1553,4 @@
     render();
 </script>
 </body>
-</html>        
+</html>
