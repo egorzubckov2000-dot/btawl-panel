@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Brawl Stars — Gun.js</title>
-    <script src="https://cdn.jsdelivr.net/npm/gun@0.9.99/gun.js"></script>
+    <title>Brawl Stars — PeerJS синхронизация</title>
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
     <style>
-        /* ===== ВЕСЬ ТВОЙ CSS ТУТ (вставь свой) ===== */
+        /* ===== ВЕСЬ ТВОЙ CSS (КОРОТКАЯ ВЕРСИЯ) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         html, body { height: 100%; width: 100%; background: #0b0b1a; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .app { width: 100%; max-width: 430px; height: 100vh; max-height: 860px; background: #14142e; padding: 20px 16px; display: flex; flex-direction: column; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .header h1 { color: #f5c842; font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+        .header h1 { color: #f5c842; font-size: 26px; font-weight: 800; }
         .header span { background: #f5c842; color: #0b0b1a; padding: 2px 14px; border-radius: 40px; font-weight: 700; font-size: 12px; }
         .online-badge { background: #2ecc71; color: #0b0b1a; padding: 2px 12px; border-radius: 40px; font-weight: 700; font-size: 10px; display: flex; align-items: center; gap: 4px; }
         .online-badge::before { content: ''; width: 6px; height: 6px; background: #0b0b1a; border-radius: 50%; display: inline-block; animation: pulse-dot 1.5s ease-in-out infinite; }
         @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
         .offline-badge { background: #d43f3f; color: #fff; padding: 2px 12px; border-radius: 40px; font-weight: 700; font-size: 10px; }
         #content { flex: 1; background: #1a1a3a; border-radius: 24px; padding: 18px 14px; border: 1px solid #f5c84233; overflow-y: auto; display: flex; flex-direction: column; }
-        .gun-panel { background: #0f0f2a; border-radius: 20px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #f5c84244; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .gun-panel .status { color: #aaaacc; font-size: 13px; }
-        .gun-panel .status .connected { color: #2ecc71; font-weight: 700; }
-        .gun-panel .status .disconnected { color: #d43f3f; font-weight: 700; }
-        .gun-panel button { background: #f5c842; border: none; padding: 6px 16px; border-radius: 40px; font-weight: 700; color: #0b0b1a; cursor: pointer; font-size: 12px; }
+        .peer-panel { background: #0f0f2a; border-radius: 20px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #f5c84244; display: flex; flex-direction: column; gap: 8px; }
+        .peer-panel .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .peer-panel input { flex: 1; padding: 8px 14px; border-radius: 40px; border: 1px solid #555577; background: #1a1a3a; color: #eee; font-size: 14px; outline: none; min-width: 100px; }
+        .peer-panel input:focus { border-color: #f5c842; }
+        .peer-panel button { background: #f5c842; border: none; padding: 8px 16px; border-radius: 40px; font-weight: 700; color: #0b0b1a; cursor: pointer; font-size: 12px; }
+        .peer-panel .status { color: #aaaacc; font-size: 13px; text-align: center; }
+        .peer-panel .status .connected { color: #2ecc71; font-weight: 700; }
+        .peer-panel .status .disconnected { color: #d43f3f; font-weight: 700; }
         .menu { display: flex; justify-content: space-around; background: #0f0f28; border-radius: 60px; padding: 8px 6px; border: 1px solid #f5c84233; flex-shrink: 0; margin-top: 12px; }
         .menu button { background: transparent; border: none; color: #777799; font-weight: 700; font-size: 13px; padding: 10px 6px; border-radius: 40px; cursor: pointer; flex: 1; text-align: center; }
         .menu button.active { background: #f5c842; color: #0b0b1a; box-shadow: 0 0 24px #f5c84277; }
@@ -42,7 +45,6 @@
         .brawler-form .form-row { display: flex; gap: 10px; }
         .brawler-form .form-row input { flex: 1; }
         .brawler-form .submit-btn { background: #f5c842; border: none; padding: 12px; border-radius: 60px; font-weight: 700; color: #0b0b1a; cursor: pointer; font-size: 16px; }
-        .brawler-form .submit-btn:hover { transform: scale(1.02); box-shadow: 0 0 30px #f5c84255; }
         .brawler-card-full { background: #0f0f2a; border-radius: 20px; padding: 12px 16px; border-left: 4px solid #f5c842; display: flex; align-items: center; gap: 12px; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         .brawler-card-full img { width: 50px; height: 50px; border-radius: 40px; object-fit: cover; background: #1a1a3a; border: 2px solid #f5c84255; }
@@ -63,7 +65,6 @@
         .item .del { background: #d43f3f; border: none; color: #fff; width: 30px; height: 30px; border-radius: 40px; font-weight: 700; cursor: pointer; font-size: 16px; flex-shrink: 0; }
         .stop-btn { background: #d43f3f; border: none; padding: 14px; border-radius: 60px; font-weight: 800; font-size: 18px; color: #fff; cursor: pointer; box-shadow: 0 0 20px #d43f3f66; transition: 0.15s; margin-top: 8px; letter-spacing: 1px; flex-shrink: 0; }
         .stop-btn:hover { transform: scale(1.02); background: #ff2f2f; }
-        .stop-btn:disabled { background: #555; box-shadow: none; transform: none; }
         .brawl-select { display: flex; flex-direction: column; gap: 12px; height: 100%; }
         .brawl-select .brawler-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; overflow-y: auto; flex: 1; align-content: flex-start; }
         .brawl-select .brawler-card { background: #0f0f2a; padding: 12px 16px; border-radius: 40px; border: 2px solid #555577; color: #eee; font-weight: 600; cursor: pointer; transition: 0.15s; font-size: 14px; min-width: 80px; text-align: center; }
@@ -91,7 +92,7 @@
     <div class="header">
         <h1>⚡ BRAWL</h1>
         <span>v.171-11</span>
-        <div class="online-badge" id="connectionBadge">GUN</div>
+        <div class="offline-badge" id="connectionBadge">P2P</div>
     </div>
     <div id="content"></div>
     <div class="menu">
@@ -103,136 +104,17 @@
 </div>
 <script>
     // ============================================================
-    //  GUN.JS — НОВЫЕ РАБОЧИЕ СЕРВЕРЫ
+    //  PEERJS — P2P СИНХРОНИЗАЦИЯ
     // ============================================================
-    const gun = Gun({
-        peers: [
-            'https://gun-manhattan.herokuapp.com/gun',
-            'https://gun-ams.herokuapp.com/gun',
-            'https://gun-eu-sv2.herokuapp.com/gun'
-        ],
-        localStorage: true,
-        radisk: true,
-        // Добавляем WebRTC для прямого P2P (обход серверов)
-        webRTC: {
-            signal: 'https://signal.gun.eco'
-        }
-    });
-
-    // ============================================================
-    //  РАБОТА С ДАННЫМИ
-    // ============================================================
-    const brawlersRef = gun.get('brawlers');
-    const shopRef = gun.get('shopItems');
-    const serverRef = gun.get('serverRunning');
-
+    let peer = null;
+    let connections = [];
+    let myPeerId = '';
+    let isHost = false;
+    
+    // Данные
     let brawlers = [];
     let shopItems = [];
     let serverRunning = true;
-
-    // ============================================================
-    //  ЗАГРУЗКА ИЗ GUN
-    // ============================================================
-    brawlersRef.on(function(data) {
-        if (data) {
-            if (Array.isArray(data)) { brawlers = data; } 
-            else { 
-                const arr = []; 
-                for (let k in data) { 
-                    if (data.hasOwnProperty(k)) { 
-                        arr.push(data[k]); 
-                    } 
-                } 
-                brawlers = arr; 
-            }
-            saveLocalData();
-            render();
-            updateGunUI(true);
-        }
-    });
-
-    shopRef.on(function(data) {
-        if (data) {
-            if (Array.isArray(data)) { shopItems = data; } 
-            else { 
-                const arr = []; 
-                for (let k in data) { 
-                    if (data.hasOwnProperty(k)) { 
-                        arr.push(data[k]); 
-                    } 
-                } 
-                shopItems = arr; 
-            }
-            saveLocalData();
-            render();
-        }
-    });
-
-    serverRef.on(function(data) {
-        if (data !== null && data !== undefined) {
-            serverRunning = data;
-            saveLocalData();
-            render();
-        }
-    });
-
-    // ============================================================
-    //  LOCALSTORAGE
-    // ============================================================
-    function loadLocalData() {
-        try {
-            const raw = localStorage.getItem('brawlData_gun');
-            if (raw) {
-                const data = JSON.parse(raw);
-                if (brawlers.length === 0) { brawlers = data.brawlers || []; }
-                if (shopItems.length === 0) { shopItems = data.shopItems || []; }
-                if (serverRunning === undefined) { serverRunning = data.serverRunning !== undefined ? data.serverRunning : true; }
-                return true;
-            }
-        } catch (e) {}
-        return false;
-    }
-
-    function saveLocalData() {
-        const data = { brawlers, shopItems, serverRunning };
-        localStorage.setItem('brawlData_gun', JSON.stringify(data));
-    }
-
-    if (!loadLocalData()) {
-        brawlers = [
-            { name: 'Шелли', desc: 'Дробовик', rarity: 'Редкий', image: '', damage: 120, hp: 400, minPower: 1, maxPower: 10 },
-            { name: 'Кольт', desc: 'Двойные револьверы', rarity: 'Редкий', image: '', damage: 80, hp: 300, minPower: 1, maxPower: 10 }
-        ];
-        shopItems = ['Ящик x10', 'Скин Дракон', 'Монеты 1000'];
-        serverRunning = true;
-        saveBrawlersToGun();
-        saveShopToGun();
-        saveServerToGun();
-    }
-
-    // ============================================================
-    //  СОХРАНЕНИЕ В GUN
-    // ============================================================
-    function saveBrawlersToGun() { brawlersRef.put(brawlers); }
-    function saveShopToGun() { shopRef.put(shopItems); }
-    function saveServerToGun() { serverRef.put(serverRunning); }
-
-    // ============================================================
-    //  UI
-    // ============================================================
-    function updateGunUI(connected) {
-        const badge = document.getElementById('connectionBadge');
-        if (connected) {
-            badge.className = 'online-badge';
-            badge.textContent = '🟢 GUN';
-        } else {
-            badge.className = 'offline-badge';
-            badge.textContent = '🔴 GUN';
-        }
-    }
-
-    const content = document.getElementById('content');
-    const menuBtns = document.querySelectorAll('.menu button');
     let currentMainTab = 'brawlers';
     let adminSubTab = 'brawlers';
     let battleState = 'select';
@@ -242,17 +124,190 @@
     let searchCancelled = false;
     const randomNames = ['🔥 Гром', '💥 Вспышка', '🌀 Тень', '⚡ Молния', '🌟 Звезда', '💀 Кошмар'];
 
+    // ============================================================
+    //  LOCALSTORAGE
+    // ============================================================
+    function loadLocalData() {
+        try {
+            const raw = localStorage.getItem('brawlData_peer');
+            if (raw) {
+                const data = JSON.parse(raw);
+                brawlers = data.brawlers || [];
+                shopItems = data.shopItems || [];
+                serverRunning = data.serverRunning !== undefined ? data.serverRunning : true;
+                return true;
+            }
+        } catch (e) {}
+        return false;
+    }
+
+    function saveLocalData() {
+        const data = { brawlers, shopItems, serverRunning };
+        localStorage.setItem('brawlData_peer', JSON.stringify(data));
+    }
+
+    if (!loadLocalData()) {
+        brawlers = [
+            { name: 'Шелли', desc: 'Дробовик', rarity: 'Редкий', image: '', damage: 120, hp: 400, minPower: 1, maxPower: 10 },
+            { name: 'Кольт', desc: 'Двойные револьверы', rarity: 'Редкий', image: '', damage: 80, hp: 300, minPower: 1, maxPower: 10 }
+        ];
+        shopItems = ['Ящик x10', 'Скин Дракон', 'Монеты 1000'];
+        serverRunning = true;
+        saveLocalData();
+    }
+
+    // ============================================================
+    //  PEERJS ФУНКЦИИ
+    // ============================================================
+    function initPeer(roomId) {
+        if (peer) {
+            peer.destroy();
+            connections = [];
+        }
+
+        peer = new Peer(roomId || undefined, {
+            debug: 0,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            }
+        });
+
+        peer.on('open', function(id) {
+            myPeerId = id;
+            isHost = !!roomId;
+            document.getElementById('connectionBadge').className = 'online-badge';
+            document.getElementById('connectionBadge').textContent = '🟢 P2P';
+            updatePeerUI('🟢 Подключено', true);
+            
+            if (isHost) {
+                console.log('Хост создан, ID:', id);
+            }
+            if (!isHost && roomId) {
+                connectToPeer(roomId);
+            }
+        });
+
+        peer.on('connection', function(conn) {
+            connections.push(conn);
+            setupConnection(conn);
+            sendDataToConnection(conn, {
+                type: 'fullSync',
+                data: { brawlers, shopItems, serverRunning }
+            });
+            updatePeerUI(`🟢 Подключено (${connections.length} устройств)`, true);
+        });
+
+        peer.on('error', function(err) {
+            console.error('Peer error:', err);
+            if (err.type === 'peer-unavailable') {
+                updatePeerUI('❌ Комната не найдена', false);
+                document.getElementById('connectionBadge').className = 'offline-badge';
+                document.getElementById('connectionBadge').textContent = '❌ Офлайн';
+            }
+        });
+    }
+
+    function connectToPeer(peerId) {
+        const conn = peer.connect(peerId, { reliable: true });
+        connections.push(conn);
+        setupConnection(conn);
+    }
+
+    function setupConnection(conn) {
+        conn.on('open', function() {
+            console.log('Соединение с:', conn.peer);
+            updatePeerUI(`🟢 Подключено (${connections.length} устройств)`, true);
+            document.getElementById('connectionBadge').className = 'online-badge';
+            document.getElementById('connectionBadge').textContent = '🟢 P2P';
+        });
+
+        conn.on('data', function(data) {
+            handleIncomingData(data);
+        });
+
+        conn.on('close', function() {
+            connections = connections.filter(c => c !== conn);
+            updatePeerUI(`🟡 Подключено (${connections.length} устройств)`, connections.length > 0);
+            if (connections.length === 0) {
+                document.getElementById('connectionBadge').className = 'offline-badge';
+                document.getElementById('connectionBadge').textContent = '❌ Офлайн';
+            }
+        });
+    }
+
+    function sendDataToAll(data) {
+        connections.forEach(conn => {
+            try { conn.send(data); } catch (e) {}
+        });
+    }
+
+    function sendDataToConnection(conn, data) {
+        try { conn.send(data); } catch (e) {}
+    }
+
+    function handleIncomingData(data) {
+        if (data.type === 'fullSync') {
+            brawlers = data.data.brawlers || [];
+            shopItems = data.data.shopItems || [];
+            serverRunning = data.data.serverRunning !== undefined ? data.data.serverRunning : true;
+            saveLocalData();
+            render();
+        } else if (data.type === 'updateBrawlers') {
+            brawlers = data.data;
+            saveLocalData();
+            render();
+        } else if (data.type === 'updateShop') {
+            shopItems = data.data;
+            saveLocalData();
+            render();
+        } else if (data.type === 'updateServer') {
+            serverRunning = data.data;
+            saveLocalData();
+            render();
+        }
+    }
+
+    function broadcastUpdate(type, data) {
+        if (connections.length > 0) {
+            sendDataToAll({ type, data });
+        }
+    }
+
+    function updatePeerUI(text, connected) {
+        const statusEl = document.getElementById('peerStatus');
+        if (statusEl) {
+            statusEl.textContent = text;
+            statusEl.className = connected ? 'connected' : 'disconnected';
+        }
+    }
+
+    // ============================================================
+    //  UI
+    // ============================================================
+    const content = document.getElementById('content');
+    const menuBtns = document.querySelectorAll('.menu button');
+
     function render() {
         const tab = currentMainTab;
-        const gunHtml = `
-            <div class="gun-panel">
-                <div class="status">📡 Синхронизация: <span class="connected">активна</span></div>
-                <button onclick="forceSync()">🔄 Синхронизировать</button>
+        const peerHtml = `
+            <div class="peer-panel">
+                <div class="row">
+                    <input type="text" id="roomInput" placeholder="Введите ID комнаты" value="${localStorage.getItem('peerRoom') || ''}">
+                    <button onclick="connectToRoom()">🔗 Подключиться</button>
+                </div>
+                <div class="row" style="justify-content:center;gap:12px;">
+                    <button onclick="createRoom()">🏠 Создать комнату</button>
+                    <span style="color:#f5c842;font-weight:700;font-size:12px;background:#f5c84222;padding:2px 12px;border-radius:40px;">${myPeerId ? '🆔 '+myPeerId : 'Не подключён'}</span>
+                </div>
+                <div class="status">Статус: <span id="peerStatus" class="disconnected">🔴 Не подключено</span></div>
             </div>
         `;
 
         if (!serverRunning) {
-            let html = gunHtml + `<div class="maintenance"><span>🔧</span><h2>Технические работы</h2><p>Сервер остановлен</p>`;
+            let html = peerHtml + `<div class="maintenance"><span>🔧</span><h2>Технические работы</h2><p>Сервер остановлен</p>`;
             if (tab === 'admin') html += `<button class="start-btn" onclick="startServer()">🚀 ЗАПУСТИТЬ</button>`;
             html += `</div>`;
             content.innerHTML = html;
@@ -262,14 +317,14 @@
             return;
         }
 
-        if (tab === 'battle') { renderBattle(gunHtml); return; }
-        if (tab === 'brawlers') { renderBrawlers(gunHtml); return; }
-        if (tab === 'shop') { renderShop(gunHtml); return; }
-        renderAdmin(gunHtml);
+        if (tab === 'battle') { renderBattle(peerHtml); return; }
+        if (tab === 'brawlers') { renderBrawlers(peerHtml); return; }
+        if (tab === 'shop') { renderShop(peerHtml); return; }
+        renderAdmin(peerHtml);
     }
 
-    function renderBrawlers(gunHtml) {
-        let html = gunHtml;
+    function renderBrawlers(peerHtml) {
+        let html = peerHtml;
         if (!brawlers.length) { html += `<div class="empty-state"><span>🦸</span>Нет бойцов</div>`; } 
         else {
             html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
@@ -286,8 +341,8 @@
         document.querySelector('[data-tab="brawlers"]').classList.add('active');
     }
 
-    function renderShop(gunHtml) {
-        let html = gunHtml;
+    function renderShop(peerHtml) {
+        let html = peerHtml;
         if (!shopItems.length) { html += `<div class="empty-state"><span>🛒</span>Магазин пуст</div>`; } 
         else {
             html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
@@ -301,8 +356,8 @@
         document.querySelector('[data-tab="shop"]').classList.add('active');
     }
 
-    function renderBattle(gunHtml) {
-        let html = gunHtml + `<div class="brawl-select">`;
+    function renderBattle(peerHtml) {
+        let html = peerHtml + `<div class="brawl-select">`;
         if (battleState === 'select') {
             html += `<h3 style="color:#f5c842;margin-bottom:8px;">Выбери бойца</h3><div class="brawler-grid">`;
             if (!brawlers.length) { html += `<div style="color:#888;padding:20px;">Нет бойцов</div>`; } 
@@ -325,8 +380,8 @@
         document.querySelector('[data-tab="battle"]').classList.add('active');
     }
 
-    function renderAdmin(gunHtml) {
-        let html = gunHtml + `<div class="admin-tabs">
+    function renderAdmin(peerHtml) {
+        let html = peerHtml + `<div class="admin-tabs">
             <button class="${adminSubTab === 'brawlers' ? 'active-tab' : ''}" data-sub="brawlers">🦸 Бойцы</button>
             <button class="${adminSubTab === 'shop' ? 'active-tab' : ''}" data-sub="shop">🛒 Товары</button>
             <button class="${adminSubTab === 'settings' ? 'active-tab' : ''}" data-sub="settings">⚙️ Настройки</button>
@@ -417,36 +472,45 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 brawlers.push({ name, desc, rarity, image: e.target.result, damage, hp, minPower, maxPower });
-                saveLocalData(); saveBrawlersToGun(); render();
+                saveLocalData(); broadcastUpdate('updateBrawlers', brawlers); render();
             };
             reader.readAsDataURL(fileInput.files[0]);
         } else {
             brawlers.push({ name, desc, rarity, image: '', damage, hp, minPower, maxPower });
-            saveLocalData(); saveBrawlersToGun(); render();
+            saveLocalData(); broadcastUpdate('updateBrawlers', brawlers); render();
         }
     };
-    window.deleteBrawler = function(idx) { brawlers.splice(idx, 1); saveLocalData(); saveBrawlersToGun(); render(); };
+    window.deleteBrawler = function(idx) { brawlers.splice(idx, 1); saveLocalData(); broadcastUpdate('updateBrawlers', brawlers); render(); };
     window.adminAddShop = function() {
         const val = document.getElementById('shopInput').value.trim();
         if (!val) return;
         shopItems.push(val);
-        saveLocalData(); saveShopToGun(); render();
+        saveLocalData(); broadcastUpdate('updateShop', shopItems); render();
     };
-    window.adminDeleteShop = function(idx) { shopItems.splice(idx, 1); saveLocalData(); saveShopToGun(); render(); };
+    window.adminDeleteShop = function(idx) { shopItems.splice(idx, 1); saveLocalData(); broadcastUpdate('updateShop', shopItems); render(); };
     window.adminEdit = function(el) {
         const idx = parseInt(el.dataset.index);
         const val = el.value.trim();
         if (!val) return;
         shopItems[idx] = val;
-        saveLocalData(); saveShopToGun();
+        saveLocalData(); broadcastUpdate('updateShop', shopItems);
     };
-    window.startServer = function() { serverRunning = true; saveLocalData(); saveServerToGun(); render(); };
-    window.stopServer = function() { serverRunning = false; saveLocalData(); saveServerToGun(); render(); };
-    window.forceSync = function() { 
-        saveBrawlersToGun(); 
-        saveShopToGun(); 
-        saveServerToGun(); 
-        alert('✅ Данные отправлены в сеть Gun.js'); 
+    window.startServer = function() { serverRunning = true; saveLocalData(); broadcastUpdate('updateServer', true); render(); };
+    window.stopServer = function() { serverRunning = false; saveLocalData(); broadcastUpdate('updateServer', false); render(); };
+
+    window.createRoom = function() {
+        const room = 'room_' + Math.random().toString(36).substring(2, 8);
+        localStorage.setItem('peerRoom', room);
+        document.getElementById('roomInput').value = room;
+        initPeer(room);
+        render();
+    };
+    window.connectToRoom = function() {
+        const room = document.getElementById('roomInput').value.trim();
+        if (!room) return alert('Введите ID комнаты');
+        localStorage.setItem('peerRoom', room);
+        initPeer(room);
+        render();
     };
 
     // ============================================================
@@ -465,7 +529,16 @@
         });
     });
 
+    // Автоподключение
+    const savedRoom = localStorage.getItem('peerRoom');
+    if (savedRoom) {
+        setTimeout(() => {
+            document.getElementById('roomInput').value = savedRoom;
+            initPeer(savedRoom);
+        }, 500);
+    }
+
     render();
 </script>
 </body>
-    </html>
+</html>
