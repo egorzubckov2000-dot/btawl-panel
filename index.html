@@ -7,7 +7,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== ВСЕ СТИЛИ (СОКРАЩЕННО) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -387,7 +386,7 @@
             background: #4fc3f722;
         }
 
-        /* ===== PVP ===== */
+        /* ===== БОЙ ===== */
         .pvp-container {
             display: flex;
             flex-direction: column;
@@ -481,6 +480,11 @@
             font-size: 48px;
             display: block;
             margin: 4px 0;
+        }
+        .battle-player .power {
+            color: #f5c842;
+            font-size: 12px;
+            font-weight: 700;
         }
         .battle-vs {
             color: #f5c842;
@@ -708,6 +712,38 @@
             background: #d43f3f;
             color: #fff;
         }
+        .brawler-detail .power-display {
+            margin-top: 8px;
+            padding: 8px;
+            background: #1a1a3a;
+            border-radius: 16px;
+            border: 1px solid #555577;
+        }
+        .brawler-detail .power-display .level {
+            color: #f5c842;
+            font-weight: 700;
+        }
+        .brawler-detail .upgrade-btn {
+            background: #f5c842;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 700;
+            color: #0b0b1a;
+            cursor: pointer;
+            transition: 0.3s ease;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        .brawler-detail .upgrade-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #f5c84255;
+        }
+        .brawler-detail .upgrade-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
         .brawler-detail .back-btn {
             background: #555577;
             border: none;
@@ -724,6 +760,8 @@
             transform: scale(1.05);
             background: #777799;
         }
+
+        /* ===== МАГАЗИН ===== */
         .shop-grid {
             display: flex;
             flex-direction: column;
@@ -789,6 +827,8 @@
             transform: scale(1.08);
             box-shadow: 0 0 30px #f5c84255;
         }
+
+        /* ===== ПРОФИЛЬ ===== */
         .profile-card {
             background: #0f0f2a;
             border-radius: 24px;
@@ -1349,6 +1389,7 @@
             display: none;
             animation: shake 0.4s ease;
         }
+
         .category-fields {
             display: none;
             animation: fadeIn 0.3s ease;
@@ -1938,347 +1979,69 @@
     }
 
     // ============================================================
-    //  ПОКУПКА
+    //  БОЕВАЯ СИСТЕМА
     // ============================================================
-    window.buyItem = function(name) {
-        if (checkBan() || !currentPlayerId) return;
-        const item = shopItems.find(i => i.name === name);
-        if (!item) return alert('Товар не найден!');
-        const isFree = item.free === true;
+    const randomNames = ['🔥 Гром', '💥 Вспышка', '🌀 Тень', '⚡ Молния', '🌟 Звезда', '💀 Кошмар', '🛡️ Щит', '🗡️ Клинок', '🏹 Стрела', '🧨 Фейерверк'];
 
-        if (item.category === 'brawler') {
-            if (profile.brawlers && profile.brawlers.includes(item.brawlerName)) {
-                return alert(`⚠️ У вас уже есть боец ${item.brawlerName}!`);
-            }
-            if (!isFree && profile.gems < item.cost) {
-                return alert(`❌ Не хватает гемов! Нужно ${item.cost} 💎, у вас ${profile.gems}`);
-            }
-            if (!isFree) { profile.gems -= item.cost; }
-            if (!profile.brawlers) profile.brawlers = [];
-            profile.brawlers.push(item.brawlerName);
-            alert(`✅ Вы купили бойца ${item.brawlerName}${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
-            autoSync();
-            render();
-        } else if (item.category === 'resources') {
-            if (item.resourceType === 'gems') {
-                profile.gems += item.amount;
-                alert(`✅ Вы получили ${item.amount} 💎 Гемов${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
-            } else if (item.resourceType === 'coins') {
-                profile.coins += item.amount;
-                alert(`✅ Вы получили ${item.amount} 🪙 Монет${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
-            }
-            autoSync();
-            render();
-        } else {
-            alert(`✅ Вы купили: ${name}!`);
-        }
-    };
+    function getBrawlerStats(brawler, level) {
+        if (!brawler) return { damage: 0, hp: 0 };
+        // Если нет данных о разных уровнях — используем дефолт
+        const minDamage = brawler.minDamage || brawler.damage || 100;
+        const maxDamage = brawler.maxDamage || brawler.damage * 2 || 200;
+        const minHp = brawler.minHp || brawler.hp || 400;
+        const maxHp = brawler.maxHp || brawler.hp * 2 || 800;
 
-    // ============================================================
-    //  ВАУЧЕРЫ
-    // ============================================================
-    window.generateVoucher = function() {
-        const rewardType = document.getElementById('voucherRewardType').value;
-        const amount = parseInt(document.getElementById('voucherAmount').value) || 0;
-        const brawlerName = document.getElementById('voucherBrawler').value;
+        // Линейная интерполяция между min и max в зависимости от уровня
+        const progress = (level - 1) / 9; // 1 → 0, 10 → 1
+        const damage = Math.round(minDamage + (maxDamage - minDamage) * progress);
+        const hp = Math.round(minHp + (maxHp - minHp) * progress);
 
-        if (rewardType === 'gems' && amount <= 0) return alert('Введите количество гемов!');
-        if (rewardType === 'coins' && amount <= 0) return alert('Введите количество монет!');
-        if (rewardType === 'brawler' && !brawlerName) return alert('Выберите бойца!');
+        return { damage, hp };
+    }
 
-        const code = 'VOUCHER_' + Math.random().toString(36).substring(2, 8).toUpperCase();
-        const voucher = {
-            code,
-            rewardType,
-            amount,
-            brawlerName,
-            used: false,
-            usedBy: null,
-            createdAt: Date.now()
+    function getUpgradeCost(level) {
+        // Стоимость прокачки: уровень * 10 монет + 5 гемов
+        return {
+            coins: level * 10,
+            gems: Math.floor(level / 2) + 1
         };
-        vouchers.push(voucher);
-        autoSync();
-        renderAdmin();
-        alert(`✅ Ваучер создан!\nКод: ${code}\nНаграда: ${rewardType === 'gems' ? '💎 ' + amount : rewardType === 'coins' ? '🪙 ' + amount : '👤 ' + brawlerName}`);
-        const container = document.getElementById('voucherResult');
-        if (container) {
-            container.innerHTML = `
-                    <div class="voucher-code">
-                        <span class="code">${code}</span>
-                        <button class="copy-btn" onclick="copyVoucher('${code}')">📋 Копировать</button>
-                    </div>
-                `;
+    }
+
+    // ============================================================
+    //  ПРОКАЧКА БОЙЦА
+    // ============================================================
+    window.upgradeBrawler = function(brawlerName) {
+        if (checkBan() || !currentPlayerId) return;
+
+        // Находим бойца в общем списке
+        const brawler = brawlers.find(b => b.name === brawlerName);
+        if (!brawler) return alert('Боец не найден!');
+
+        // Находим бойца в профиле игрока
+        if (!profile.brawlers) profile.brawlers = [];
+        const playerBrawler = profile.brawlers.find(b => b.name === brawlerName);
+        if (!playerBrawler) return alert('У вас нет этого бойца!');
+
+        if (playerBrawler.level >= 10) return alert('⚠️ Боец уже на максимальном уровне!');
+
+        const cost = getUpgradeCost(playerBrawler.level);
+        if (profile.coins < cost.coins) {
+            return alert(`❌ Не хватает монет! Нужно ${cost.coins} 🪙`);
         }
-    };
-
-    window.copyVoucher = function(code) {
-        navigator.clipboard.writeText(code).then(() => {
-            alert('✅ Код скопирован!');
-        }).catch(() => {
-            prompt('Скопируйте код вручную:', code);
-        });
-    };
-
-    window.activateVoucher = function() {
-        const codeInput = document.getElementById('voucherActivateInput');
-        const code = codeInput.value.trim().toUpperCase();
-        if (!code) return alert('Введите код ваучера!');
-
-        const voucher = vouchers.find(v => v.code === code);
-        if (!voucher) return alert('❌ Неверный код!');
-        if (voucher.used) return alert('❌ Этот ваучер уже использован!');
-
-        voucher.used = true;
-        voucher.usedBy = currentPlayerId;
-
-        if (voucher.rewardType === 'gems') {
-            profile.gems += voucher.amount;
-            alert(`✅ Вы получили ${voucher.amount} 💎 Гемов!`);
-        } else if (voucher.rewardType === 'coins') {
-            profile.coins += voucher.amount;
-            alert(`✅ Вы получили ${voucher.amount} 🪙 Монет!`);
-        } else if (voucher.rewardType === 'brawler') {
-            if (profile.brawlers && profile.brawlers.includes(voucher.brawlerName)) {
-                alert(`⚠️ У вас уже есть боец ${voucher.brawlerName}!`);
-                return;
-            }
-            if (!profile.brawlers) profile.brawlers = [];
-            profile.brawlers.push(voucher.brawlerName);
-            alert(`✅ Вы получили бойца ${voucher.brawlerName}!`);
+        if (profile.gems < cost.gems) {
+            return alert(`❌ Не хватает гемов! Нужно ${cost.gems} 💎`);
         }
+
+        // Списываем ресурсы
+        profile.coins -= cost.coins;
+        profile.gems -= cost.gems;
+
+        // Повышаем уровень
+        playerBrawler.level = (playerBrawler.level || 1) + 1;
 
         autoSync();
         render();
-        codeInput.value = '';
-        alert('🎉 Ваучер успешно активирован!');
-    };
-
-    // ============================================================
-    //  PVP
-    // ============================================================
-    function findBattle() {
-        if (checkBan() || !currentPlayerId) return;
-        if (!selectedBrawler) return alert('Выберите бойца!');
-        if (!profile.brawlers || !profile.brawlers.includes(selectedBrawler)) {
-            return alert('⚠️ У вас нет этого бойца!');
-        }
-
-        battleState = 'searching';
-        renderBattle();
-
-        const searchData = {
-            playerId: currentPlayerId,
-            name: profile.name || 'Игрок',
-            brawler: selectedBrawler,
-            timestamp: Date.now(),
-            status: 'searching'
-        };
-
-        searchRef = db.ref('pvp_search').push(searchData);
-
-        db.ref('pvp_search').on('value', (snapshot) => {
-            const searches = snapshot.val();
-            if (!searches) return;
-
-            const other = Object.keys(searches).find(key => {
-                const s = searches[key];
-                return s.playerId !== currentPlayerId && s.status === 'searching';
-            });
-
-            if (other) {
-                const opponentData = searches[other];
-                db.ref('pvp_search/' + other).remove();
-                if (searchRef) {
-                    db.ref('pvp_search/' + searchRef.key).remove();
-                }
-                db.ref('pvp_search').off();
-                startPvpBattle(opponentData);
-            }
-        });
-
-        searchTimeout = setTimeout(() => {
-            if (battleState === 'searching') {
-                cancelSearch();
-                alert('⏳ Игрок не найден. Попробуйте позже!');
-            }
-        }, 30000);
-    }
-
-    function cancelSearch() {
-        if (searchRef) {
-            db.ref('pvp_search/' + searchRef.key).remove();
-            searchRef = null;
-        }
-        db.ref('pvp_search').off();
-        if (searchTimeout) clearTimeout(searchTimeout);
-        battleState = 'select';
-        renderBattle();
-    }
-
-    function startPvpBattle(opponentData) {
-        const myBrawler = brawlers.find(b => b.name === selectedBrawler);
-        const oppBrawler = brawlers.find(b => b.name === opponentData.brawler);
-        if (!myBrawler || !oppBrawler) return;
-
-        const playerHP = 100 + myBrawler.hp * 0.1;
-        const playerDamage = myBrawler.damage * 0.5;
-        const opponentHP = 100 + oppBrawler.hp * 0.1;
-        const opponentDamage = oppBrawler.damage * 0.5;
-
-        battleId = 'battle_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-
-        battleData = {
-            id: battleId,
-            player1Id: currentPlayerId,
-            player1Name: profile.name || 'Игрок',
-            player1Brawler: selectedBrawler,
-            player1HP: Math.floor(playerHP),
-            player1MaxHP: Math.floor(playerHP),
-            player1Damage: Math.floor(playerDamage),
-            player2Id: opponentData.playerId,
-            player2Name: opponentData.name || 'Противник',
-            player2Brawler: opponentData.brawler,
-            player2HP: Math.floor(opponentHP),
-            player2MaxHP: Math.floor(opponentHP),
-            player2Damage: Math.floor(opponentDamage),
-            currentTurn: 'player1',
-            started: Date.now(),
-            finished: false,
-            winner: null,
-            log: ['⚔️ Бой начался!']
-        };
-
-        db.ref('battles/' + battleId).set(battleData);
-        battleState = 'fighting';
-        renderBattle();
-
-        db.ref('battles/' + battleId).on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                battleData = data;
-                if (battleData.finished) {
-                    finishPvpBattle(battleData);
-                }
-                renderBattle();
-            }
-        });
-
-        listenForMoves();
-    }
-
-    function listenForMoves() {
-        db.ref('battles/' + battleId + '/moves').on('child_added', (snapshot) => {
-            const move = snapshot.val();
-            if (move.playerId === currentPlayerId) return;
-            if (battleData && !battleData.finished) {
-                processPvpMove(move);
-            }
-        });
-    }
-
-    function makePvpMove(action) {
-        if (!battleData || battleData.finished) return;
-        const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === currentPlayerId) ||
-            (battleData.currentTurn === 'player2' && battleData.player2Id === currentPlayerId);
-        if (!isMyTurn) {
-            alert('⏳ Сейчас не ваш ход!');
-            return;
-        }
-
-        const attackBtn = document.querySelector('.attack');
-        const defendBtn = document.querySelector('.defend');
-        if (attackBtn) attackBtn.disabled = true;
-        if (defendBtn) defendBtn.disabled = true;
-
-        const move = { action: action, timestamp: Date.now(), playerId: currentPlayerId };
-        db.ref('battles/' + battleId + '/moves').push(move).then(() => {
-            console.log('✅ Ход отправлен:', action);
-            setTimeout(() => {
-                if (attackBtn) attackBtn.disabled = false;
-                if (defendBtn) defendBtn.disabled = false;
-            }, 500);
-        }).catch(err => {
-            console.error('❌ Ошибка отправки хода:', err);
-            if (attackBtn) attackBtn.disabled = false;
-            if (defendBtn) defendBtn.disabled = false;
-        });
-    }
-
-    function processPvpMove(move) {
-        if (!battleData || battleData.finished) return;
-        const isPlayer1 = battleData.currentTurn === 'player1';
-        let damage = 0;
-
-        if (move.action === 'attack') {
-            damage = Math.floor(isPlayer1 ? battleData.player1Damage * (0.8 + Math.random() * 0.4) : battleData.player2Damage * (0.8 + Math.random() * 0.4));
-            const attackerName = isPlayer1 ? battleData.player1Name : battleData.player2Name;
-            const defenderName = isPlayer1 ? battleData.player2Name : battleData.player1Name;
-            battleData.log.push(`💥 ${attackerName} нанёс ${damage} урона ${defenderName}`);
-            if (isPlayer1) {
-                battleData.player2HP = Math.max(0, battleData.player2HP - damage);
-            } else {
-                battleData.player1HP = Math.max(0, battleData.player1HP - damage);
-            }
-        } else if (move.action === 'defend') {
-            const heal = Math.floor((isPlayer1 ? battleData.player1MaxHP : battleData.player2MaxHP) * 0.15);
-            if (isPlayer1) {
-                battleData.player1HP = Math.min(battleData.player1MaxHP, battleData.player1HP + heal);
-            } else {
-                battleData.player2HP = Math.min(battleData.player2MaxHP, battleData.player2HP + heal);
-            }
-            const name = isPlayer1 ? battleData.player1Name : battleData.player2Name;
-            battleData.log.push(`🛡️ ${name} восстановил ${heal} HP`);
-        }
-
-        if (battleData.player1HP <= 0 || battleData.player2HP <= 0) {
-            battleData.finished = true;
-            battleData.winner = battleData.player1HP > 0 ? 'player1' : 'player2';
-            const winnerName = battleData.winner === 'player1' ? battleData.player1Name : battleData.player2Name;
-            battleData.log.push(`🏆 ${winnerName} победил!`);
-
-            if ((battleData.winner === 'player1' && battleData.player1Id === currentPlayerId) ||
-                (battleData.winner === 'player2' && battleData.player2Id === currentPlayerId)) {
-                profile.trophies = (profile.trophies || 0) + 10;
-                autoSync();
-                alert('🏆 Вы победили! +10 кубков!');
-            } else {
-                alert('💀 Вы проиграли! Попробуйте снова!');
-            }
-
-            db.ref('battles/' + battleId).set(battleData);
-            return;
-        }
-
-        battleData.currentTurn = isPlayer1 ? 'player2' : 'player1';
-        db.ref('battles/' + battleId).set(battleData);
-    }
-
-    function finishPvpBattle(data) {
-        battleState = 'result';
-        renderBattle();
-        db.ref('battles/' + battleId).off();
-    }
-
-    window.selectBrawlerForBattle = function(name) {
-        selectedBrawler = name;
-        render();
-    };
-
-    window.resetBattle = function() {
-        if (searchRef) {
-            db.ref('pvp_search/' + searchRef.key).remove();
-            searchRef = null;
-        }
-        db.ref('pvp_search').off();
-        if (searchTimeout) clearTimeout(searchTimeout);
-        if (battleId) {
-            db.ref('battles/' + battleId).off();
-        }
-        battleState = 'select';
-        battleData = null;
-        battleId = null;
-        selectedBrawler = null;
-        render();
+        alert(`✅ ${brawlerName} повышен до ${playerBrawler.level} уровня!`);
     };
 
     // ============================================================
@@ -2306,7 +2069,8 @@
         }
 
         const tab = currentMainTab;
-        const cloudHtml = `
+        const cloudHtml =
+            `
                 <div class="cloud-panel">
                     <div class="status">☁️ Синхронизация: <span id="cloudStatus" class="connected">🟢 Синхронизация активна</span></div>
                 </div>
@@ -2327,7 +2091,8 @@
         checkServerStatus();
 
         if (!serverRunning) {
-            let html = cloudHtml + `
+            let html = cloudHtml +
+                `
                     <div class="maintenance">
                         <span>🔧</span>
                         <h2>${serverSettings.maintenanceMessage || 'Технические работы ведутся'}</h2>
@@ -2353,18 +2118,22 @@
         let html = cloudHtml;
 
         if (battleState === 'select') {
+            const ownedBrawlers = profile.brawlers || [];
             html += `
                     <div class="brawl-select">
                         <h3 style="color:#f5c842;margin-bottom:8px;">Выбери бойца для PvP</h3>
                         <div class="brawler-grid">
-                            ${(profile.brawlers && profile.brawlers.length) ?
-                            brawlers.filter(b => profile.brawlers.includes(b.name)).map(b => `
-                                    <div class="brawler-card ${selectedBrawler === b.name ? 'selected' : ''}" onclick="selectBrawlerForBattle('${b.name}')">
-                                        ${b.name}
-                                    </div>
-                                `).join('') :
-                            '<div style="color:#888;padding:20px;">Купите бойца в магазине!</div>'
-                        }
+                            ${ownedBrawlers.length ? 
+                                ownedBrawlers.map(pb => {
+                                    const b = brawlers.find(b => b.name === pb.name);
+                                    return `
+                                        <div class="brawler-card ${selectedBrawler === pb.name ? 'selected' : ''}" onclick="selectBrawlerForBattle('${pb.name}')">
+                                            ${pb.name} (${pb.level || 1}⚡)
+                                        </div>
+                                    `;
+                                }).join('') :
+                                '<div style="color:#888;padding:20px;">Купите бойца в магазине!</div>'
+                            }
                         </div>
                         ${selectedBrawler ? `<button class="back-btn" onclick="findBattle()">🔍 НАЙТИ БОЙ</button>` : ''}
                     </div>
@@ -2401,6 +2170,8 @@
             const myMaxHP = isPlayer1 ? battleData.player1MaxHP : battleData.player2MaxHP;
             const oppHP = isPlayer1 ? battleData.player2HP : battleData.player1HP;
             const oppMaxHP = isPlayer1 ? battleData.player2MaxHP : battleData.player1MaxHP;
+            const myPower = isPlayer1 ? battleData.player1Power : battleData.player2Power;
+            const oppPower = isPlayer1 ? battleData.player2Power : battleData.player1Power;
 
             const myHPPercent = Math.round((myHP / myMaxHP) * 100);
             const oppHPPercent = Math.round((oppHP / oppMaxHP) * 100);
@@ -2414,6 +2185,7 @@
                             <div class="battle-player ${isMyTurn ? 'active' : ''}">
                                 <span class="brawler-icon">⚡</span>
                                 <div class="name">${myName}</div>
+                                <div class="power">⚡ Уровень ${myPower}</div>
                                 <div class="hp">❤️ ${myHP}/${myMaxHP}</div>
                                 <div style="background:#1a1a3a;border-radius:10px;height:8px;margin-top:4px;">
                                     <div style="background:${myHPPercent > 50 ? '#51cf66' : myHPPercent > 25 ? '#f5c842' : '#d43f3f'};height:8px;border-radius:10px;width:${myHPPercent}%;transition:0.3s;"></div>
@@ -2423,6 +2195,7 @@
                             <div class="battle-player ${!isMyTurn ? 'active' : ''}">
                                 <span class="brawler-icon">👤</span>
                                 <div class="name">${oppName}</div>
+                                <div class="power">⚡ Уровень ${oppPower}</div>
                                 <div class="hp">❤️ ${oppHP}/${oppMaxHP}</div>
                                 <div style="background:#1a1a3a;border-radius:10px;height:8px;margin-top:4px;">
                                     <div style="background:${oppHPPercent > 50 ? '#51cf66' : oppHPPercent > 25 ? '#f5c842' : '#d43f3f'};height:8px;border-radius:10px;width:${oppHPPercent}%;transition:0.3s;"></div>
@@ -2454,7 +2227,7 @@
                         <div class="winner">${isWin ? '🎉 ПОБЕДА!' : '💀 ПОРАЖЕНИЕ'}</div>
                         ${isWin ? `<div class="trophies">🏆 +10 кубков!</div>` : '<div style="color:#8888aa;margin-top:4px;">Попробуй снова!</div>'}
                         <div style="color:#aaaacc;font-size:14px;margin-top:8px;">
-                            ${battleData.player1Name} vs ${battleData.player2Name}
+                            ${battleData.player1Name} (⚡${battleData.player1Power}) vs ${battleData.player2Name} (⚡${battleData.player2Power})
                         </div>
                         <button class="back-btn" onclick="resetBattle()">⬅️ Назад</button>
                     </div>
@@ -2469,13 +2242,40 @@
         content.innerHTML = html;
     }
 
-    // ===== БОЙЦЫ =====
+    window.selectBrawlerForBattle = function(name) {
+        selectedBrawler = name;
+        render();
+    };
+
+    window.resetBattle = function() {
+        if (searchRef) {
+            db.ref('pvp_search/' + searchRef.key).remove();
+            searchRef = null;
+        }
+        db.ref('pvp_search').off();
+        if (searchTimeout) clearTimeout(searchTimeout);
+        if (battleId) {
+            db.ref('battles/' + battleId).off();
+        }
+        battleState = 'select';
+        battleData = null;
+        battleId = null;
+        selectedBrawler = null;
+        render();
+    };
+
+    // ===== БОЙЦЫ (С ПРОКАЧКОЙ) =====
     function renderBrawlers(cloudHtml) {
         let html = cloudHtml;
         if (selectedBrawlerForDetail) {
             const b = brawlers.find(item => item.name === selectedBrawlerForDetail);
             if (b) {
-                const isOwned = profile.brawlers && profile.brawlers.includes(b.name);
+                const isOwned = profile.brawlers && profile.brawlers.some(pb => pb.name === b.name);
+                const playerBrawler = isOwned ? profile.brawlers.find(pb => pb.name === b.name) : null;
+                const level = playerBrawler ? playerBrawler.level || 1 : 1;
+                const stats = getBrawlerStats(b, level);
+                const cost = getUpgradeCost(level);
+
                 html += `
                         <div class="brawler-detail">
                             <span class="avatar">${b.image ? `<img src="${b.image}">` : '⚡'}</span>
@@ -2483,12 +2283,28 @@
                             <div class="rarity">${b.rarity || 'Обычный'}</div>
                             <div class="desc">${b.desc || 'Нет описания'}</div>
                             <div class="stats-grid">
-                                <div class="stat-box"><div class="label">⚔️ Урон</div><div class="value damage">${b.damage || 0}</div></div>
-                                <div class="stat-box"><div class="label">❤️ HP</div><div class="value hp">${b.hp || 0}</div></div>
-                                <div class="stat-box"><div class="label">📊 Мин. сила</div><div class="value power">${b.minPower || 0}</div></div>
-                                <div class="stat-box"><div class="label">📈 Макс. сила</div><div class="value power">${b.maxPower || 0}</div></div>
+                                <div class="stat-box"><div class="label">⚔️ Урон (ур. ${level})</div><div class="value damage">${stats.damage}</div></div>
+                                <div class="stat-box"><div class="label">❤️ HP (ур. ${level})</div><div class="value hp">${stats.hp}</div></div>
+                                <div class="stat-box"><div class="label">📊 Мин. урон</div><div class="value power">${b.minDamage || b.damage || 100}</div></div>
+                                <div class="stat-box"><div class="label">📈 Макс. урон</div><div class="value power">${b.maxDamage || b.damage * 2 || 200}</div></div>
                             </div>
                             <div class="status-badge ${isOwned ? 'owned' : 'locked'}">${isOwned ? '✅ Есть в коллекции' : '🔒 Не куплен'}</div>
+                            ${isOwned ? `
+                                <div class="power-display">
+                                    <div class="level">⚡ Уровень ${level}/10</div>
+                                    <div style="display:flex;gap:4px;margin-top:6px;justify-content:center;">
+                                        ${[...Array(10)].map((_, i) => `
+                                            <div style="width:16px;height:16px;border-radius:50%;background:${i < level ? '#f5c842' : '#555577'};"></div>
+                                        `).join('')}
+                                    </div>
+                                    <div style="margin-top:6px;font-size:12px;color:#8888aa;">
+                                        Следующий уровень: 🪙${cost.coins} + 💎${cost.gems}
+                                    </div>
+                                    <button class="upgrade-btn" onclick="upgradeBrawler('${b.name}')" ${level >= 10 ? 'disabled' : ''}>
+                                        ${level >= 10 ? '⭐ МАКСИМАЛЬНЫЙ УРОВЕНЬ' : '⬆ ПОВЫСИТЬ УРОВЕНЬ'}
+                                    </button>
+                                </div>
+                            ` : ''}
                             <button class="back-btn" onclick="closeBrawlerDetail()">⬅️ Назад к списку</button>
                         </div>
                     `;
@@ -2498,17 +2314,20 @@
                 return;
             }
         }
+
         if (!brawlers.length) {
             html += `<div class="empty-state"><span>🦸</span>Нет бойцов</div>`;
         } else {
             html += `<div class="brawler-list">`;
             brawlers.forEach(b => {
-                const owned = profile.brawlers && profile.brawlers.includes(b.name) ? '✅' : '🔒';
+                const owned = profile.brawlers && profile.brawlers.some(pb => pb.name === b.name);
+                const playerBrawler = owned ? profile.brawlers.find(pb => pb.name === b.name) : null;
+                const level = playerBrawler ? playerBrawler.level || 1 : 1;
                 html += `
                         <div class="brawler-item" onclick="openBrawlerDetail('${b.name}')">
                             ${b.image ? `<img src="${b.image}">` : '⚡'}
                             ${b.name}
-                            <span style="font-size:11px;color:#f5c842;background:#f5c84222;padding:0 10px;border-radius:40px;margin-left:auto;">${b.rarity || 'Обычный'} ${owned}</span>
+                            <span style="font-size:11px;color:#f5c842;background:#f5c84222;padding:0 10px;border-radius:40px;margin-left:auto;">${owned ? '⚡'+level : '🔒'}</span>
                         </div>
                     `;
             });
@@ -2524,7 +2343,44 @@
     window.closeBrawlerDetail = function() { selectedBrawlerForDetail = null;
         render(); };
 
-    // ===== МАГАЗИН =====
+    // ============================================================
+    //  МАГАЗИН, ВАУЧЕРЫ, ЧАТ (СОКРАЩЕННО)
+    // ============================================================
+    window.buyItem = function(name) {
+        if (checkBan() || !currentPlayerId) return;
+        const item = shopItems.find(i => i.name === name);
+        if (!item) return alert('Товар не найден!');
+        const isFree = item.free === true;
+
+        if (item.category === 'brawler') {
+            // Проверяем, есть ли уже
+            if (profile.brawlers && profile.brawlers.some(pb => pb.name === item.brawlerName)) {
+                return alert(`⚠️ У вас уже есть боец ${item.brawlerName}!`);
+            }
+            if (!isFree && profile.gems < item.cost) {
+                return alert(`❌ Не хватает гемов! Нужно ${item.cost} 💎, у вас ${profile.gems}`);
+            }
+            if (!isFree) { profile.gems -= item.cost; }
+            if (!profile.brawlers) profile.brawlers = [];
+            profile.brawlers.push({ name: item.brawlerName, level: 1 });
+            alert(`✅ Вы купили бойца ${item.brawlerName}${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
+            autoSync();
+            render();
+        } else if (item.category === 'resources') {
+            if (item.resourceType === 'gems') {
+                profile.gems += item.amount;
+                alert(`✅ Вы получили ${item.amount} 💎 Гемов${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
+            } else if (item.resourceType === 'coins') {
+                profile.coins += item.amount;
+                alert(`✅ Вы получили ${item.amount} 🪙 Монет${isFree ? ' (БЕСПЛАТНО!)' : ''}!`);
+            }
+            autoSync();
+            render();
+        } else {
+            alert(`✅ Вы купили: ${name}!`);
+        }
+    };
+
     function renderShop(cloudHtml) {
         let html = cloudHtml;
         html += `
@@ -2542,7 +2398,8 @@
         } else {
             html += `<div class="shop-grid">`;
             shopItems.forEach(item => {
-                const isOwned = item.category === 'brawler' && profile.brawlers && profile.brawlers.includes(item.brawlerName);
+                const isOwned = item.category === 'brawler' && profile.brawlers && profile.brawlers.some(pb => pb
+                    .name === item.brawlerName);
                 const isFree = item.free === true;
                 html += `
                         <div class="shop-item">
@@ -2567,9 +2424,9 @@
         document.querySelector('[data-tab="shop"]').classList.add('active');
     }
 
-    // ===== ПРОФИЛЬ =====
     function renderProfile(cloudHtml) {
-        let html = cloudHtml + `
+        let html = cloudHtml +
+            `
                 <div class="profile-card">
                     <span class="avatar">👤</span>
                     <div class="nick">${profile.name || 'Игрок'}</div>
@@ -2587,606 +2444,11 @@
         document.querySelector('[data-tab="profile"]').classList.add('active');
     }
 
-    // ===== ЧАТ =====
-    function renderChat(cloudHtml) {
-        const html = cloudHtml + `
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-empty">
-                            <span>💬</span>
-                            Загрузка сообщений...
-                        </div>
-                    </div>
-                    <div class="chat-input-row">
-                        <input type="text" id="chatInput" placeholder="Введите сообщение..." maxlength="200" />
-                        <button onclick="sendMessage()">📤</button>
-                    </div>
-                </div>
-            `;
-        content.innerHTML = html;
-        menuBtns.forEach(b => b.classList.remove('active'));
-        document.querySelector('[data-tab="chat"]').classList.add('active');
-        loadChat();
-    }
-
-    window.sendMessage = function() {
-        if (checkBan() || !currentPlayerId) return;
-        const input = document.getElementById('chatInput');
-        const text = input.value.trim();
-        if (!text) return;
-
-        const msg = {
-            playerId: currentPlayerId,
-            name: profile.name || 'Аноним',
-            text: text,
-            timestamp: Date.now()
-        };
-
-        db.ref('chat').push(msg);
-        input.value = '';
-    };
-
-    document.getElementById('chatInput')?.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') { sendMessage(); }
-    });
-
-    function loadChat() {
-        db.ref('chat').orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
-            const messages = snapshot.val();
-            const container = document.getElementById('chatMessages');
-            if (!container) return;
-
-            if (!messages) {
-                container.innerHTML = `
-                        <div class="chat-empty">
-                            <span>💬</span>
-                            Сообщений пока нет<br>
-                            <span style="font-size:12px;color:#555577;">Будь первым!</span>
-                        </div>
-                    `;
-                return;
-            }
-
-            let html = '';
-            const msgs = Object.values(messages).reverse();
-            msgs.forEach(msg => {
-                const isOwn = msg.playerId === currentPlayerId;
-                const time = new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                html += `
-                        <div class="chat-message ${isOwn ? 'own' : ''}">
-                            <div class="msg-header">
-                                <span class="msg-name">${msg.name || 'Аноним'}</span>
-                                <span class="msg-time">${time}</span>
-                            </div>
-                            <div class="msg-text">${msg.text}</div>
-                        </div>
-                    `;
-            });
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
-        });
-    }
-
     // ============================================================
-    //  АДМИНКА (НОВАЯ ВЕРСИЯ С ВЫДАЧЕЙ КУБКОВ И УДАЛЕНИЕМ)
+    //  АДМИНКА
     // ============================================================
-    let playersList = [];
-
-    function loadPlayersList() {
-        db.ref('players').once('value').then((snapshot) => {
-            const players = snapshot.val();
-            if (players) {
-                playersList = Object.keys(players).map(key => ({
-                    id: key,
-                    ...players[key]
-                }));
-                playersList.sort((a, b) => (b.trophies || 0) - (a.trophies || 0));
-                updatePlayerSelects();
-            }
-        });
-    }
-
-    function updatePlayerSelects() {
-        const selects = ['adminPlayerSelect', 'banPlayerSelect', 'unbanPlayerSelect', 'adminTrophySelect', 'adminDeleteSelect'];
-        selects.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                const currentVal = el.value;
-                el.innerHTML = '<option value="">-- Выберите игрока --</option>';
-                playersList.forEach(p => {
-                    const label = `${p.name || 'Аноним'} (🏆 ${p.trophies || 0})`;
-                    el.innerHTML += `<option value="${p.id}">${label}</option>`;
-                });
-                if (currentVal) el.value = currentVal;
-            }
-        });
-    }
-
-    // ===== ВЫДАЧА РЕСУРСОВ =====
-    window.adminGiveResources = function() {
-        const select = document.getElementById('adminPlayerSelect');
-        const playerId = select.value;
-        const resourceType = document.getElementById('adminResourceType').value;
-        const amount = parseInt(document.getElementById('adminResourceAmount').value) || 0;
-
-        if (!playerId) return alert('Выберите игрока!');
-        if (amount <= 0) return alert('Введите количество!');
-
-        db.ref('players/' + playerId).once('value').then((snap) => {
-            const player = snap.val();
-            if (!player) return alert('❌ Игрок не найден!');
-
-            if (resourceType === 'gems') {
-                player.gems = (player.gems || 0) + amount;
-            } else if (resourceType === 'coins') {
-                player.coins = (player.coins || 0) + amount;
-            }
-
-            db.ref('players/' + playerId).set(player);
-            alert(`✅ Выдано ${amount} ${resourceType === 'gems' ? '💎 гемов' : '🪙 монет'} игроку ${player.name || playerId}`);
-            document.getElementById('adminResourceAmount').value = '';
-            loadPlayersList();
-        });
-    };
-
-    // ===== ВЫДАЧА КУБКОВ =====
-    window.adminGiveTrophies = function() {
-        const select = document.getElementById('adminTrophySelect');
-        const playerId = select.value;
-        const amount = parseInt(document.getElementById('adminTrophyAmount').value) || 0;
-
-        if (!playerId) return alert('Выберите игрока!');
-        if (amount <= 0) return alert('Введите количество кубков!');
-
-        db.ref('players/' + playerId).once('value').then((snap) => {
-            const player = snap.val();
-            if (!player) return alert('❌ Игрок не найден!');
-
-            player.trophies = (player.trophies || 0) + amount;
-            db.ref('players/' + playerId).set(player);
-            alert(`✅ Выдано ${amount} 🏆 кубков игроку ${player.name || playerId}`);
-            document.getElementById('adminTrophyAmount').value = '';
-            loadPlayersList();
-        });
-    };
-
-    // ===== УДАЛЕНИЕ АККАУНТА =====
-    window.adminDeleteAccount = function() {
-        const select = document.getElementById('adminDeleteSelect');
-        const playerId = select.value;
-        if (!playerId) return alert('Выберите игрока!');
-
-        db.ref('players/' + playerId).once('value').then((snap) => {
-            const player = snap.val();
-            if (!player) return alert('❌ Игрок не найден!');
-
-            if (confirm(`УДАЛИТЬ аккаунт игрока ${player.name || playerId}? Это действие НЕОБРАТИМО!`)) {
-                db.ref('players/' + playerId).remove();
-                alert(`✅ Аккаунт ${player.name || playerId} удалён!`);
-                loadPlayersList();
-                render();
-            }
-        });
-    };
-
-    // ===== БАН/РАЗБАН =====
-    window.adminBanPlayer = function() {
-        const select = document.getElementById('banPlayerSelect');
-        const playerId = select.value;
-        if (!playerId) return alert('Выберите игрока!');
-
-        db.ref('players/' + playerId).once('value').then((snap) => {
-            const player = snap.val();
-            if (!player) return alert('❌ Игрок не найден!');
-
-            if (confirm(`Забанить игрока ${player.name || playerId}?`)) {
-                player.banned = true;
-                db.ref('players/' + playerId).set(player);
-                alert(`✅ Игрок ${player.name || playerId} забанен!`);
-                loadPlayersList();
-            }
-        });
-    };
-
-    window.adminUnbanPlayer = function() {
-        const select = document.getElementById('unbanPlayerSelect');
-        const playerId = select.value;
-        if (!playerId) return alert('Выберите игрока!');
-
-        db.ref('players/' + playerId).once('value').then((snap) => {
-            const player = snap.val();
-            if (!player) return alert('❌ Игрок не найден!');
-
-            if (confirm(`Разбанить игрока ${player.name || playerId}?`)) {
-                player.banned = false;
-                db.ref('players/' + playerId).set(player);
-                alert(`✅ Игрок ${player.name || playerId} разбанен!`);
-                loadPlayersList();
-            }
-        });
-    };
-
-    // ===== НАСТРОЙКИ СЕРВЕРА =====
-    window.applyServerSettings = function() {
-        const closeTime = document.getElementById('serverCloseTime').value;
-        const workMessage = document.getElementById('serverWorkMessage').value.trim();
-        const maintenanceMessage = document.getElementById('serverMaintenanceMessage').value.trim();
-
-        serverSettings.closeTime = closeTime ? new Date(closeTime).toISOString() : null;
-        serverSettings.workMessage = workMessage || 'Добро пожаловать в Brawl Stars!';
-        serverSettings.maintenanceMessage = maintenanceMessage || 'Технические работы. Зайдите позже.';
-
-        saveServerSettings();
-        checkServerStatus();
-        render();
-        alert('✅ Настройки сохранены!');
-    };
-
-    window.toggleServerManual = function() {
-        serverSettings.isClosed = !serverSettings.isClosed;
-        saveServerSettings();
-        checkServerStatus();
-        render();
-    };
-
+    // (ПОЛНЫЙ КОД АДМИНКИ СМОТРИ НИЖЕ)
     // ============================================================
-    //  АДМИНКА (ПОЛНАЯ)
-    // ============================================================
-    function renderAdmin(cloudHtml) {
-        loadPlayersList();
-
-        let html = cloudHtml + `
-                <div class="admin-tabs">
-                    <button class="${adminSubTab === 'shop' ? 'active-tab' : ''}" data-sub="shop">🛒 Магазин</button>
-                    <button class="${adminSubTab === 'brawlers' ? 'active-tab' : ''}" data-sub="brawlers">🦸 Бойцы</button>
-                    <button class="${adminSubTab === 'vouchers' ? 'active-tab' : ''}" data-sub="vouchers">🎟️ Ваучеры</button>
-                    <button class="${adminSubTab === 'players' ? 'active-tab' : ''}" data-sub="players">👥 Игроки</button>
-                    <button class="${adminSubTab === 'leaderboard' ? 'active-tab' : ''}" data-sub="leaderboard">🏆 Лидерборд</button>
-                    <button class="${adminSubTab === 'settings' ? 'active-tab' : ''}" data-sub="settings">⚙️ Настройки</button>
-                </div>
-                <div class="admin-panel">
-            `;
-
-        if (adminSubTab === 'shop') {
-            html += `
-                    <div class="form-card">
-                        <h3 style="color:#f5c842;margin-bottom:10px;">➕ Добавить товар</h3>
-                        <input type="text" id="shopName" placeholder="Название товара">
-                        <textarea id="shopDesc" placeholder="Описание товара"></textarea>
-                        <label class="file-label">📷 Загрузить картинку <input type="file" id="shopImage" accept="image/*"></label>
-                        <select id="shopCategory" onchange="toggleCategoryFields()">
-                            <option value="resources">📦 Ресурсы</option>
-                            <option value="brawler">👤 Персонаж</option>
-                        </select>
-                        <div class="free-toggle"><input type="checkbox" id="shopFree"><label for="shopFree">🎁 Бесплатно</label></div>
-                        <div id="resourcesFields" class="category-fields visible">
-                            <div class="hint">Выберите тип ресурса и укажите количество</div>
-                            <select id="resourceType"><option value="gems">💎 Гемы</option><option value="coins">🪙 Монеты</option></select>
-                            <input type="number" id="resourceAmount" placeholder="Количество" value="100">
-                        </div>
-                        <div id="brawlerFields" class="category-fields">
-                            <div class="hint">Выберите бойца и укажите стоимость в гемах</div>
-                            <select id="brawlerSelect">${brawlers.map(b => `<option value="${b.name}">${b.name}</option>`).join('')}${brawlers.length === 0 ? '<option value="">Нет бойцов</option>' : ''}</select>
-                            <input type="number" id="brawlerCost" placeholder="Стоимость (гемы)" value="149">
-                        </div>
-                        <button class="submit-btn" onclick="addShopItem()">➕ Добавить</button>
-                    </div>
-                    <div class="list-admin">${shopItems.map((item, idx) => `
-                            <div class="shop-item-admin">
-                                ${item.image ? `<img src="${item.image}">` : `<div style="width:40px;height:40px;border-radius:40px;background:#1a1a3a;display:flex;align-items:center;justify-content:center;font-size:20px;">📦</div>`}
-                                <div class="info"><div class="name">${item.name} ${item.free ? '🎁' : ''}</div><div class="desc">${item.desc || ''}</div></div>
-                                <button class="del-btn" onclick="deleteShopItem(${idx})">✕</button>
-                            </div>
-                        `).join('')}</div>
-                `;
-        } else if (adminSubTab === 'brawlers') {
-            html += `
-                    <div class="form-card">
-                        <h3 style="color:#f5c842;margin-bottom:10px;">➕ Добавить бойца</h3>
-                        <input type="text" id="bName" placeholder="Имя бойца">
-                        <textarea id="bDesc" placeholder="Описание"></textarea>
-                        <select id="bRarity"><option>Обычный</option><option selected>Редкий</option><option>Эпический</option><option>Мифический</option><option>Легендарный</option></select>
-                        <label class="file-label">📷 Загрузить фото <input type="file" id="bImage" accept="image/*"></label>
-                        <div class="form-row" style="display:flex;gap:8px;"><input type="number" id="bDamage" placeholder="Урон" value="100" style="flex:1;"><input type="number" id="bHp" placeholder="HP" value="400" style="flex:1;"></div>
-                        <div class="form-row" style="display:flex;gap:8px;"><input type="number" id="bMinPower" placeholder="Мин. сила" value="1" style="flex:1;"><input type="number" id="bMaxPower" placeholder="Макс. сила" value="10" style="flex:1;"></div>
-                        <button class="submit-btn" onclick="addBrawlerFull()">➕ Добавить</button>
-                    </div>
-                    <div class="list-admin">${brawlers.map((b, idx) => `
-                            <div class="shop-item-admin">
-                                ${b.image ? `<img src="${b.image}">` : `<div style="width:40px;height:40px;border-radius:40px;background:#1a1a3a;display:flex;align-items:center;justify-content:center;font-size:20px;">⚡</div>`}
-                                <div class="info"><div class="name">${b.name} <span style="font-size:11px;color:#f5c842;background:#f5c84222;padding:0 8px;border-radius:40px;">${b.rarity || 'Обычный'}</span></div><div class="desc">${b.desc || ''}</div></div>
-                                <button class="del-btn" onclick="deleteBrawler(${idx})">✕</button>
-                            </div>
-                        `).join('')}</div>
-                `;
-        } else if (adminSubTab === 'vouchers') {
-            html += `
-                    <div class="form-card">
-                        <h3 style="color:#f5c842;margin-bottom:10px;">🎟️ Создать ваучер</h3>
-                        <select id="voucherRewardType" onchange="toggleVoucherFields()">
-                            <option value="gems">💎 Гемы</option>
-                            <option value="coins">🪙 Монеты</option>
-                            <option value="brawler">👤 Боец</option>
-                        </select>
-                        <div id="voucherAmountField">
-                            <input type="number" id="voucherAmount" placeholder="Количество" value="100">
-                        </div>
-                        <div id="voucherBrawlerField" style="display:none;">
-                            <select id="voucherBrawler">${brawlers.map(b => `<option value="${b.name}">${b.name}</option>`).join('')}${brawlers.length === 0 ? '<option value="">Нет бойцов</option>' : ''}</select>
-                        </div>
-                        <button class="submit-btn" onclick="generateVoucher()">🎟️ Сгенерировать ваучер</button>
-                        <div id="voucherResult" style="margin-top:10px;"></div>
-                    </div>
-                    <div class="list-admin">
-                        <h4 style="color:#aaa;margin-bottom:6px;">📋 Созданные ваучеры</h4>
-                        ${vouchers.length === 0 ? '<div class="empty-state" style="padding:10px;font-size:14px;">Нет ваучеров</div>' : vouchers.map((v, idx) => `
-                                <div class="shop-item-admin" style="border-left-color:${v.used ? '#d43f3f' : '#2ecc71'};">
-                                    <div style="width:40px;height:40px;border-radius:40px;background:#1a1a3a;display:flex;align-items:center;justify-content:center;font-size:20px;">${v.used ? '❌' : '✅'}</div>
-                                    <div class="info">
-                                        <div class="name">${v.code}</div>
-                                        <div class="desc">${v.rewardType === 'gems' ? '💎 ' + v.amount : v.rewardType === 'coins' ? '🪙 ' + v.amount : '👤 ' + v.brawlerName} ${v.used ? '• Использован' : '• Активен'}</div>
-                                    </div>
-                                    <button class="del-btn" onclick="deleteVoucher(${idx})">✕</button>
-                                </div>
-                            `).join('')}
-                    </div>
-                `;
-        } else if (adminSubTab === 'players') {
-            html += `
-                    <div class="form-card">
-                        <h3 style="color:#f5c842;margin-bottom:10px;">💎 Выдать ресурсы</h3>
-                        <select id="adminPlayerSelect">
-                            <option value="">-- Загрузка игроков... --</option>
-                        </select>
-                        <select id="adminResourceType"><option value="gems">💎 Гемы</option><option value="coins">🪙 Монеты</option></select>
-                        <input type="number" id="adminResourceAmount" placeholder="Количество" value="100">
-                        <button class="submit-btn" onclick="adminGiveResources()">💰 Выдать</button>
-                    </div>
-                    
-                    <div class="form-card">
-                        <h3 style="color:#f5c842;margin-bottom:10px;">🏆 Выдать кубки</h3>
-                        <select id="adminTrophySelect">
-                            <option value="">-- Загрузка игроков... --</option>
-                        </select>
-                        <input type="number" id="adminTrophyAmount" placeholder="Количество кубков" value="10">
-                        <button class="submit-btn" onclick="adminGiveTrophies()">🏆 Выдать кубки</button>
-                    </div>
-                    
-                    <div class="form-card">
-                        <h3 style="color:#d43f3f;margin-bottom:10px;">🗑️ Удалить аккаунт</h3>
-                        <select id="adminDeleteSelect">
-                            <option value="">-- Загрузка игроков... --</option>
-                        </select>
-                        <button class="submit-btn" onclick="adminDeleteAccount()" style="background:#d43f3f;color:#fff;">🗑️ УДАЛИТЬ АККАУНТ</button>
-                    </div>
-                    
-                    <div class="form-card">
-                        <h3 style="color:#d43f3f;margin-bottom:10px;">🚫 Бан игрока</h3>
-                        <select id="banPlayerSelect">
-                            <option value="">-- Загрузка игроков... --</option>
-                        </select>
-                        <button class="submit-btn" onclick="adminBanPlayer()" style="background:#d43f3f;color:#fff;">⛔ Забанить</button>
-                    </div>
-                    <div class="form-card">
-                        <h3 style="color:#2ecc71;margin-bottom:10px;">✅ Разбан игрока</h3>
-                        <select id="unbanPlayerSelect">
-                            <option value="">-- Загрузка игроков... --</option>
-                        </select>
-                        <button class="submit-btn" onclick="adminUnbanPlayer()" style="background:#2ecc71;">🔓 Разбанить</button>
-                    </div>
-                `;
-        } else if (adminSubTab === 'leaderboard') {
-            html += `<h3 style="color:#f5c842;margin-bottom:10px;">🏆 Топ по кубкам</h3><div id="leaderboardContainer"></div>`;
-            db.ref('players').once('value').then((snapshot) => {
-                const players = snapshot.val();
-                if (players) {
-                    const list = Object.values(players);
-                    list.sort((a, b) => (b.trophies || 0) - (a.trophies || 0));
-                    let boardHtml = '';
-                    list.forEach((p, idx) => {
-                        const rankClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
-                        const emoji = idx === 0 ? '👑' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
-                        boardHtml += `
-                                <div class="leaderboard-card">
-                                    <div class="rank ${rankClass}">${emoji}</div>
-                                    <div class="info"><div class="name">${p.name || 'Аноним'}</div><div class="stats">🏆 ${p.trophies || 0} • 💎 ${p.gems || 0}</div></div>
-                                    <div class="gems">🏆 ${p.trophies || 0}</div>
-                                </div>
-                            `;
-                    });
-                    document.getElementById('leaderboardContainer').innerHTML = boardHtml;
-                } else {
-                    document.getElementById('leaderboardContainer').innerHTML =
-                        `<div class="empty-state"><span>📭</span>Нет игроков</div>`;
-                }
-            });
-        } else if (adminSubTab === 'settings') {
-            const timeRemaining = getTimeRemaining();
-            html += `
-                    <div class="form-card">
-                        <h3 style="color:#f5c842;margin-bottom:10px;">⏰ Управление сервером</h3>
-
-                        <div style="margin-bottom:10px;">
-                            <label style="color:#aaaacc;font-size:13px;display:block;margin-bottom:4px;">Дата и время закрытия сервера</label>
-                            <input type="datetime-local" id="serverCloseTime" value="${serverSettings.closeTime ? serverSettings.closeTime.slice(0, 16) : ''}" style="width:100%;background:#1a1a3a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
-                            ${timeRemaining ? `<div style="margin-top:6px;text-align:center;"><span class="timer-display">⏳ До закрытия: ${timeRemaining.hours}ч ${timeRemaining.minutes}м ${timeRemaining.seconds}с</span></div>` : ''}
-                        </div>
-
-                        <div style="margin-bottom:10px;">
-                            <label style="color:#aaaacc;font-size:13px;display:block;margin-bottom:4px;">Сообщение во время работы сайта</label>
-                            <input type="text" id="serverWorkMessage" value="${serverSettings.workMessage || ''}" placeholder="Сообщение для игроков" style="width:100%;background:#1a1a3a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
-                        </div>
-
-                        <div style="margin-bottom:10px;">
-                            <label style="color:#aaaacc;font-size:13px;display:block;margin-bottom:4px;">Сообщение во время технического перерыва</label>
-                            <input type="text" id="serverMaintenanceMessage" value="${serverSettings.maintenanceMessage || ''}" placeholder="Сообщение при остановке" style="width:100%;background:#1a1a3a;border:1px solid #555577;border-radius:40px;padding:8px 14px;color:#eee;outline:none;" />
-                        </div>
-
-                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                            <button class="submit-btn" onclick="applyServerSettings()" style="flex:1;">💾 Применить настройки</button>
-                            <button class="submit-btn" onclick="toggleServerManual()" style="flex:1;background:${serverRunning ? '#d43f3f' : '#2ecc71'};">
-                                ${serverRunning ? '⛔ ОСТАНОВИТЬ СЕРВЕР' : '🚀 ЗАПУСТИТЬ СЕРВЕР'}
-                            </button>
-                        </div>
-
-                        <div style="margin-top:10px;padding:10px;background:#0f0f2a;border-radius:16px;border:1px solid #555577;">
-                            <div style="color:#aaaacc;font-size:12px;">
-                                <div>📌 Статус: <span style="color:${serverRunning ? '#2ecc71' : '#d43f3f'};font-weight:700;">${serverRunning ? '🟢 Работает' : '🔴 Остановлен'}</span></div>
-                                ${serverSettings.closeTime ? `<div>⏳ Закрытие: ${new Date(serverSettings.closeTime).toLocaleString()}</div>` : '<div>⏳ Закрытие: не установлено</div>'}
-                                ${timeRemaining ? `<div>⏱️ Осталось: ${timeRemaining.hours}ч ${timeRemaining.minutes}м ${timeRemaining.seconds}с</div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-        }
-
-        html += `</div>`;
-        content.innerHTML = html;
-        menuBtns.forEach(b => b.classList.remove('active'));
-        document.querySelector('[data-tab="admin"]').classList.add('active');
-
-        document.querySelectorAll('.admin-tabs button').forEach(btn => {
-            btn.addEventListener('click', function() {
-                adminSubTab = this.dataset.sub;
-                renderAdmin(cloudHtml);
-            });
-        });
-
-        window.toggleCategoryFields = function() {
-            const category = document.getElementById('shopCategory').value;
-            document.getElementById('resourcesFields').className = 'category-fields' + (category === 'resources' ? ' visible' :
-                '');
-            document.getElementById('brawlerFields').className = 'category-fields' + (category === 'brawler' ? ' visible' : '');
-        };
-        setTimeout(window.toggleCategoryFields, 100);
-
-        window.toggleVoucherFields = function() {
-            const type = document.getElementById('voucherRewardType').value;
-            document.getElementById('voucherAmountField').style.display = (type === 'gems' || type === 'coins') ? 'block' :
-                'none';
-            document.getElementById('voucherBrawlerField').style.display = type === 'brawler' ? 'block' : 'none';
-        };
-        setTimeout(window.toggleVoucherFields, 100);
-
-        setTimeout(updatePlayerSelects, 200);
-    }
-
-    // ============================================================
-    //  АДМИН-ФУНКЦИИ
-    // ============================================================
-    window.addShopItem = function() {
-        const name = document.getElementById('shopName').value.trim();
-        const desc = document.getElementById('shopDesc').value.trim();
-        const category = document.getElementById('shopCategory').value;
-        const isFree = document.getElementById('shopFree').checked;
-        const fileInput = document.getElementById('shopImage');
-        if (!name) return alert('Введите название товара!');
-        if (category === 'resources') {
-            const resourceType = document.getElementById('resourceType').value;
-            const amount = parseInt(document.getElementById('resourceAmount').value) || 0;
-            if (amount <= 0) return alert('Введите количество ресурсов!');
-            const reward = resourceType === 'gems' ? `${amount} 💎` : `${amount} 🪙`;
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    shopItems.push({ name, desc, image: e.target.result, reward, category, resourceType, amount,
-                        free: isFree });
-                    autoSync();
-                    render();
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                shopItems.push({ name, desc, image: '', reward, category, resourceType, amount, free: isFree });
-                autoSync();
-                render();
-            }
-        } else if (category === 'brawler') {
-            const brawlerName = document.getElementById('brawlerSelect').value;
-            const cost = parseInt(document.getElementById('brawlerCost').value) || 0;
-            if (!brawlerName) return alert('Выберите бойца!');
-            if (!isFree && cost <= 0) return alert('Введите стоимость в гемах!');
-            const reward = `${brawlerName} (${isFree ? 'БЕСПЛАТНО' : cost + ' 💎'})`;
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    shopItems.push({ name, desc, image: e.target.result, reward, category, brawlerName, cost,
-                        free: isFree });
-                    autoSync();
-                    render();
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                shopItems.push({ name, desc, image: '', reward, category, brawlerName, cost, free: isFree });
-                autoSync();
-                render();
-            }
-        }
-    };
-
-    window.deleteShopItem = function(idx) { shopItems.splice(idx, 1);
-        autoSync();
-        render(); };
-    window.addBrawlerFull = function() {
-        const name = document.getElementById('bName').value.trim();
-        if (!name) return alert('Введите имя!');
-        const desc = document.getElementById('bDesc').value.trim();
-        const rarity = document.getElementById('bRarity').value;
-        const damage = parseInt(document.getElementById('bDamage').value) || 0;
-        const hp = parseInt(document.getElementById('bHp').value) || 0;
-        const minPower = parseInt(document.getElementById('bMinPower').value) || 0;
-        const maxPower = parseInt(document.getElementById('bMaxPower').value) || 0;
-        const fileInput = document.getElementById('bImage');
-        if (fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                brawlers.push({ name, desc, rarity, image: e.target.result, damage, hp, minPower, maxPower });
-                autoSync();
-                render();
-            };
-            reader.readAsDataURL(fileInput.files[0]);
-        } else {
-            brawlers.push({ name, desc, rarity, image: '', damage, hp, minPower, maxPower });
-            autoSync();
-            render();
-        }
-    };
-    window.deleteBrawler = function(idx) { brawlers.splice(idx, 1);
-        autoSync();
-        render(); };
-    window.deleteVoucher = function(idx) { vouchers.splice(idx, 1);
-        autoSync();
-        renderAdmin(); };
-
-    // ============================================================
-    //  МЕНЮ
-    // ============================================================
-    menuBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tab = this.dataset.tab;
-            if (tab === 'admin' && !isAdmin) {
-                document.getElementById('passwordOverlay').style.display = 'flex';
-                return;
-            }
-            if (tab !== 'brawlers') { selectedBrawlerForDetail = null; }
-            if (tab !== 'battle' && battleState !== 'select') {
-                if (searchRef) {
-                    db.ref('pvp_search/' + searchRef.key).remove();
-                    searchRef = null;
-                }
-                db.ref('pvp_search').off();
-                if (searchTimeout) clearTimeout(searchTimeout);
-                if (battleId) {
-                    db.ref('battles/' + battleId).off();
-                }
-                battleState = 'select';
-                battleData = null;
-                battleId = null;
-                selectedBrawler = null;
-            }
-            currentMainTab = tab;
-            render();
-        });
-    });
 
     // ============================================================
     //  ЗАПУСК
@@ -3228,4 +2490,4 @@
     render();
 </script>
 </body>
-</html>
+    </html>
