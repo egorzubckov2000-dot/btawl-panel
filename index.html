@@ -1676,7 +1676,7 @@
     <div class="app">
         <div class="header">
             <h1>⚡ BRAWL</h1>
-            <span>v.12.0</span>
+            <span>v.13.0</span>
             <div class="offline-badge" id="connectionBadge">☁️</div>
         </div>
 
@@ -1702,8 +1702,8 @@
             <div class="error" id="authError">❌ Ошибка</div>
             <div class="success" id="authSuccess">✅ Успешно!</div>
             <div class="btn-group">
-                <button class="login-btn" onclick="loginWithUsername()">🔑 Войти</button>
-                <button class="register-btn" onclick="registerWithUsername()">📝 Регистрация</button>
+                <button class="login-btn" id="loginBtn">🔑 Войти</button>
+                <button class="register-btn" id="registerBtn">📝 Регистрация</button>
             </div>
         </div>
     </div>
@@ -1715,8 +1715,8 @@
             <h2>⛔ ВЫ ЗАБАНЕНЫ!</h2>
             <p>Ваш аккаунт был заблокирован администратором.</p>
             <div class="btn-group">
-                <button class="new-account" onclick="createNewAccount()">🔄 Создать новый аккаунт</button>
-                <button class="appeal" onclick="appealBan()">📩 Подать заявку на разбан</button>
+                <button class="new-account" id="newAccountBtn">🔄 Создать новый аккаунт</button>
+                <button class="appeal" id="appealBtn">📩 Подать заявку на разбан</button>
             </div>
         </div>
     </div>
@@ -1728,7 +1728,7 @@
             <h2>🔒 Админ-панель</h2>
             <p>Введите пароль для доступа</p>
             <input type="password" id="passwordInput" placeholder="Введите пароль" />
-            <button onclick="checkPassword()">Войти</button>
+            <button id="checkPasswordBtn">Войти</button>
             <div class="error" id="passwordError">❌ Неверный пароль</div>
         </div>
     </div>
@@ -1760,11 +1760,11 @@
         const ADMIN_PASSWORD = 'admin123';
         let isAdmin = localStorage.getItem('brawl_isAdmin') === 'true';
 
-        function closePasswordModal() {
+        window.closePasswordModal = function() {
             document.getElementById('passwordOverlay').style.display = 'none';
         }
 
-        function checkPassword() {
+        window.checkPassword = function() {
             const input = document.getElementById('passwordInput');
             const error = document.getElementById('passwordError');
             if (input.value === ADMIN_PASSWORD) {
@@ -1781,7 +1781,7 @@
         }
 
         document.getElementById('passwordInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') { checkPassword(); }
+            if (e.key === 'Enter') { window.checkPassword(); }
         });
 
         // ============================================================
@@ -2166,7 +2166,7 @@
         }
 
         // ============================================================
-        //  БОЕВАЯ СИСТЕМА
+        //  БОЕВАЯ СИСТЕМА - ИСПРАВЛЕННАЯ
         // ============================================================
 
         window.upgradeBrawler = function(brawlerName) {
@@ -2299,6 +2299,7 @@
             render();
         };
 
+        // ----- ЗАПУСК БОЯ -----
         function startBattle(opponentData) {
             const myLevel = profile.brawlers.find(b => b.name === selectedBrawler)?.level || 1;
             const myStats = getBrawlerStats(selectedBrawler, myLevel);
@@ -2364,6 +2365,7 @@
             render();
         }
 
+        // ----- БОТ -----
         function startBotAI() {
             if (botInterval) clearInterval(botInterval);
             botInterval = setInterval(() => {
@@ -2402,6 +2404,7 @@
             }, 1200);
         }
 
+        // ----- ОБРАБОТКА ХОДА -----
         function processMove(move) {
             if (!battleData || battleData.finished) return;
 
@@ -2506,6 +2509,7 @@
             render();
         }
 
+        // ----- ЗАВЕРШЕНИЕ БОЯ -----
         function endBattle() {
             battleState = 'result';
             if (battleListener) {
@@ -2521,8 +2525,19 @@
             render();
         }
 
+        // ----- ХОД ИГРОКА - ГЛАВНАЯ ФУНКЦИЯ! -----
         window.makeMove = function(action) {
-            if (!battleData || battleData.finished) return;
+            console.log('makeMove вызван с действием:', action);
+            
+            if (!battleData) {
+                alert('Нет данных о бое!');
+                return;
+            }
+            
+            if (battleData.finished) {
+                alert('Бой уже закончен!');
+                return;
+            }
 
             const isMyTurn = (battleData.currentTurn === 'player1' && battleData.player1Id === currentUserId) ||
                 (battleData.currentTurn === 'player2' && battleData.player2Id === currentUserId);
@@ -2543,12 +2558,26 @@
 
             document.querySelectorAll('.battle-actions button').forEach(b => b.disabled = true);
 
-            const move = { action, playerId: currentUserId, timestamp: Date.now() };
-            db.ref('battles/' + battleId + '/moves').push(move).then(() => {
-                setTimeout(() => {
+            const move = { 
+                action: action, 
+                playerId: currentUserId, 
+                timestamp: Date.now() 
+            };
+            
+            console.log('Отправка хода:', move);
+            
+            db.ref('battles/' + battleId + '/moves').push(move)
+                .then(() => {
+                    console.log('Ход отправлен успешно');
+                    setTimeout(() => {
+                        document.querySelectorAll('.battle-actions button').forEach(b => b.disabled = false);
+                    }, 500);
+                })
+                .catch((err) => {
+                    console.error('Ошибка отправки хода:', err);
+                    alert('Ошибка отправки хода!');
                     document.querySelectorAll('.battle-actions button').forEach(b => b.disabled = false);
-                }, 500);
-            });
+                });
         };
 
         // ============================================================
@@ -3314,7 +3343,7 @@
         }
 
         // ============================================================
-        //  АДМИНКА (RENDER) - ИСПРАВЛЕННАЯ
+        //  АДМИНКА (RENDER)
         // ============================================================
         function renderAdmin(cloudHtml) {
             loadPlayersList();
@@ -3534,8 +3563,8 @@
             menuBtns.forEach(b => b.classList.remove('active'));
             document.querySelector('[data-tab="admin"]').classList.add('active');
 
-            // ===== ИСПРАВЛЕННЫЕ ФУНКЦИИ - С ПРОВЕРКОЙ НА СУЩЕСТВОВАНИЕ =====
-            function safeToggleCategoryFields() {
+            // Функции для админки с проверкой
+            window.toggleCategoryFields = function() {
                 const category = document.getElementById('shopCategory');
                 const resourcesFields = document.getElementById('resourcesFields');
                 const brawlerFields = document.getElementById('brawlerFields');
@@ -3544,8 +3573,8 @@
                     brawlerFields.className = 'category-fields' + (category.value === 'brawler' ? ' visible' : '');
                 }
             }
-
-            function safeToggleVoucherFields() {
+            
+            window.toggleVoucherFields = function() {
                 const type = document.getElementById('voucherRewardType');
                 const amountField = document.getElementById('voucherAmountField');
                 const brawlerField = document.getElementById('voucherBrawlerField');
@@ -3555,20 +3584,10 @@
                 }
             }
 
-            // Назначаем функции глобально с проверкой
-            if (document.getElementById('shopCategory')) {
-                window.toggleCategoryFields = safeToggleCategoryFields;
-                setTimeout(safeToggleCategoryFields, 100);
-            } else {
-                window.toggleCategoryFields = function() { console.log('Элементы не загружены'); };
-            }
-
-            if (document.getElementById('voucherRewardType')) {
-                window.toggleVoucherFields = safeToggleVoucherFields;
-                setTimeout(safeToggleVoucherFields, 100);
-            } else {
-                window.toggleVoucherFields = function() { console.log('Элементы не загружены'); };
-            }
+            setTimeout(() => {
+                if (document.getElementById('shopCategory')) window.toggleCategoryFields();
+                if (document.getElementById('voucherRewardType')) window.toggleVoucherFields();
+            }, 100);
 
             setTimeout(updatePlayerSelects, 200);
         }
@@ -3578,21 +3597,33 @@
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             // Авторизация
-            document.getElementById('loginBtn')?.addEventListener('click', loginWithUsername);
-            document.getElementById('registerBtn')?.addEventListener('click', registerWithUsername);
-            document.getElementById('checkPasswordBtn')?.addEventListener('click', checkPassword);
-            document.getElementById('newAccountBtn')?.addEventListener('click', createNewAccount);
-            document.getElementById('appealBtn')?.addEventListener('click', appealBan);
+            const loginBtn = document.getElementById('loginBtn');
+            const registerBtn = document.getElementById('registerBtn');
+            const checkPassBtn = document.getElementById('checkPasswordBtn');
+            const newAccountBtn = document.getElementById('newAccountBtn');
+            const appealBtn = document.getElementById('appealBtn');
+
+            if (loginBtn) loginBtn.addEventListener('click', loginWithUsername);
+            if (registerBtn) registerBtn.addEventListener('click', registerWithUsername);
+            if (checkPassBtn) checkPassBtn.addEventListener('click', checkPassword);
+            if (newAccountBtn) newAccountBtn.addEventListener('click', createNewAccount);
+            if (appealBtn) appealBtn.addEventListener('click', appealBan);
 
             // Пароль админки по Enter
-            document.getElementById('passwordInput')?.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { checkPassword(); }
-            });
+            const passInput = document.getElementById('passwordInput');
+            if (passInput) {
+                passInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { checkPassword(); }
+                });
+            }
 
             // Чат по Enter
-            document.getElementById('chatInput')?.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { sendMessage(); }
-            });
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { sendMessage(); }
+                });
+            }
 
             // Меню
             menuBtns.forEach(btn => {
