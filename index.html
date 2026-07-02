@@ -1676,7 +1676,7 @@
     <div class="app">
         <div class="header">
             <h1>⚡ BRAWL</h1>
-            <span>v.13.0</span>
+            <span>v.14.0</span>
             <div class="offline-badge" id="connectionBadge">☁️</div>
         </div>
 
@@ -2166,7 +2166,7 @@
         }
 
         // ============================================================
-        //  БОЕВАЯ СИСТЕМА - ИСПРАВЛЕННАЯ
+        //  БОЕВАЯ СИСТЕМА - ПОЛНОСТЬЮ ПЕРЕРАБОТАНА
         // ============================================================
 
         window.upgradeBrawler = function(brawlerName) {
@@ -2525,17 +2525,17 @@
             render();
         }
 
-        // ----- ХОД ИГРОКА - ГЛАВНАЯ ФУНКЦИЯ! -----
+        // ----- ХОД ИГРОКА - ВСЁ ПРИВЯЗАНО К ГЛОБАЛЬНОМУ ОБЪЕКТУ! -----
         window.makeMove = function(action) {
-            console.log('makeMove вызван с действием:', action);
+            console.log('🔥 makeMove вызван! Действие:', action);
             
             if (!battleData) {
-                alert('Нет данных о бое!');
+                alert('❌ Нет данных о бое!');
                 return;
             }
             
             if (battleData.finished) {
-                alert('Бой уже закончен!');
+                alert('⛔ Бой уже закончен!');
                 return;
             }
 
@@ -2556,6 +2556,7 @@
                 }
             }
 
+            // Блокируем кнопки
             document.querySelectorAll('.battle-actions button').forEach(b => b.disabled = true);
 
             const move = { 
@@ -2564,17 +2565,17 @@
                 timestamp: Date.now() 
             };
             
-            console.log('Отправка хода:', move);
+            console.log('📤 Отправка хода:', move);
             
             db.ref('battles/' + battleId + '/moves').push(move)
                 .then(() => {
-                    console.log('Ход отправлен успешно');
+                    console.log('✅ Ход отправлен успешно');
                     setTimeout(() => {
                         document.querySelectorAll('.battle-actions button').forEach(b => b.disabled = false);
                     }, 500);
                 })
                 .catch((err) => {
-                    console.error('Ошибка отправки хода:', err);
+                    console.error('❌ Ошибка отправки хода:', err);
                     alert('Ошибка отправки хода!');
                     document.querySelectorAll('.battle-actions button').forEach(b => b.disabled = false);
                 });
@@ -3131,13 +3132,13 @@
                             </div>
 
                             <div class="battle-actions">
-                                <button class="attack" onclick="makeMove('attack')" ${!isMyTurn ? 'disabled' : ''}>
+                                <button class="attack" onclick="window.makeMove('attack')" ${!isMyTurn ? 'disabled' : ''}>
                                     ⚔️ Атака
                                 </button>
-                                <button class="defend" onclick="makeMove('defend')" ${!isMyTurn ? 'disabled' : ''}>
+                                <button class="defend" onclick="window.makeMove('defend')" ${!isMyTurn ? 'disabled' : ''}>
                                     🛡️ Защита
                                 </button>
-                                <button class="ability ${myCooldown <= 0 && isMyTurn ? 'ability-ready' : ''}" onclick="makeMove('ability')" ${!isMyTurn || myCooldown > 0 ? 'disabled' : ''}>
+                                <button class="ability ${myCooldown <= 0 && isMyTurn ? 'ability-ready' : ''}" onclick="window.makeMove('ability')" ${!isMyTurn || myCooldown > 0 ? 'disabled' : ''}>
                                     ⚡ Удар ${myCooldown > 0 ? `(${myCooldown})` : ''}
                                 </button>
                             </div>
