@@ -561,6 +561,9 @@
             flex: 1;
             max-width: 150px;
         }
+        .battle-actions button:active:not(:disabled) {
+            transform: scale(0.95);
+        }
         .battle-actions .attack {
             background: #d43f3f;
             color: #fff;
@@ -1897,12 +1900,6 @@
                         return;
                     }
 
-                    if (profile.banned) {
-                        errorEl.textContent = '⛔ Вы забанены!';
-                        errorEl.style.display = 'block';
-                        return;
-                    }
-
                     currentUserId = uid;
                     isLoggedIn = true;
                     localStorage.setItem('brawl_userId', uid);
@@ -2525,7 +2522,7 @@
             render();
         }
 
-        // ----- ХОД ИГРОКА - ВСЁ ПРИВЯЗАНО К ГЛОБАЛЬНОМУ ОБЪЕКТУ! -----
+        // ----- ХОД ИГРОКА - ГЛОБАЛЬНАЯ ФУНКЦИЯ! -----
         window.makeMove = function(action) {
             console.log('🔥 makeMove вызван! Действие:', action);
             
@@ -3667,6 +3664,18 @@
                     render();
                 });
             });
+
+            // Админские вкладки
+            document.addEventListener('click', function(e) {
+                const tabBtn = e.target.closest('.admin-tabs button');
+                if (tabBtn) {
+                    const sub = tabBtn.dataset.sub;
+                    if (sub) {
+                        adminSubTab = sub;
+                        render();
+                    }
+                }
+            });
         });
 
         // ============================================================
@@ -3679,4 +3688,4 @@
         render();
     </script>
 </body>
-</html>.  
+</html>
