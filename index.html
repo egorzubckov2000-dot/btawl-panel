@@ -7,7 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== ВСЕ СТИЛИ (СТАРЫЙ ДИЗАЙН) ===== */
+        /* ===== ВСЕ СТИЛИ ===== */
         * {
             margin: 0;
             padding: 0;
@@ -1677,7 +1677,7 @@
     <div class="app">
         <div class="header">
             <h1>⚡ BRAWL</h1>
-            <span>v.10.0</span>
+            <span>v.11.0</span>
             <div class="offline-badge" id="connectionBadge">☁️</div>
         </div>
 
@@ -1736,7 +1736,7 @@
 
     <script>
         // ============================================================
-        //  FIREBASE КОНФИГ (без Auth)
+        //  FIREBASE КОНФИГ
         // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyB_IDn4_u5W1G82CrjXSMz6SAwXhkdnktc",
@@ -1786,7 +1786,7 @@
         });
 
         // ============================================================
-        //  АВТОРИЗАЦИЯ ПО ИМЕНИ (без Firebase Auth)
+        //  АВТОРИЗАЦИЯ ПО ИМЕНИ
         // ============================================================
         let currentUserId = null;
         let isLoggedIn = false;
@@ -3315,7 +3315,7 @@
         }
 
         // ============================================================
-        //  АДМИНКА (RENDER)
+        //  АДМИНКА (RENDER) - ИСПРАВЛЕННАЯ
         // ============================================================
         function renderAdmin(cloudHtml) {
             loadPlayersList();
@@ -3535,29 +3535,33 @@
             menuBtns.forEach(b => b.classList.remove('active'));
             document.querySelector('[data-tab="admin"]').classList.add('active');
 
-            document.querySelectorAll('.admin-tabs button').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    adminSubTab = this.dataset.sub;
-                    renderAdmin(cloudHtml);
-                });
-            });
-
-            window.toggleCategoryFields = function() {
-                const category = document.getElementById('shopCategory').value;
-                document.getElementById('resourcesFields').className = 'category-fields' + (category === 'resources' ?
-                    ' visible' : '');
-                document.getElementById('brawlerFields').className = 'category-fields' + (category === 'brawler' ?
-                    ' visible' : '');
+            // ===== ИСПРАВЛЕННЫЕ ФУНКЦИИ =====
+            // Проверяем существование элементов перед вызовом
+            if (document.getElementById('shopCategory')) {
+                window.toggleCategoryFields = function() {
+                    const category = document.getElementById('shopCategory');
+                    const resourcesFields = document.getElementById('resourcesFields');
+                    const brawlerFields = document.getElementById('brawlerFields');
+                    if (category && resourcesFields && brawlerFields) {
+                        resourcesFields.className = 'category-fields' + (category.value === 'resources' ? ' visible' : '');
+                        brawlerFields.className = 'category-fields' + (category.value === 'brawler' ? ' visible' : '');
+                    }
+                }
+                setTimeout(window.toggleCategoryFields, 100);
             }
-            setTimeout(window.toggleCategoryFields, 100);
 
-            window.toggleVoucherFields = function() {
-                const type = document.getElementById('voucherRewardType').value;
-                document.getElementById('voucherAmountField').style.display = (type === 'gems' || type === 'coins') ?
-                    'block' : 'none';
-                document.getElementById('voucherBrawlerField').style.display = type === 'brawler' ? 'block' : 'none';
+            if (document.getElementById('voucherRewardType')) {
+                window.toggleVoucherFields = function() {
+                    const type = document.getElementById('voucherRewardType');
+                    const amountField = document.getElementById('voucherAmountField');
+                    const brawlerField = document.getElementById('voucherBrawlerField');
+                    if (type && amountField && brawlerField) {
+                        amountField.style.display = (type.value === 'gems' || type.value === 'coins') ? 'block' : 'none';
+                        brawlerField.style.display = type.value === 'brawler' ? 'block' : 'none';
+                    }
+                }
+                setTimeout(window.toggleVoucherFields, 100);
             }
-            setTimeout(window.toggleVoucherFields, 100);
 
             setTimeout(updatePlayerSelects, 200);
         }
