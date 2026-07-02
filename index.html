@@ -7,7 +7,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== ВСЕ СТИЛИ ===== */
         * {
             margin: 0;
             padding: 0;
@@ -1677,7 +1676,7 @@
     <div class="app">
         <div class="header">
             <h1>⚡ BRAWL</h1>
-            <span>v.11.0</span>
+            <span>v.12.0</span>
             <div class="offline-badge" id="connectionBadge">☁️</div>
         </div>
 
@@ -3535,32 +3534,40 @@
             menuBtns.forEach(b => b.classList.remove('active'));
             document.querySelector('[data-tab="admin"]').classList.add('active');
 
-            // ===== ИСПРАВЛЕННЫЕ ФУНКЦИИ =====
-            // Проверяем существование элементов перед вызовом
-            if (document.getElementById('shopCategory')) {
-                window.toggleCategoryFields = function() {
-                    const category = document.getElementById('shopCategory');
-                    const resourcesFields = document.getElementById('resourcesFields');
-                    const brawlerFields = document.getElementById('brawlerFields');
-                    if (category && resourcesFields && brawlerFields) {
-                        resourcesFields.className = 'category-fields' + (category.value === 'resources' ? ' visible' : '');
-                        brawlerFields.className = 'category-fields' + (category.value === 'brawler' ? ' visible' : '');
-                    }
+            // ===== ИСПРАВЛЕННЫЕ ФУНКЦИИ - С ПРОВЕРКОЙ НА СУЩЕСТВОВАНИЕ =====
+            function safeToggleCategoryFields() {
+                const category = document.getElementById('shopCategory');
+                const resourcesFields = document.getElementById('resourcesFields');
+                const brawlerFields = document.getElementById('brawlerFields');
+                if (category && resourcesFields && brawlerFields) {
+                    resourcesFields.className = 'category-fields' + (category.value === 'resources' ? ' visible' : '');
+                    brawlerFields.className = 'category-fields' + (category.value === 'brawler' ? ' visible' : '');
                 }
-                setTimeout(window.toggleCategoryFields, 100);
+            }
+
+            function safeToggleVoucherFields() {
+                const type = document.getElementById('voucherRewardType');
+                const amountField = document.getElementById('voucherAmountField');
+                const brawlerField = document.getElementById('voucherBrawlerField');
+                if (type && amountField && brawlerField) {
+                    amountField.style.display = (type.value === 'gems' || type.value === 'coins') ? 'block' : 'none';
+                    brawlerField.style.display = type.value === 'brawler' ? 'block' : 'none';
+                }
+            }
+
+            // Назначаем функции глобально с проверкой
+            if (document.getElementById('shopCategory')) {
+                window.toggleCategoryFields = safeToggleCategoryFields;
+                setTimeout(safeToggleCategoryFields, 100);
+            } else {
+                window.toggleCategoryFields = function() { console.log('Элементы не загружены'); };
             }
 
             if (document.getElementById('voucherRewardType')) {
-                window.toggleVoucherFields = function() {
-                    const type = document.getElementById('voucherRewardType');
-                    const amountField = document.getElementById('voucherAmountField');
-                    const brawlerField = document.getElementById('voucherBrawlerField');
-                    if (type && amountField && brawlerField) {
-                        amountField.style.display = (type.value === 'gems' || type.value === 'coins') ? 'block' : 'none';
-                        brawlerField.style.display = type.value === 'brawler' ? 'block' : 'none';
-                    }
-                }
-                setTimeout(window.toggleVoucherFields, 100);
+                window.toggleVoucherFields = safeToggleVoucherFields;
+                setTimeout(safeToggleVoucherFields, 100);
+            } else {
+                window.toggleVoucherFields = function() { console.log('Элементы не загружены'); };
             }
 
             setTimeout(updatePlayerSelects, 200);
