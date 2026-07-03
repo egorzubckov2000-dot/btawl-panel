@@ -13,7 +13,8 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
-        html, body {
+        html,
+        body {
             height: 100%;
             width: 100%;
             background: #0b0b1a;
@@ -44,9 +45,18 @@
             }
         }
         @media (max-width:430px) {
-            .app { padding: 12px 10px; height: 100vh; max-height: 860px; }
-            .header h1 { font-size: 22px; }
-            .menu button { font-size: 11px; padding: 8px 4px; }
+            .app {
+                padding: 12px 10px;
+                height: 100vh;
+                max-height: 860px;
+            }
+            .header h1 {
+                font-size: 22px;
+            }
+            .menu button {
+                font-size: 11px;
+                padding: 8px 4px;
+            }
         }
         .header {
             display: flex;
@@ -90,8 +100,16 @@
             display: inline-block;
             animation: pulse-dot 1.5s ease-in-out infinite;
         }
-        @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-        @keyframes pulse-badge { 0%,100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+        @keyframes pulse-dot {
+            0%,
+            100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        @keyframes pulse-badge {
+            0%,
+            100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
         .offline-badge {
             background: #d43f3f;
             color: #fff;
@@ -111,7 +129,12 @@
             flex-direction: column;
             animation: fadeIn 0.4s ease;
         }
-        @media (max-width:430px) { #content { padding: 12px 10px; border-radius: 18px; } }
+        @media (max-width:430px) {
+            #content {
+                padding: 12px 10px;
+                border-radius: 18px;
+            }
+        }
         .cloud-panel {
             background: #0f0f2a;
             border-radius: 20px;
@@ -124,8 +147,14 @@
             flex-wrap: wrap;
             gap: 6px;
         }
-        .cloud-panel .status { color: #aaaacc; font-size: 12px; }
-        .cloud-panel .status .connected { color: #2ecc71; font-weight: 700; }
+        .cloud-panel .status {
+            color: #aaaacc;
+            font-size: 12px;
+        }
+        .cloud-panel .status .connected {
+            color: #2ecc71;
+            font-weight: 700;
+        }
         .menu {
             display: flex;
             justify-content: space-around;
@@ -156,7 +185,10 @@
             box-shadow: 0 0 24px #f5c84277;
             transform: scale(1.05);
         }
-        .menu button:hover:not(.active) { color: #fff; transform: scale(1.05); }
+        .menu button:hover:not(.active) {
+            color: #fff;
+            transform: scale(1.05);
+        }
         .empty-state {
             color: #8888aa;
             text-align: center;
@@ -170,8 +202,13 @@
             margin-bottom: 12px;
             animation: bounce-icon 2s ease-in-out infinite;
         }
-        @keyframes bounce-icon { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes bounce-icon {
+            0%,
+            100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
 
+        /* ===== АВТОРИЗАЦИЯ ===== */
         .auth-overlay {
             position: fixed;
             top: 0;
@@ -195,9 +232,20 @@
             width: 90%;
             animation: scaleIn 0.4s ease;
         }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        .auth-box h2 { color: #f5c842; font-size: 24px; margin-bottom: 4px; }
-        .auth-box p { color: #8888aa; font-size: 14px; margin-bottom: 16px; }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .auth-box h2 {
+            color: #f5c842;
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        .auth-box p {
+            color: #8888aa;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
         .auth-box input {
             width: 100%;
             padding: 10px 14px;
@@ -260,8 +308,14 @@
             margin-top: 8px;
             display: none;
         }
-        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        @keyframes shake {
+            0%,
+            100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
 
+        /* ===== БАН ===== */
         .banned-overlay {
             position: fixed;
             top: 0;
@@ -285,10 +339,26 @@
             width: 90%;
             animation: scaleIn 0.4s ease;
         }
-        .banned-box .ban-icon { font-size: 64px; display: block; margin-bottom: 8px; }
-        .banned-box h2 { color: #d43f3f; font-size: 24px; margin-bottom: 8px; }
-        .banned-box p { color: #8888aa; font-size: 14px; margin-bottom: 16px; }
-        .banned-box .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        .banned-box .ban-icon {
+            font-size: 64px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .banned-box h2 {
+            color: #d43f3f;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .banned-box p {
+            color: #8888aa;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .banned-box .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
         .banned-box .btn-group button {
             padding: 12px;
             border-radius: 40px;
@@ -316,6 +386,7 @@
             background: #4fc3f722;
         }
 
+        /* ===== ВСПЛЫВАЮЩЕЕ СООБЩЕНИЕ ===== */
         .server-notification {
             position: fixed;
             top: 20px;
@@ -356,9 +427,16 @@
             transform: scale(1.15);
             background: #ff2f2f;
         }
-        .server-notification .notify-icon { font-size: 24px; margin-right: 10px; }
-        @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-60px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        .server-notification .notify-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-60px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
 
+        /* ===== БОЙ ===== */
         .pvp-container {
             display: flex;
             flex-direction: column;
@@ -378,7 +456,11 @@
             justify-content: center;
             align-items: center;
         }
-        @keyframes pulse-search { 0%,100% { border-color: #f5c84244; } 50% { border-color: #f5c842; } }
+        @keyframes pulse-search {
+            0%,
+            100% { border-color: #f5c84244; }
+            50% { border-color: #f5c842; }
+        }
         .pvp-search .spinner {
             display: inline-block;
             width: 50px;
@@ -389,9 +471,18 @@
             animation: spin 1s linear infinite;
             margin-bottom: 16px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .pvp-search h3 { color: #f5c842; font-size: 22px; margin-bottom: 8px; }
-        .pvp-search p { color: #8888aa; font-size: 14px; }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .pvp-search h3 {
+            color: #f5c842;
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+        .pvp-search p {
+            color: #8888aa;
+            font-size: 14px;
+        }
         .pvp-search .cancel-btn {
             margin-top: 16px;
             background: #555;
@@ -403,7 +494,10 @@
             cursor: pointer;
             transition: 0.3s ease;
         }
-        .pvp-search .cancel-btn:hover { transform: scale(1.05); background: #777; }
+        .pvp-search .cancel-btn:hover {
+            transform: scale(1.05);
+            background: #777;
+        }
 
         .battle-field {
             display: flex;
@@ -428,7 +522,10 @@
             border-color: #f5c842;
             box-shadow: 0 0 30px #f5c84244;
         }
-        .battle-player .hp-container { position: relative; margin-top: 4px; }
+        .battle-player .hp-container {
+            position: relative;
+            margin-top: 4px;
+        }
         .battle-player .hp-bar-bg {
             background: #1a1a3a;
             border-radius: 10px;
@@ -442,13 +539,35 @@
             transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             position: relative;
         }
-        .battle-player .hp-bar-fill.green { background: linear-gradient(90deg, #51cf66, #2ecc71); }
-        .battle-player .hp-bar-fill.yellow { background: linear-gradient(90deg, #f5c842, #f39c12); }
-        .battle-player .hp-bar-fill.red { background: linear-gradient(90deg, #d43f3f, #e74c3c); }
-        .battle-player .hp-text { color: #ff6b6b; font-size: 14px; font-weight: 700; margin-top: 2px; }
-        .battle-player .name { color: #eee; font-weight: 700; font-size: 16px; }
-        .battle-player .brawler-icon { font-size: 48px; display: block; margin: 4px 0; transition: transform 0.3s ease; }
-        .battle-player .brawler-icon.hit { animation: hitShake 0.4s ease; }
+        .battle-player .hp-bar-fill.green {
+            background: linear-gradient(90deg, #51cf66, #2ecc71);
+        }
+        .battle-player .hp-bar-fill.yellow {
+            background: linear-gradient(90deg, #f5c842, #f39c12);
+        }
+        .battle-player .hp-bar-fill.red {
+            background: linear-gradient(90deg, #d43f3f, #e74c3c);
+        }
+        .battle-player .hp-text {
+            color: #ff6b6b;
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+        .battle-player .name {
+            color: #eee;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .battle-player .brawler-icon {
+            font-size: 48px;
+            display: block;
+            margin: 4px 0;
+            transition: transform 0.3s ease;
+        }
+        .battle-player .brawler-icon.hit {
+            animation: hitShake 0.4s ease;
+        }
         @keyframes hitShake {
             0% { transform: translateX(0) scale(1); }
             25% { transform: translateX(-15px) scale(0.9); }
@@ -456,19 +575,27 @@
             75% { transform: translateX(-10px) scale(0.95); }
             100% { transform: translateX(0) scale(1); }
         }
-        .battle-player .brawler-icon.heal { animation: healPulse 0.6s ease; }
+        .battle-player .brawler-icon.heal {
+            animation: healPulse 0.6s ease;
+        }
         @keyframes healPulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.2); filter: brightness(1.5); }
             100% { transform: scale(1); }
         }
-        .battle-player .brawler-icon.shield { animation: shieldPulse 0.5s ease; }
+        .battle-player .brawler-icon.shield {
+            animation: shieldPulse 0.5s ease;
+        }
         @keyframes shieldPulse {
             0% { transform: scale(1); }
             30% { transform: scale(1.3); filter: drop-shadow(0 0 20px #4fc3f7); }
             100% { transform: scale(1); }
         }
-        .battle-player .power { color: #f5c842; font-size: 12px; font-weight: 700; }
+        .battle-player .power {
+            color: #f5c842;
+            font-size: 12px;
+            font-weight: 700;
+        }
         .battle-player .shield-indicator {
             display: inline-block;
             background: #4fc3f7;
@@ -480,7 +607,11 @@
             margin-top: 2px;
             animation: shieldGlow 0.8s ease-in-out infinite;
         }
-        @keyframes shieldGlow { 0%,100% { box-shadow: 0 0 10px #4fc3f755; } 50% { box-shadow: 0 0 30px #4fc3f7; } }
+        @keyframes shieldGlow {
+            0%,
+            100% { box-shadow: 0 0 10px #4fc3f755; }
+            50% { box-shadow: 0 0 30px #4fc3f7; }
+        }
         .battle-player .damage-float {
             position: absolute;
             top: 50%;
@@ -491,17 +622,29 @@
             pointer-events: none;
             animation: damageFloat 1s ease forwards;
             z-index: 10;
-            text-shadow: 0 0 20px rgba(255,0,0,0.8);
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
             color: #ff6b6b;
         }
-        .battle-player .damage-float.heal-float { color: #2ecc71; text-shadow: 0 0 20px rgba(46,204,113,0.8); }
-        .battle-player .damage-float.shield-float { color: #4fc3f7; text-shadow: 0 0 20px rgba(79,195,247,0.8); font-size: 28px; }
+        .battle-player .damage-float.heal-float {
+            color: #2ecc71;
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.8);
+        }
+        .battle-player .damage-float.shield-float {
+            color: #4fc3f7;
+            text-shadow: 0 0 20px rgba(79, 195, 247, 0.8);
+            font-size: 28px;
+        }
         @keyframes damageFloat {
             0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
             30% { transform: translate(-50%, -80%) scale(1.2); }
             100% { opacity: 0; transform: translate(-50%, -120%) scale(1); }
         }
-        .battle-vs { color: #f5c842; font-size: 24px; font-weight: 800; }
+
+        .battle-vs {
+            color: #f5c842;
+            font-size: 24px;
+            font-weight: 800;
+        }
         .battle-actions {
             display: flex;
             gap: 10px;
@@ -521,16 +664,47 @@
             position: relative;
             overflow: hidden;
         }
-        .battle-actions button:active:not(:disabled) { transform: scale(0.92); }
-        .battle-actions button .btn-icon { display: block; font-size: 20px; }
-        .battle-actions button .btn-label { display: block; font-size: 11px; margin-top: 2px; }
-        .battle-actions .attack { background: linear-gradient(135deg, #d43f3f, #b71c1c); color: #fff; }
-        .battle-actions .attack:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 0 30px #d43f3f66; }
-        .battle-actions .defend { background: linear-gradient(135deg, #4fc3f7, #0288d1); color: #fff; }
-        .battle-actions .defend:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 0 30px #4fc3f766; }
-        .battle-actions .ability { background: linear-gradient(135deg, #9b59b6, #6c3483); color: #fff; }
-        .battle-actions .ability:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 0 30px #9b59b666; }
-        .battle-actions button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .battle-actions button:active:not(:disabled) {
+            transform: scale(0.92);
+        }
+        .battle-actions button .btn-icon {
+            display: block;
+            font-size: 20px;
+        }
+        .battle-actions button .btn-label {
+            display: block;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+        .battle-actions .attack {
+            background: linear-gradient(135deg, #d43f3f, #b71c1c);
+            color: #fff;
+        }
+        .battle-actions .attack:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #d43f3f66;
+        }
+        .battle-actions .defend {
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+            color: #fff;
+        }
+        .battle-actions .defend:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #4fc3f766;
+        }
+        .battle-actions .ability {
+            background: linear-gradient(135deg, #9b59b6, #6c3483);
+            color: #fff;
+        }
+        .battle-actions .ability:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #9b59b666;
+        }
+        .battle-actions button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
         .battle-actions button .cooldown-badge {
             position: absolute;
             top: -6px;
@@ -562,12 +736,28 @@
             border-bottom: 1px solid #1a1a3a;
             animation: logSlide 0.3s ease;
         }
-        @keyframes logSlide { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        .battle-log .log-entry.crit { color: #ffd700; font-weight: 700; }
-        .battle-log .log-entry.heal { color: #51cf66; }
-        .battle-log .log-entry.damage { color: #ff6b6b; }
-        .battle-log .log-entry.win { color: #f5c842; font-weight: 700; font-size: 16px; }
-        .battle-log .log-entry.shield { color: #4fc3f7; }
+        @keyframes logSlide {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .battle-log .log-entry.crit {
+            color: #ffd700;
+            font-weight: 700;
+        }
+        .battle-log .log-entry.heal {
+            color: #51cf66;
+        }
+        .battle-log .log-entry.damage {
+            color: #ff6b6b;
+        }
+        .battle-log .log-entry.win {
+            color: #f5c842;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .battle-log .log-entry.shield {
+            color: #4fc3f7;
+        }
         .battle-status {
             text-align: center;
             color: #aaaacc;
@@ -577,9 +767,18 @@
             border-radius: 12px;
             transition: all 0.3s ease;
         }
-        .battle-status .waiting { color: #f5c842; }
-        .battle-status .fighting { color: #ff6b6b; animation: pulse-fight 1s ease-in-out infinite; }
-        @keyframes pulse-fight { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .battle-status .waiting {
+            color: #f5c842;
+        }
+        .battle-status .fighting {
+            color: #ff6b6b;
+            animation: pulse-fight 1s ease-in-out infinite;
+        }
+        @keyframes pulse-fight {
+            0%,
+            100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
         .battle-result {
             text-align: center;
             padding: 20px;
@@ -588,8 +787,16 @@
             border: 2px solid #f5c842;
             animation: scaleIn 0.4s ease;
         }
-        .battle-result .winner { font-size: 32px; font-weight: 800; color: #f5c842; }
-        .battle-result .trophies { font-size: 18px; color: #2ecc71; margin-top: 4px; }
+        .battle-result .winner {
+            font-size: 32px;
+            font-weight: 800;
+            color: #f5c842;
+        }
+        .battle-result .trophies {
+            font-size: 18px;
+            color: #2ecc71;
+            margin-top: 4px;
+        }
         .battle-result .back-btn {
             background: #f5c842;
             border: none;
@@ -602,9 +809,17 @@
             margin-top: 12px;
             font-size: 14px;
         }
-        .battle-result .back-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px #f5c84255; }
+        .battle-result .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #f5c84255;
+        }
 
-        .brawler-list { display: flex; flex-direction: column; gap: 6px; }
+        /* ===== БОЙЦЫ ===== */
+        .brawler-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
         .brawler-item {
             background: #0f0f2a;
             padding: 10px 14px;
@@ -618,8 +833,16 @@
             transition: 0.3s ease;
             cursor: pointer;
         }
-        .brawler-item:hover { transform: scale(1.02); border-left-color: #f5c84288; }
-        .brawler-item img { width: 32px; height: 32px; border-radius: 40px; object-fit: cover; }
+        .brawler-item:hover {
+            transform: scale(1.02);
+            border-left-color: #f5c84288;
+        }
+        .brawler-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 40px;
+            object-fit: cover;
+        }
         .brawler-detail {
             background: #0f0f2a;
             border-radius: 24px;
@@ -629,9 +852,22 @@
             margin-top: 8px;
             text-align: center;
         }
-        .brawler-detail .avatar { font-size: 80px; display: block; margin-bottom: 4px; }
-        .brawler-detail .avatar img { width: 80px; height: 80px; border-radius: 40px; object-fit: cover; }
-        .brawler-detail .name { color: #f5c842; font-size: 26px; font-weight: 800; }
+        .brawler-detail .avatar {
+            font-size: 80px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .brawler-detail .avatar img {
+            width: 80px;
+            height: 80px;
+            border-radius: 40px;
+            object-fit: cover;
+        }
+        .brawler-detail .name {
+            color: #f5c842;
+            font-size: 26px;
+            font-weight: 800;
+        }
         .brawler-detail .rarity {
             font-size: 14px;
             color: #f5c842;
@@ -641,7 +877,11 @@
             display: inline-block;
             margin: 4px 0 12px;
         }
-        .brawler-detail .desc { color: #ccccee; font-size: 15px; margin-bottom: 16px; }
+        .brawler-detail .desc {
+            color: #ccccee;
+            font-size: 15px;
+            margin-bottom: 16px;
+        }
         .brawler-detail .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -654,11 +894,24 @@
             padding: 10px 8px;
             border: 1px solid #555577;
         }
-        .brawler-detail .stat-box .label { font-size: 11px; color: #8888aa; }
-        .brawler-detail .stat-box .value { font-size: 18px; font-weight: 700; color: #eee; }
-        .brawler-detail .stat-box .value.damage { color: #ff6b6b; }
-        .brawler-detail .stat-box .value.hp { color: #51cf66; }
-        .brawler-detail .stat-box .value.power { color: #f5c842; }
+        .brawler-detail .stat-box .label {
+            font-size: 11px;
+            color: #8888aa;
+        }
+        .brawler-detail .stat-box .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #eee;
+        }
+        .brawler-detail .stat-box .value.damage {
+            color: #ff6b6b;
+        }
+        .brawler-detail .stat-box .value.hp {
+            color: #51cf66;
+        }
+        .brawler-detail .stat-box .value.power {
+            color: #f5c842;
+        }
         .brawler-detail .status-badge {
             font-size: 14px;
             padding: 6px 20px;
@@ -666,8 +919,14 @@
             display: inline-block;
             font-weight: 700;
         }
-        .brawler-detail .status-badge.owned { background: #2ecc71; color: #0b0b1a; }
-        .brawler-detail .status-badge.locked { background: #d43f3f; color: #fff; }
+        .brawler-detail .status-badge.owned {
+            background: #2ecc71;
+            color: #0b0b1a;
+        }
+        .brawler-detail .status-badge.locked {
+            background: #d43f3f;
+            color: #fff;
+        }
         .brawler-detail .power-display {
             margin-top: 8px;
             padding: 8px;
@@ -675,7 +934,10 @@
             border-radius: 16px;
             border: 1px solid #555577;
         }
-        .brawler-detail .power-display .level { color: #f5c842; font-weight: 700; }
+        .brawler-detail .power-display .level {
+            color: #f5c842;
+            font-weight: 700;
+        }
         .brawler-detail .upgrade-btn {
             background: #f5c842;
             border: none;
@@ -688,8 +950,15 @@
             margin-top: 8px;
             font-size: 14px;
         }
-        .brawler-detail .upgrade-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 0 30px #f5c84255; }
-        .brawler-detail .upgrade-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .brawler-detail .upgrade-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #f5c84255;
+        }
+        .brawler-detail .upgrade-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
         .brawler-detail .back-btn {
             background: #555577;
             border: none;
@@ -702,9 +971,17 @@
             margin-top: 12px;
             font-size: 14px;
         }
-        .brawler-detail .back-btn:hover { transform: scale(1.05); background: #777799; }
+        .brawler-detail .back-btn:hover {
+            transform: scale(1.05);
+            background: #777799;
+        }
 
-        .shop-grid { display: flex; flex-direction: column; gap: 10px; }
+        /* ===== МАГАЗИН ===== */
+        .shop-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
         .shop-item {
             background: #0f0f2a;
             border-radius: 20px;
@@ -715,7 +992,11 @@
             align-items: center;
             transition: 0.3s ease;
         }
-        .shop-item:hover { transform: scale(1.02); border-color: #f5c842; box-shadow: 0 0 30px #f5c84211; }
+        .shop-item:hover {
+            transform: scale(1.02);
+            border-color: #f5c842;
+            box-shadow: 0 0 30px #f5c84211;
+        }
         .shop-item img {
             width: 50px;
             height: 50px;
@@ -724,9 +1005,18 @@
             background: #1a1a3a;
             border: 2px solid #f5c84255;
         }
-        .shop-item .info { flex: 1; }
-        .shop-item .info .name { color: #eee; font-weight: 700; font-size: 15px; }
-        .shop-item .info .desc { color: #8888aa; font-size: 12px; }
+        .shop-item .info {
+            flex: 1;
+        }
+        .shop-item .info .name {
+            color: #eee;
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .shop-item .info .desc {
+            color: #8888aa;
+            font-size: 12px;
+        }
         .shop-item .info .reward {
             font-size: 11px;
             color: #f5c842;
@@ -748,9 +1038,17 @@
             font-size: 13px;
             flex-shrink: 0;
         }
-        .shop-item .buy-btn:hover:not(:disabled) { transform: scale(1.08); box-shadow: 0 0 30px #f5c84255; }
-        .shop-item .buy-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .shop-item .buy-btn:hover:not(:disabled) {
+            transform: scale(1.08);
+            box-shadow: 0 0 30px #f5c84255;
+        }
+        .shop-item .buy-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
 
+        /* ===== ПРОФИЛЬ ===== */
         .profile-card {
             background: #0f0f2a;
             border-radius: 24px;
@@ -758,8 +1056,17 @@
             border: 1px solid #f5c84233;
             text-align: center;
         }
-        .profile-card .avatar { font-size: 64px; margin-bottom: 8px; display: block; }
-        .profile-card .nick { color: #f5c842; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .profile-card .avatar {
+            font-size: 64px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .profile-card .nick {
+            color: #f5c842;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
         .profile-card .stats {
             display: flex;
             justify-content: center;
@@ -767,12 +1074,28 @@
             margin-top: 12px;
             flex-wrap: wrap;
         }
-        .profile-card .stat-item { text-align: center; }
-        .profile-card .stat-item .value { font-size: 24px; font-weight: 800; color: #f5c842; }
-        .profile-card .stat-item .label { font-size: 11px; color: #8888aa; margin-top: 2px; }
-        .profile-card .stat-item .value.gems { color: #4fc3f7; }
-        .profile-card .stat-item .value.coins { color: #ffd54f; }
-        .profile-card .stat-item .value.trophies { color: #f5c842; }
+        .profile-card .stat-item {
+            text-align: center;
+        }
+        .profile-card .stat-item .value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #f5c842;
+        }
+        .profile-card .stat-item .label {
+            font-size: 11px;
+            color: #8888aa;
+            margin-top: 2px;
+        }
+        .profile-card .stat-item .value.gems {
+            color: #4fc3f7;
+        }
+        .profile-card .stat-item .value.coins {
+            color: #ffd54f;
+        }
+        .profile-card .stat-item .value.trophies {
+            color: #f5c842;
+        }
         .profile-card .logout-btn {
             background: #d43f3f;
             border: none;
@@ -785,8 +1108,12 @@
             font-size: 14px;
             margin-top: 12px;
         }
-        .profile-card .logout-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px #d43f3f66; }
+        .profile-card .logout-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #d43f3f66;
+        }
 
+        /* ===== ЧАТ ===== */
         .chat-container {
             display: flex;
             flex-direction: column;
@@ -803,9 +1130,17 @@
             min-height: 200px;
             max-height: 400px;
         }
-        .chat-messages::-webkit-scrollbar { width: 4px; }
-        .chat-messages::-webkit-scrollbar-track { background: #0f0f2a; border-radius: 10px; }
-        .chat-messages::-webkit-scrollbar-thumb { background: #f5c84255; border-radius: 10px; }
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: #0f0f2a;
+            border-radius: 10px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #f5c84255;
+            border-radius: 10px;
+        }
         .chat-message {
             background: #0f0f2a;
             border-radius: 16px;
@@ -819,11 +1154,26 @@
             align-items: center;
             margin-bottom: 2px;
         }
-        .chat-message .msg-name { font-weight: 700; color: #f5c842; font-size: 13px; }
-        .chat-message .msg-time { font-size: 10px; color: #555577; }
-        .chat-message .msg-text { color: #ccccee; font-size: 14px; word-wrap: break-word; }
-        .chat-message.own { border-left-color: #4fc3f7; }
-        .chat-message.own .msg-name { color: #4fc3f7; }
+        .chat-message .msg-name {
+            font-weight: 700;
+            color: #f5c842;
+            font-size: 13px;
+        }
+        .chat-message .msg-time {
+            font-size: 10px;
+            color: #555577;
+        }
+        .chat-message .msg-text {
+            color: #ccccee;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+        .chat-message.own {
+            border-left-color: #4fc3f7;
+        }
+        .chat-message.own .msg-name {
+            color: #4fc3f7;
+        }
         .chat-input-row {
             display: flex;
             gap: 8px;
@@ -856,7 +1206,10 @@
             font-size: 14px;
             flex-shrink: 0;
         }
-        .chat-input-row button:hover { transform: scale(1.05); box-shadow: 0 0 30px #f5c84255; }
+        .chat-input-row button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #f5c84255;
+        }
         .chat-empty {
             color: #8888aa;
             text-align: center;
@@ -864,7 +1217,36 @@
             font-size: 16px;
             margin: auto 0;
         }
-        .chat-empty span { font-size: 48px; display: block; margin-bottom: 8px; }
+        .chat-empty span {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* ===== ТАЙМЕР ===== */
+        .timer-display {
+            font-size: 14px;
+            color: #f5c842;
+            font-weight: 700;
+            padding: 4px 12px;
+            background: #0f0f2a;
+            border-radius: 40px;
+            display: inline-block;
+            animation: pulse-timer 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-timer {
+            0%,
+            100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .ability-ready {
+            animation: pulse-ability 1s ease-in-out infinite;
+        }
+        @keyframes pulse-ability {
+            0%,
+            100% { box-shadow: 0 0 20px #9b59b644; }
+            50% { box-shadow: 0 0 50px #9b59b6; }
+        }
 
         .brawl-select {
             display: flex;
@@ -917,7 +1299,10 @@
             font-size: 14px;
             transition: 0.3s ease;
         }
-        .brawl-select .back-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px #f5c84255; }
+        .brawl-select .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #f5c84255;
+        }
 
         .maintenance {
             background: #2a1a1a;
@@ -928,16 +1313,31 @@
             margin: auto 0;
             animation: pulse-maintenance 2s ease-in-out infinite;
         }
-        @keyframes pulse-maintenance { 0%,100% { border-color: #f5c84288; } 50% { border-color: #f5c842; } }
+        @keyframes pulse-maintenance {
+            0%,
+            100% { border-color: #f5c84288; }
+            50% { border-color: #f5c842; }
+        }
         .maintenance span {
             font-size: 48px;
             display: block;
             margin-bottom: 10px;
             animation: spin-icon 4s linear infinite;
         }
-        @keyframes spin-icon { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .maintenance h2 { color: #f5c842; font-size: 20px; font-weight: 700; }
-        .maintenance p { color: #aaaacc; margin-top: 6px; font-size: 14px; }
+        @keyframes spin-icon {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .maintenance h2 {
+            color: #f5c842;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .maintenance p {
+            color: #aaaacc;
+            margin-top: 6px;
+            font-size: 14px;
+        }
 
         .form-card {
             background: #0f0f2a;
@@ -958,7 +1358,10 @@
             transition: 0.3s ease;
             margin-bottom: 0;
         }
-        .form-card input:focus { border-color: #f5c842; box-shadow: 0 0 20px #f5c84222; }
+        .form-card input:focus {
+            border-color: #f5c842;
+            box-shadow: 0 0 20px #f5c84222;
+        }
         .form-card .submit-btn {
             background: #f5c842;
             border: none;
@@ -971,14 +1374,24 @@
             transition: 0.3s ease;
             white-space: nowrap;
         }
-        .form-card .submit-btn:hover { transform: scale(1.03); box-shadow: 0 0 30px #f5c84255; }
+        .form-card .submit-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px #f5c84255;
+        }
 
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-12px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
+    <!-- ===== ВСПЛЫВАЮЩЕЕ СООБЩЕНИЕ ===== -->
     <div class="server-notification" id="serverNotification">
         <button class="close-notify" onclick="closeNotification()">✕</button>
         <span class="notify-icon">📢</span>
@@ -1003,6 +1416,7 @@
         </div>
     </div>
 
+    <!-- ===== АВТОРИЗАЦИЯ ===== -->
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-box">
             <h2>⚡ BRAWL</h2>
@@ -1018,6 +1432,7 @@
         </div>
     </div>
 
+    <!-- ===== БАН ===== -->
     <div class="banned-overlay" id="bannedOverlay">
         <div class="banned-box">
             <span class="ban-icon">🚫</span>
@@ -1044,7 +1459,11 @@
             appId: "1:458936707927:web:2abf0144fc135277ee6c12"
         };
 
-        try { firebase.initializeApp(firebaseConfig); } catch (e) { console.warn(e); }
+        try {
+            firebase.initializeApp(firebaseConfig);
+        } catch (e) {
+            console.warn('Firebase уже инициализирован:', e);
+        }
         const db = firebase.database();
 
         // ============================================================
@@ -1089,6 +1508,9 @@
             { name: 'Динамайк', icon: '💣', minDamage: 120, maxDamage: 210, minHp: 320, maxHp: 580 }
         ];
 
+        // ============================================================
+        //  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+        // ============================================================
         function getBrawlerStats(brawlerName, level) {
             const b = ALL_BRAWLERS.find(br => br.name === brawlerName);
             if (!b) return { damage: 100, hp: 400 };
@@ -1207,6 +1629,12 @@
                     const savedPass = passSnap.val();
                     if (savedPass !== password) {
                         errorEl.textContent = '❌ Неверный пароль!';
+                        errorEl.style.display = 'block';
+                        return;
+                    }
+
+                    if (profile.banned) {
+                        errorEl.textContent = '⛔ Вы забанены!';
                         errorEl.style.display = 'block';
                         return;
                     }
@@ -1397,7 +1825,7 @@
         }
 
         // ============================================================
-        //  БОЕВАЯ СИСТЕМА - ИСПРАВЛЕННАЯ
+        //  БОЕВАЯ СИСТЕМА
         // ============================================================
         window.upgradeBrawler = function(brawlerName) {
             if (checkBan() || !currentUserId) return;
@@ -1563,45 +1991,43 @@
             };
 
             // Сохраняем бой в Firebase
-            db.ref('battles/' + battleId).set(battleData).then(() => {
-                battleState = 'fighting';
-                
-                // СЛУШАЕМ ИЗМЕНЕНИЯ БОЯ
-                battleListener = db.ref('battles/' + battleId);
-                battleListener.on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        const oldData = battleData ? {...battleData} : null;
-                        battleData = data;
-                        if (battleData.finished) {
-                            endBattle();
-                        }
-                        render();
-                        // Анимации при изменении HP
-                        if (oldData && !battleData.finished) {
-                            animateHPChanges(oldData, battleData);
-                        }
-                    }
-                });
+            db.ref('battles/' + battleId).set(battleData);
 
-                // СЛУШАЕМ ХОДЫ
-                moveListener = db.ref('battles/' + battleId + '/moves');
-                moveListener.on('child_added', (snapshot) => {
-                    const move = snapshot.val();
-                    if (move.playerId === currentUserId) return;
-                    if (battleData && !battleData.finished) {
-                        processMove(move);
-                    }
-                });
+            battleState = 'fighting';
 
-                if (opponentData.isBot) {
-                    startBotAI();
+            // СЛУШАЕМ ИЗМЕНЕНИЯ БОЯ
+            battleListener = db.ref('battles/' + battleId);
+            battleListener.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const oldData = battleData ? { ...battleData } : null;
+                    battleData = data;
+                    if (battleData.finished) {
+                        endBattle();
+                    }
+                    render();
+                    // Анимации при изменении HP
+                    if (oldData && !battleData.finished) {
+                        animateHPChanges(oldData, battleData);
+                    }
                 }
-
-                render();
-            }).catch(err => {
-                alert('Ошибка создания боя: ' + err.message);
             });
+
+            // СЛУШАЕМ ХОДЫ
+            moveListener = db.ref('battles/' + battleId + '/moves');
+            moveListener.on('child_added', (snapshot) => {
+                const move = snapshot.val();
+                if (move.playerId === currentUserId) return;
+                if (battleData && !battleData.finished) {
+                    processMove(move);
+                }
+            });
+
+            if (opponentData.isBot) {
+                startBotAI();
+            }
+
+            render();
         }
 
         // ===== АНИМАЦИИ =====
@@ -1851,7 +2277,8 @@
             }
 
             if (action === 'ability') {
-                const cooldown = battleData.currentTurn === 'player1' ? battleData.player1Cooldown : battleData.player2Cooldown;
+                const cooldown = battleData.currentTurn === 'player1' ? battleData.player1Cooldown : battleData
+                    .player2Cooldown;
                 if (cooldown > 0) {
                     alert(`⏳ Перезарядка: ${cooldown} ходов`);
                     return;
@@ -1956,7 +2383,8 @@
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
             if (!text) return;
-            db.ref('chat').push({ playerId: currentUserId, name: profile.name || 'Аноним', text: text, timestamp: Date.now() });
+            db.ref('chat').push({ playerId: currentUserId, name: profile.name || 'Аноним', text: text, timestamp: Date
+                    .now() });
             input.value = '';
         }
 
@@ -1974,7 +2402,8 @@
                 const msgs = Object.values(messages).reverse();
                 msgs.forEach(msg => {
                     const isOwn = msg.playerId === currentUserId;
-                    const time = new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                    const time = new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit',
+                        minute: '2-digit' });
                     html +=
                         `<div class="chat-message ${isOwn ? 'own' : ''}"><div class="msg-header"><span class="msg-name">${msg.name || 'Аноним'}</span><span class="msg-time">${time}</span></div><div class="msg-text">${msg.text}</div></div>`;
                 });
