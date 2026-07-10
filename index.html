@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Brawl Stars - Полная версия</title>
+    <title>Brawl Stars</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>
     <style>
         * {
             margin: 0;
@@ -85,7 +89,6 @@
             color: #fff;
         }
 
-        /* ===== ОБЩИЕ СТИЛИ ===== */
         .empty-state {
             color: #8888aa;
             text-align: center;
@@ -921,6 +924,47 @@
             display: none;
         }
 
+        /* ===== ВАУЧЕРЫ ===== */
+        .voucher-section {
+            background: #0f0f2a;
+            border-radius: 16px;
+            padding: 12px;
+            margin-top: 12px;
+            border: 1px solid #f5c84233;
+        }
+        .voucher-section input,
+        .voucher-section select {
+            width: 100%;
+            padding: 8px 14px;
+            border-radius: 40px;
+            border: 1px solid #555577;
+            background: #1a1a3a;
+            color: #eee;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 6px;
+        }
+        .voucher-section input:focus,
+        .voucher-section select:focus {
+            border-color: #f5c842;
+        }
+        .voucher-section .voucher-code {
+            background: #1a1a3a;
+            border-radius: 12px;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #f5c84244;
+            margin-top: 6px;
+        }
+        .voucher-section .voucher-code .code {
+            color: #f5c842;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
         @keyframes scaleIn {
             from {
                 opacity: 0;
@@ -942,43 +986,27 @@
             }
         }
 
-        /* ===== ВАУЧЕРЫ ===== */
-        .voucher-section {
+        .cloud-panel {
             background: #0f0f2a;
             border-radius: 16px;
-            padding: 12px;
-            margin-top: 12px;
-            border: 1px solid #f5c84233;
-        }
-        .voucher-section input {
-            width: 100%;
-            padding: 8px 14px;
-            border-radius: 40px;
-            border: 1px solid #555577;
-            background: #1a1a3a;
-            color: #eee;
-            font-size: 14px;
-            outline: none;
-            margin-bottom: 8px;
-        }
-        .voucher-section input:focus {
-            border-color: #f5c842;
-        }
-        .voucher-section .voucher-code {
-            background: #1a1a3a;
-            border-radius: 12px;
             padding: 8px 12px;
+            margin-bottom: 10px;
+            border: 1px solid #f5c84244;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid #f5c84244;
-            margin-top: 6px;
+            font-size: 12px;
         }
-        .voucher-section .voucher-code .code {
-            color: #f5c842;
+        .cloud-panel .online {
+            color: #2ecc71;
             font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 2px;
+        }
+        .cloud-panel .offline {
+            color: #d43f3f;
+            font-weight: 700;
+        }
+        .cloud-panel .status {
+            color: #8888aa;
         }
     </style>
 </head>
@@ -987,7 +1015,7 @@
     <div class="app">
         <div class="header">
             <h1>⚡ BRAWL</h1>
-            <span class="badge" id="statusBadge">🟢 Локально</span>
+            <span class="badge" id="statusBadge">☁️ Онлайн</span>
         </div>
 
         <div id="content"></div>
@@ -1005,9 +1033,9 @@
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-box">
             <h2>⚡ BRAWL</h2>
-            <p>Локальная версия</p>
-            <input type="text" id="authUsername" placeholder="Имя пользователя" value="Игрок" />
-            <input type="password" id="authPassword" placeholder="Пароль" value="1234" />
+            <p>Вход по имени</p>
+            <input type="text" id="authUsername" placeholder="Имя пользователя" />
+            <input type="password" id="authPassword" placeholder="Пароль" />
             <div class="error" id="authError">❌ Ошибка</div>
             <div class="success" id="authSuccess">✅ Успешно!</div>
             <div class="btn-group">
@@ -1019,19 +1047,28 @@
 
     <script>
         // ============================================================
-        //  ЛОКАЛЬНОЕ ХРАНИЛИЩЕ
+        //  FIREBASE КОНФИГ
         // ============================================================
-        const DB = {
-            get(key) {
-                try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
-            },
-            set(key, data) {
-                localStorage.setItem(key, JSON.stringify(data));
-            },
-            remove(key) {
-                localStorage.removeItem(key);
-            }
+        const firebaseConfig = {
+            apiKey: "AIzaSyB_IDn4_u5W1G82CrjXSMz6SAwXhkdnktc",
+            authDomain: "brawl-stars-panel.firebaseapp.com",
+            databaseURL: "https://brawl-stars-panel-default-rtdb.firebaseio.com",
+            projectId: "brawl-stars-panel",
+            storageBucket: "brawl-stars-panel.firebasestorage.app",
+            messagingSenderId: "458936707927",
+            appId: "1:458936707927:web:2abf0144fc135277ee6c12"
         };
+
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+                console.log('✅ Firebase подключен!');
+            }
+        } catch (e) {
+            console.error('Firebase error:', e);
+            alert('Ошибка подключения к Firebase! Проверьте интернет.');
+        }
+        const db = firebase.database();
 
         // ============================================================
         //  ВСЕ БОЙЦЫ
@@ -1079,7 +1116,8 @@
                 { name: 'Шелли', level: 1 },
                 { name: 'Кольт', level: 1 }
             ],
-            trophies: 0
+            trophies: 0,
+            banned: false
         };
 
         let currentTab = 'brawlers';
@@ -1091,22 +1129,20 @@
         let battleId = null;
         let botTimeout = null;
         let botInterval = null;
-        let chatMessages = [];
-
-        // Ваучеры
-        let vouchers = [];
+        let searchRef = null;
+        let battleListener = null;
+        let moveListener = null;
 
         // ============================================================
-        //  АВТОРИЗАЦИЯ
+        //  АВТОРИЗАЦИЯ (Firebase)
         // ============================================================
         function checkSession() {
-            const saved = DB.get('brawl_userId');
-            if (saved) {
-                currentUserId = saved;
+            const savedId = localStorage.getItem('brawl_userId');
+            if (savedId) {
+                currentUserId = savedId;
                 isLoggedIn = true;
                 document.getElementById('authOverlay').style.display = 'none';
                 loadProfile();
-                loadVouchers();
                 render();
             } else {
                 document.getElementById('authOverlay').style.display = 'flex';
@@ -1124,23 +1160,26 @@
             if (!name || !pass) { err.textContent = '❌ Заполните все поля!';
                 err.style.display = 'block'; return; }
 
-            const users = DB.get('users') || {};
-            const uid = users[name];
-            if (!uid) { err.textContent = '❌ Пользователь не найден!';
-                err.style.display = 'block'; return; }
+            db.ref('usernames/' + name).once('value').then(snap => {
+                const uid = snap.val();
+                if (!uid) { err.textContent = '❌ Пользователь не найден!';
+                    err.style.display = 'block'; return; }
 
-            const passwords = DB.get('passwords') || {};
-            if (passwords[uid] !== pass) { err.textContent = '❌ Неверный пароль!';
-                err.style.display = 'block'; return; }
+                db.ref('passwords/' + uid).once('value').then(ps => {
+                    if (ps.val() !== pass) { err.textContent = '❌ Неверный пароль!';
+                        err.style.display = 'block'; return; }
 
-            currentUserId = uid;
-            isLoggedIn = true;
-            DB.set('brawl_userId', uid);
-            ok.textContent = '✅ Вход выполнен!';
-            ok.style.display = 'block';
-            loadProfile();
-            setTimeout(() => { document.getElementById('authOverlay').style.display = 'none';
-                render(); }, 500);
+                    currentUserId = uid;
+                    isLoggedIn = true;
+                    localStorage.setItem('brawl_userId', uid);
+                    ok.textContent = '✅ Вход выполнен!';
+                    ok.style.display = 'block';
+                    loadProfile();
+                    setTimeout(() => { document.getElementById('authOverlay').style.display = 'none';
+                        render(); }, 500);
+                });
+            }).catch(() => { err.textContent = '❌ Ошибка сети!';
+                err.style.display = 'block'; });
         });
 
         document.getElementById('registerBtn').addEventListener('click', function() {
@@ -1158,63 +1197,57 @@
             if (pass.length < 4) { err.textContent = '❌ Пароль минимум 4 символа!';
                 err.style.display = 'block'; return; }
 
-            const users = DB.get('users') || {};
-            if (users[name]) { err.textContent = '❌ Имя занято!';
-                err.style.display = 'block'; return; }
+            db.ref('usernames/' + name).once('value').then(snap => {
+                if (snap.exists()) { err.textContent = '❌ Имя занято!';
+                    err.style.display = 'block'; return; }
 
-            const uid = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-            users[name] = uid;
-            DB.set('users', users);
+                const uid = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+                db.ref('usernames/' + name).set(uid);
+                db.ref('passwords/' + uid).set(pass);
 
-            const passwords = DB.get('passwords') || {};
-            passwords[uid] = pass;
-            DB.set('passwords', passwords);
+                const newProfile = {
+                    name,
+                    gems: 50,
+                    coins: 100,
+                    brawlers: [
+                        { name: 'Шелли', level: 1 },
+                        { name: 'Кольт', level: 1 }
+                    ],
+                    trophies: 0,
+                    banned: false,
+                    createdAt: Date.now()
+                };
+                db.ref('players/' + uid).set(newProfile);
 
-            const newProfile = {
-                name,
-                gems: 50,
-                coins: 100,
-                brawlers: [
-                    { name: 'Шелли', level: 1 },
-                    { name: 'Кольт', level: 1 }
-                ],
-                trophies: 0
-            };
-            const players = DB.get('players') || {};
-            players[uid] = newProfile;
-            DB.set('players', players);
-
-            currentUserId = uid;
-            isLoggedIn = true;
-            DB.set('brawl_userId', uid);
-            profile = newProfile;
-            ok.textContent = '✅ Аккаунт создан!';
-            ok.style.display = 'block';
-            setTimeout(() => { document.getElementById('authOverlay').style.display = 'none';
-                render(); }, 500);
+                currentUserId = uid;
+                isLoggedIn = true;
+                localStorage.setItem('brawl_userId', uid);
+                profile = newProfile;
+                ok.textContent = '✅ Аккаунт создан!';
+                ok.style.display = 'block';
+                setTimeout(() => { document.getElementById('authOverlay').style.display = 'none';
+                    render(); }, 500);
+            }).catch(() => { err.textContent = '❌ Ошибка сети!';
+                err.style.display = 'block'; });
         });
 
         function loadProfile() {
             if (!currentUserId) return;
-            const players = DB.get('players') || {};
-            if (players[currentUserId]) {
-                profile = players[currentUserId];
-                render();
-            }
+            db.ref('players/' + currentUserId).once('value').then(snap => {
+                if (snap.val()) {
+                    profile = snap.val();
+                    if (profile.banned) {
+                        alert('⛔ Ваш аккаунт забанен!');
+                        logout();
+                    }
+                    render();
+                }
+            });
         }
 
         function saveProfile() {
-            const players = DB.get('players') || {};
-            players[currentUserId] = profile;
-            DB.set('players', players);
-        }
-
-        function loadVouchers() {
-            vouchers = DB.get('vouchers') || [];
-        }
-
-        function saveVouchers() {
-            DB.set('vouchers', vouchers);
+            if (!currentUserId) return;
+            db.ref('players/' + currentUserId).set(profile);
         }
 
         // ============================================================
@@ -1222,10 +1255,10 @@
         // ============================================================
         window.logout = function() {
             if (confirm('Выйти из аккаунта?')) {
-                DB.remove('brawl_userId');
+                localStorage.removeItem('brawl_userId');
                 currentUserId = null;
                 isLoggedIn = false;
-                profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0 };
+                profile = { name: '', gems: 0, coins: 0, brawlers: [], trophies: 0, banned: false };
                 document.getElementById('authOverlay').style.display = 'flex';
                 render();
             }
@@ -1260,25 +1293,45 @@
         };
 
         // ============================================================
-        //  МАГАЗИН
+        //  МАГАЗИН (Firebase)
         // ============================================================
-        const SHOP_ITEMS = [
-            { id: 1, name: '50 💎 Гемов', desc: 'Пополните запас гемов', icon: '💎', cost: 0, reward: { type: 'gems',
-                    amount: 50 }, free: false },
-            { id: 2, name: '100 🪙 Монет', desc: 'Для прокачки бойцов', icon: '🪙', cost: 0, reward: { type: 'coins',
-                    amount: 100 }, free: false },
-            { id: 3, name: 'Боец: Спайк', desc: 'Мифический боец', icon: '🌵', cost: 149, reward: { type: 'brawler',
-                    name: 'Спайк' }, free: false },
-            { id: 4, name: 'Боец: Леон', desc: 'Мифический боец', icon: '🦎', cost: 149, reward: { type: 'brawler',
-                    name: 'Леон' }, free: false },
-            { id: 5, name: 'Боец: Динамайк', desc: 'Легендарный боец', icon: '💣', cost: 299, reward: { type: 'brawler',
-                    name: 'Динамайк' }, free: false },
-            { id: 6, name: '🎁 БЕСПЛАТНО!', desc: '50 гемов в подарок', icon: '🎁', cost: 0, reward: { type: 'gems',
-                    amount: 50 }, free: true }
-        ];
+        let shopItems = [];
+
+        function loadShop() {
+            db.ref('shop').on('value', snap => {
+                const data = snap.val();
+                if (data) {
+                    shopItems = data;
+                    render();
+                }
+            });
+        }
+
+        // Добавляем товары в Firebase при первом запуске
+        function initShop() {
+            db.ref('shop').once('value', snap => {
+                if (!snap.val()) {
+                    const defaultShop = [
+                        { id: 1, name: '50 💎 Гемов', desc: 'Пополните запас гемов', icon: '💎', cost: 0, reward: { type: 'gems',
+                                amount: 50 }, free: false },
+                        { id: 2, name: '100 🪙 Монет', desc: 'Для прокачки бойцов', icon: '🪙', cost: 0, reward: { type: 'coins',
+                                amount: 100 }, free: false },
+                        { id: 3, name: 'Боец: Спайк', desc: 'Мифический боец', icon: '🌵', cost: 149, reward: { type: 'brawler',
+                                name: 'Спайк' }, free: false },
+                        { id: 4, name: 'Боец: Леон', desc: 'Мифический боец', icon: '🦎', cost: 149, reward: { type: 'brawler',
+                                name: 'Леон' }, free: false },
+                        { id: 5, name: 'Боец: Динамайк', desc: 'Легендарный боец', icon: '💣', cost: 299, reward: { type: 'brawler',
+                                name: 'Динамайк' }, free: false },
+                        { id: 6, name: '🎁 БЕСПЛАТНО!', desc: '50 гемов в подарок', icon: '🎁', cost: 0, reward: { type: 'gems',
+                                amount: 50 }, free: true }
+                    ];
+                    db.ref('shop').set(defaultShop);
+                }
+            });
+        }
 
         window.buyItem = function(itemId) {
-            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            const item = shopItems.find(i => i.id === itemId);
             if (!item) return alert('Товар не найден!');
 
             if (!item.free && profile.gems < item.cost) {
@@ -1311,8 +1364,20 @@
         };
 
         // ============================================================
-        //  ВАУЧЕРЫ
+        //  ВАУЧЕРЫ (Firebase)
         // ============================================================
+        let vouchers = [];
+
+        function loadVouchers() {
+            db.ref('vouchers').on('value', snap => {
+                const data = snap.val();
+                if (data) {
+                    vouchers = Object.values(data);
+                    render();
+                }
+            });
+        }
+
         window.generateVoucher = function() {
             const rewardType = document.getElementById('voucherRewardType').value;
             const amount = parseInt(document.getElementById('voucherAmount').value) || 0;
@@ -1335,10 +1400,9 @@
                 usedBy: [],
                 createdAt: Date.now()
             };
-            vouchers.push(voucher);
-            saveVouchers();
-            alert(`✅ Ваучер создан!\nКод: ${code}\nНаграда: ${rewardType === 'gems' ? '💎 ' + amount : rewardType === 'coins' ? '🪙 ' + amount : '👤 ' + brawlerName}\nАктиваций: ${maxUses}`);
 
+            db.ref('vouchers/' + code).set(voucher);
+            alert(`✅ Ваучер создан!\nКод: ${code}`);
             document.getElementById('voucherResult').innerHTML = `
                 <div class="voucher-code">
                     <span class="code">${code}</span>
@@ -1359,97 +1423,93 @@
             const code = codeInput.value.trim().toUpperCase();
             if (!code) return alert('Введите код!');
 
-            const voucher = vouchers.find(v => v.code === code);
-            if (!voucher) return alert('❌ Неверный код!');
-            if (voucher.maxUses <= 0) return alert('❌ Ваучер уже использован!');
-            if (voucher.usedBy && voucher.usedBy.includes(currentUserId)) {
-                return alert('⚠️ Вы уже активировали этот ваучер!');
-            }
-
-            if (!voucher.usedBy) voucher.usedBy = [];
-            voucher.usedBy.push(currentUserId);
-            voucher.maxUses -= 1;
-            if (voucher.maxUses <= 0) voucher.used = true;
-
-            if (voucher.rewardType === 'gems') {
-                profile.gems += voucher.amount;
-                alert(`✅ +${voucher.amount} 💎 Гемов!`);
-            } else if (voucher.rewardType === 'coins') {
-                profile.coins += voucher.amount;
-                alert(`✅ +${voucher.amount} 🪙 Монет!`);
-            } else if (voucher.rewardType === 'brawler') {
-                if (profile.brawlers.some(b => b.name === voucher.brawlerName)) {
-                    alert(`⚠️ У вас уже есть ${voucher.brawlerName}!`);
-                    return;
+            db.ref('vouchers/' + code).once('value').then(snap => {
+                const voucher = snap.val();
+                if (!voucher) return alert('❌ Неверный код!');
+                if (voucher.maxUses <= 0) return alert('❌ Ваучер уже использован!');
+                if (voucher.usedBy && voucher.usedBy.includes(currentUserId)) {
+                    return alert('⚠️ Вы уже активировали этот ваучер!');
                 }
-                profile.brawlers.push({ name: voucher.brawlerName, level: 1 });
-                alert(`✅ Получен боец ${voucher.brawlerName}!`);
-            }
 
-            saveProfile();
-            saveVouchers();
-            codeInput.value = '';
-            render();
-            alert(`🎉 Ваучер активирован! Осталось ${voucher.maxUses} активаций.`);
+                if (!voucher.usedBy) voucher.usedBy = [];
+                voucher.usedBy.push(currentUserId);
+                voucher.maxUses -= 1;
+                if (voucher.maxUses <= 0) voucher.used = true;
+
+                if (voucher.rewardType === 'gems') {
+                    profile.gems += voucher.amount;
+                    alert(`✅ +${voucher.amount} 💎 Гемов!`);
+                } else if (voucher.rewardType === 'coins') {
+                    profile.coins += voucher.amount;
+                    alert(`✅ +${voucher.amount} 🪙 Монет!`);
+                } else if (voucher.rewardType === 'brawler') {
+                    if (profile.brawlers.some(b => b.name === voucher.brawlerName)) {
+                        alert(`⚠️ У вас уже есть ${voucher.brawlerName}!`);
+                        return;
+                    }
+                    profile.brawlers.push({ name: voucher.brawlerName, level: 1 });
+                    alert(`✅ Получен боец ${voucher.brawlerName}!`);
+                }
+
+                db.ref('vouchers/' + code).set(voucher);
+                saveProfile();
+                codeInput.value = '';
+                render();
+                alert(`🎉 Ваучер активирован! Осталось ${voucher.maxUses} активаций.`);
+            });
         };
 
         // ============================================================
-        //  ЧАТ
+        //  ЧАТ (Firebase)
         // ============================================================
         window.sendMessage = function() {
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
             if (!text) return;
-            const msg = {
-                id: Date.now(),
+
+            db.ref('chat').push({
+                playerId: currentUserId,
                 name: profile.name || 'Игрок',
                 text: text,
-                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-                own: true
-            };
-            chatMessages.push(msg);
-            DB.set('chat_messages', chatMessages);
+                timestamp: Date.now()
+            });
             input.value = '';
-            renderChat();
         };
 
         function loadChat() {
-            chatMessages = DB.get('chat_messages') || [];
-            if (chatMessages.length === 0) {
-                chatMessages = [
-                    { id: 1, name: 'Система', text: 'Добро пожаловать в чат!', time: '12:00', own: false },
-                    { id: 2, name: 'Игрок1', text: 'Кто хочет бой?', time: '12:01', own: false }
-                ];
-                DB.set('chat_messages', chatMessages);
-            }
-            renderChat();
-        }
+            db.ref('chat').orderByChild('timestamp').limitToLast(50).on('value', snap => {
+                const messages = snap.val();
+                const container = document.getElementById('chatMessages');
+                if (!container) return;
 
-        function renderChat() {
-            const container = document.getElementById('chatMessages');
-            if (!container) return;
-            if (!chatMessages.length) {
-                container.innerHTML = '<div class="empty-state"><span>💬</span>Нет сообщений</div>';
-                return;
-            }
-            let html = '';
-            chatMessages.slice(-50).forEach(msg => {
-                html += `
-                    <div class="chat-message ${msg.own ? 'own' : ''}">
-                        <div class="msg-header">
-                            <span class="msg-name">${msg.name}</span>
-                            <span class="msg-time">${msg.time || '12:00'}</span>
+                if (!messages) {
+                    container.innerHTML = '<div class="empty-state"><span>💬</span>Нет сообщений</div>';
+                    return;
+                }
+
+                let html = '';
+                const msgs = Object.values(messages).reverse();
+                msgs.forEach(msg => {
+                    const isOwn = msg.playerId === currentUserId;
+                    const time = new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit',
+                        minute: '2-digit' });
+                    html += `
+                        <div class="chat-message ${isOwn ? 'own' : ''}">
+                            <div class="msg-header">
+                                <span class="msg-name">${msg.name || 'Аноним'}</span>
+                                <span class="msg-time">${time}</span>
+                            </div>
+                            <div class="msg-text">${msg.text}</div>
                         </div>
-                        <div class="msg-text">${msg.text}</div>
-                    </div>
-                `;
+                    `;
+                });
+                container.innerHTML = html;
+                container.scrollTop = container.scrollHeight;
             });
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
         }
 
         // ============================================================
-        //  БОЕВАЯ СИСТЕМА
+        //  БОЕВАЯ СИСТЕМА (Firebase)
         // ============================================================
 
         window.selectBrawlerForBattle = function(name) {
@@ -1463,8 +1523,39 @@
 
         window.findBattle = function() {
             if (!selectedBrawler) { alert('Выберите бойца!'); return; }
+
             battleState = 'searching';
             render();
+
+            const searchData = {
+                playerId: currentUserId,
+                name: profile.name || 'Игрок',
+                brawler: selectedBrawler,
+                level: profile.brawlers.find(b => b.name === selectedBrawler)?.level || 1,
+                timestamp: Date.now(),
+                status: 'searching'
+            };
+
+            searchRef = db.ref('search').push(searchData);
+
+            const searchListener = db.ref('search');
+            searchListener.on('value', function(snap) {
+                const searches = snap.val();
+                if (!searches) return;
+
+                const other = Object.keys(searches).find(key => {
+                    return searches[key].playerId !== currentUserId && searches[key].status === 'searching';
+                });
+
+                if (other) {
+                    const opponent = searches[other];
+                    db.ref('search/' + other).remove();
+                    if (searchRef) db.ref('search/' + searchRef.key).remove();
+                    searchListener.off();
+                    if (botTimeout) clearTimeout(botTimeout);
+                    startBattle(opponent);
+                }
+            });
 
             botTimeout = setTimeout(() => {
                 if (battleState === 'searching') {
@@ -1477,19 +1568,34 @@
                         level: Math.floor(Math.random() * 5) + 1,
                         isBot: true
                     };
+                    if (searchRef) db.ref('search/' + searchRef.key).remove();
+                    searchListener.off();
                     startBattle(bot);
                 }
-            }, 2000);
+            }, 3000);
         };
 
         window.cancelSearch = function() {
+            if (searchRef) { db.ref('search/' + searchRef.key).remove();
+                searchRef = null; }
+            db.ref('search').off();
             if (botTimeout) clearTimeout(botTimeout);
             battleState = 'select';
             render();
         };
 
         window.resetBattle = function() {
+            if (searchRef) { db.ref('search/' + searchRef.key).remove();
+                searchRef = null; }
+            db.ref('search').off();
             if (botTimeout) clearTimeout(botTimeout);
+            if (battleId) {
+                db.ref('battles/' + battleId).off();
+                if (moveListener) { moveListener.off();
+                    moveListener = null; }
+                if (battleListener) { battleListener.off();
+                    battleListener = null; }
+            }
             if (botInterval) { clearInterval(botInterval);
                 botInterval = null; }
             battleState = 'select';
@@ -1531,12 +1637,38 @@
                 isBot: opponent.isBot || false
             };
 
+            db.ref('battles/' + battleId).set(battleData);
+
             battleState = 'fighting';
-            render();
+
+            // Слушаем бой
+            battleListener = db.ref('battles/' + battleId);
+            battleListener.on('value', snap => {
+                const data = snap.val();
+                if (data) {
+                    battleData = data;
+                    if (battleData.finished) {
+                        endBattle();
+                    }
+                    render();
+                }
+            });
+
+            // Слушаем ходы
+            moveListener = db.ref('battles/' + battleId + '/moves');
+            moveListener.on('child_added', snap => {
+                const move = snap.val();
+                if (move.playerId === currentUserId) return;
+                if (battleData && !battleData.finished) {
+                    processMove(move);
+                }
+            });
 
             if (opponent.isBot) {
                 startBot();
             }
+
+            render();
         }
 
         function startBot() {
@@ -1565,7 +1697,7 @@
                 else action = Math.random() < 0.6 ? 'attack' : 'defend';
 
                 const move = { action: action, playerId: isP1 ? battleData.p1Id : battleData.p2Id };
-                processMove(move);
+                db.ref('battles/' + battleId + '/moves').push(move);
             }, 1500);
         }
 
@@ -1662,6 +1794,7 @@
                     setTimeout(() => alert('💀 Поражение... Попробуйте снова!'), 300);
                 }
 
+                db.ref('battles/' + battleId).set(battleData);
                 if (botInterval) { clearInterval(botInterval);
                     botInterval = null; }
                 render();
@@ -1669,6 +1802,18 @@
             }
 
             battleData.turn = isP1 ? 'p2' : 'p1';
+            db.ref('battles/' + battleId).set(battleData);
+            render();
+        }
+
+        function endBattle() {
+            battleState = 'result';
+            if (battleListener) { battleListener.off();
+                battleListener = null; }
+            if (moveListener) { moveListener.off();
+                moveListener = null; }
+            if (botInterval) { clearInterval(botInterval);
+                botInterval = null; }
             render();
         }
 
@@ -1686,8 +1831,8 @@
                 if (cooldown > 0) { alert(`⏳ Перезарядка: ${cooldown} ходов`); return; }
             }
 
-            const move = { action: action, playerId: currentUserId };
-            processMove(move);
+            const move = { action: action, playerId: currentUserId, timestamp: Date.now() };
+            db.ref('battles/' + battleId + '/moves').push(move);
         };
 
         // ============================================================
@@ -1711,6 +1856,9 @@
             document.querySelectorAll('.menu button').forEach(b => {
                 b.classList.toggle('active', b.dataset.tab === tab);
             });
+
+            // Обновляем статус
+            document.getElementById('statusBadge').textContent = '☁️ Онлайн';
         }
 
         // ===== БОЙЦЫ =====
@@ -1787,25 +1935,29 @@
             const content = document.getElementById('content');
             let html = `<div class="shop-grid">`;
 
-            SHOP_ITEMS.forEach(item => {
-                const isBrawler = item.reward.type === 'brawler';
-                const hasBrawler = isBrawler && profile.brawlers.some(b => b.name === item.reward.name);
-                const isFree = item.free;
+            if (!shopItems || !shopItems.length) {
+                html += '<div class="empty-state"><span>🛒</span>Загрузка товаров...</div>';
+            } else {
+                shopItems.forEach(item => {
+                    const isBrawler = item.reward.type === 'brawler';
+                    const hasBrawler = isBrawler && profile.brawlers.some(b => b.name === item.reward.name);
+                    const isFree = item.free;
 
-                html += `
-                    <div class="shop-item">
-                        <div class="icon-box">${item.icon}</div>
-                        <div class="info">
-                            <div class="name">${item.name} ${isFree ? '🎁' : ''}</div>
-                            <div class="desc">${item.desc}</div>
-                            <div class="reward">${isBrawler ? '👤 Боец' : item.reward.type === 'gems' ? '💎 ' + item.reward.amount : '🪙 ' + item.reward.amount}</div>
+                    html += `
+                        <div class="shop-item">
+                            <div class="icon-box">${item.icon}</div>
+                            <div class="info">
+                                <div class="name">${item.name} ${isFree ? '🎁' : ''}</div>
+                                <div class="desc">${item.desc}</div>
+                                <div class="reward">${isBrawler ? '👤 Боец' : item.reward.type === 'gems' ? '💎 ' + item.reward.amount : '🪙 ' + item.reward.amount}</div>
+                            </div>
+                            <button class="buy-btn" onclick="buyItem(${item.id})" ${hasBrawler ? 'disabled' : ''}>
+                                ${hasBrawler ? '✅' : isFree ? '🎁 Получить' : item.cost > 0 ? `${item.cost} 💎` : 'Купить'}
+                            </button>
                         </div>
-                        <button class="buy-btn" onclick="buyItem(${item.id})" ${hasBrawler ? 'disabled' : ''}>
-                            ${hasBrawler ? '✅' : isFree ? '🎁 Получить' : item.cost > 0 ? `${item.cost} 💎` : 'Купить'}
-                        </button>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            }
 
             html += `</div>`;
 
@@ -1821,11 +1973,11 @@
                 </div>
             `;
 
-            // Генерация ваучера (только для админа, но для простоты оставим)
+            // Генерация ваучера
             html += `
                 <div class="voucher-section" style="border-color:#d43f3f44;">
                     <h4 style="color:#d43f3f;margin-bottom:8px;">🔑 Создать ваучер (Админ)</h4>
-                    <select id="voucherRewardType" style="width:100%;padding:8px;border-radius:40px;background:#1a1a3a;border:1px solid #555;color:#eee;margin-bottom:6px;">
+                    <select id="voucherRewardType">
                         <option value="gems">💎 Гемы</option>
                         <option value="coins">🪙 Монеты</option>
                         <option value="brawler">👤 Боец</option>
@@ -1834,7 +1986,7 @@
                         <input type="number" id="voucherAmount" placeholder="Количество" value="50" style="flex:1;">
                         <input type="text" id="voucherBrawlerName" placeholder="Имя бойца" style="flex:1;">
                     </div>
-                    <input type="number" id="voucherMaxUses" placeholder="Активаций" value="1" style="margin-top:6px;">
+                    <input type="number" id="voucherMaxUses" placeholder="Активаций" value="1">
                     <button class="btn-primary" style="padding:8px 16px;font-size:13px;margin-top:6px;" onclick="generateVoucher()">🎟️ Создать ваучер</button>
                 </div>
             `;
@@ -1865,6 +2017,10 @@
                     html +=
                         `<div class="brawler-card ${sel}" onclick="selectBrawlerForBattle('${b.name}')">${icon} ${b.name} (${b.level}⚡)</div>`;
                 });
+
+                if (!profile.brawlers.length) {
+                    html += '<div style="color:#888;padding:10px;">Купите бойца в магазине!</div>';
+                }
 
                 html += `
                         </div>
@@ -2069,6 +2225,16 @@
                     if (botTimeout) clearTimeout(botTimeout);
                     if (botInterval) { clearInterval(botInterval);
                         botInterval = null; }
+                    if (searchRef) { db.ref('search/' + searchRef.key).remove();
+                        searchRef = null; }
+                    db.ref('search').off();
+                    if (battleId) {
+                        db.ref('battles/' + battleId).off();
+                        if (moveListener) { moveListener.off();
+                            moveListener = null; }
+                        if (battleListener) { battleListener.off();
+                            battleListener = null; }
+                    }
                     battleState = 'select';
                     battleData = null;
                     battleId = null;
@@ -2085,12 +2251,16 @@
         // ============================================================
         //  ЗАПУСК
         // ============================================================
+        loadShop();
+        initShop();
+        loadVouchers();
         checkSession();
         render();
 
-        console.log('🚀 Brawl Stars полная версия запущена!');
+        console.log('🚀 Brawl Stars с Firebase запущен!');
         console.log('📊 Доступно бойцов:', ALL_BRAWLERS.length);
         console.log('👤 Игрок:', profile.name || 'Не авторизован');
+        console.log('🔥 Firebase статус:', firebase.apps.length ? '✅ Подключен' : '❌ Не подключен');
     </script>
 </body>
 </html>
