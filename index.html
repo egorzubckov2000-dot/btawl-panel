@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Brawl Stars</title>
-    <!-- ПРАВИЛЬНЫЕ ССЫЛКИ НА FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
@@ -686,11 +685,6 @@
         .battle-player .damage-float.heal-float {
             color: #2ecc71;
             text-shadow: 0 0 20px rgba(46, 204, 113, 0.8);
-        }
-        .battle-player .damage-float.shield-float {
-            color: #4fc3f7;
-            text-shadow: 0 0 20px rgba(79, 195, 247, 0.8);
-            font-size: 28px;
         }
         @keyframes damageFloat {
             0% {
@@ -1569,6 +1563,7 @@
 
         let battleState = 'select';
         let selectedBrawler = null;
+        let selectedBrawlerStats = null;
         let battleData = null;
         let battleId = null;
         let searchRef = null;
@@ -1918,8 +1913,9 @@
         }
 
         // ============================================================
-        //  БОЕВАЯ СИСТЕМА
+        //  БОЕВАЯ СИСТЕМА - ПОЛНОСТЬЮ ПЕРЕРАБОТАНА
         // ============================================================
+
         window.upgradeBrawler = function(brawlerName) {
             if (checkBan() || !currentUserId) return;
             const brawler = brawlers.find(b => b.name === brawlerName);
@@ -1939,11 +1935,19 @@
             alert(`✅ ${brawlerName} → ${playerBrawler.level} ур.!`);
         }
 
+        // ===== ВЫБОР БОЙЦА ДЛЯ БОЯ =====
         window.selectBrawlerForBattle = function(name) {
+            if (!profile.brawlers.some(b => b.name === name)) {
+                alert('У вас нет этого бойца!');
+                return;
+            }
             selectedBrawler = name;
+            const b = profile.brawlers.find(b => b.name === name);
+            selectedBrawlerStats = getBrawlerStats(name, b.level);
             render();
         }
 
+        // ===== СБРОС БОЯ =====
         window.resetBattle = function() {
             if (searchRef) {
                 db.ref('search/' + searchRef.key).remove();
@@ -1970,9 +1974,11 @@
             battleData = null;
             battleId = null;
             selectedBrawler = null;
+            selectedBrawlerStats = null;
             render();
         }
 
+        // ===== ПОИСК БОЯ =====
         window.findBattle = function() {
             if (checkBan() || !currentUserId) return;
             if (!selectedBrawler) {
@@ -2083,40 +2089,49 @@
                 isBot: opponentData.isBot || false
             };
 
-            db.ref('battles/' + battleId).set(battleData);
-
-            battleState = 'fighting';
-
-            battleListener = db.ref('battles/' + battleId);
-            battleListener.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    const oldData = battleData ? { ...battleData } : null;
-                    battleData = data;
-                    if (battleData.finished) {
-                        endBattle();
-                    }
+            // Сохраняем бой в Firebase
+            db.ref('battles/' + battleId).set(battleData)
+                .then(() => {
+                    battleState = 'fighting';
                     render();
-                    if (oldData && !battleData.finished) {
-                        animateHPChanges(oldData, battleData);
+
+                    // СЛУШАЕМ ИЗМЕНЕНИЯ БОЯ
+                    battleListener = db.ref('battles/' + battleId);
+                    battleListener.on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            const oldData = battleData ? { ...battleData } : null;
+                            battleData = data;
+                            if (battleData.finished) {
+                                endBattle();
+                            }
+                            render();
+                            // Анимации при изменении HP
+                            if (oldData && !battleData.finished) {
+                                animateHPChanges(oldData, battleData);
+                            }
+                        }
+                    });
+
+                    // СЛУШАЕМ ХОДЫ
+                    moveListener = db.ref('battles/' + battleId + '/moves');
+                    moveListener.on('child_added', (snapshot) => {
+                        const move = snapshot.val();
+                        if (move.playerId === currentUserId) return;
+                        if (battleData && !battleData.finished) {
+                            processMove(move);
+                        }
+                    });
+
+                    if (opponentData.isBot) {
+                        startBotAI();
                     }
-                }
-            });
-
-            moveListener = db.ref('battles/' + battleId + '/moves');
-            moveListener.on('child_added', (snapshot) => {
-                const move = snapshot.val();
-                if (move.playerId === currentUserId) return;
-                if (battleData && !battleData.finished) {
-                    processMove(move);
-                }
-            });
-
-            if (opponentData.isBot) {
-                startBotAI();
-            }
-
-            render();
+                })
+                .catch(err => {
+                    alert('Ошибка создания боя: ' + err.message);
+                    battleState = 'select';
+                    render();
+                });
         }
 
         // ===== АНИМАЦИИ =====
@@ -2234,21 +2249,24 @@
             const isPlayerTurn = isPlayer1 ? battleData.player1Id === move.playerId : battleData.player2Id === move.playerId;
             if (!isPlayerTurn) return;
 
+            // Обновляем кулдауны
             if (battleData.player1Cooldown > 0) battleData.player1Cooldown--;
             if (battleData.player2Cooldown > 0) battleData.player2Cooldown--;
 
             const attackerName = isPlayer1 ? battleData.player1Name : battleData.player2Name;
             const defenderName = isPlayer1 ? battleData.player2Name : battleData.player1Name;
+            const attackerDamage = isPlayer1 ? battleData.player1Damage : battleData.player2Damage;
             let damage = 0;
             let isCrit = false;
 
             if (move.action === 'attack') {
-                const baseDamage = isPlayer1 ? battleData.player1Damage : battleData.player2Damage;
                 const variance = 0.8 + Math.random() * 0.4;
                 isCrit = Math.random() < 0.25;
-                damage = Math.round(baseDamage * variance * (isCrit ? 1.5 : 1));
+                damage = Math.round(attackerDamage * variance * (isCrit ? 1.5 : 1));
 
-                if (isPlayer1 ? battleData.player2Shield : battleData.player1Shield) {
+                // Проверка щита
+                const hasShield = isPlayer1 ? battleData.player2Shield : battleData.player1Shield;
+                if (hasShield) {
                     damage = Math.round(damage * 0.5);
                     if (isPlayer1) battleData.player2Shield = false;
                     else battleData.player1Shield = false;
@@ -2279,15 +2297,17 @@
                 if (cooldown > 0) {
                     battleData.log.push(`⏳ ${attackerName} — способность на перезарядке!`);
                 } else {
+                    // Устанавливаем кулдаун
                     if (isPlayer1) battleData.player1Cooldown = 2;
                     else battleData.player2Cooldown = 2;
 
-                    const baseDamage = isPlayer1 ? battleData.player1Damage : battleData.player2Damage;
                     const variance = 0.9 + Math.random() * 0.2;
                     isCrit = Math.random() < 0.3;
-                    damage = Math.round(baseDamage * 2.5 * variance * (isCrit ? 1.5 : 1));
+                    damage = Math.round(attackerDamage * 2.5 * variance * (isCrit ? 1.5 : 1));
 
-                    if (isPlayer1 ? battleData.player2Shield : battleData.player1Shield) {
+                    // Проверка щита
+                    const hasShield = isPlayer1 ? battleData.player2Shield : battleData.player1Shield;
+                    if (hasShield) {
                         damage = Math.round(damage * 0.5);
                         if (isPlayer1) battleData.player2Shield = false;
                         else battleData.player1Shield = false;
@@ -2304,6 +2324,7 @@
                 }
             }
 
+            // Проверяем окончание боя
             if (battleData.player1HP <= 0 || battleData.player2HP <= 0) {
                 battleData.finished = true;
                 battleData.winner = battleData.player1HP > 0 ? 'player1' : 'player2';
@@ -2326,11 +2347,13 @@
                 return;
             }
 
+            // Меняем ход
             battleData.currentTurn = isPlayer1 ? 'player2' : 'player1';
             db.ref('battles/' + battleId).set(battleData);
             render();
         }
 
+        // ===== ЗАВЕРШЕНИЕ БОЯ =====
         function endBattle() {
             battleState = 'result';
             if (battleListener) {
@@ -2346,6 +2369,7 @@
             render();
         }
 
+        // ===== ХОД ИГРОКА =====
         window.makeMove = function(action) {
             if (!battleData) {
                 alert('❌ Нет данных о бое!');
@@ -2373,6 +2397,7 @@
                 }
             }
 
+            // Блокируем кнопки
             document.querySelectorAll('.battle-actions button').forEach(b => b.disabled = true);
 
             const move = { action: action, playerId: currentUserId, timestamp: Date.now() };
@@ -2555,27 +2580,39 @@
             if (battleState === 'select') {
                 const ownedBrawlers = profile.brawlers || [];
                 html += `
-                            <div class="brawl-select">
-                                <h3 style="color:#f5c842;margin-bottom:8px;">Выбери бойца для PvP</h3>
-                                <div class="brawler-grid">
-                                    ${ownedBrawlers.length ?
-                                        ownedBrawlers.map(pb => {
-                                            const icon = ALL_BRAWLERS.find(b => b.name === pb.name)?.icon || '⚡';
-                                            return `
-                                                <div class="brawler-card ${selectedBrawler === pb.name ? 'selected' : ''}" onclick="selectBrawlerForBattle('${pb.name}')">
-                                                    ${icon} ${pb.name} (${pb.level || 1}⚡)
-                                                </div>
-                                            `;
-                                        }).join('') :
-                                        '<div style="color:#888;padding:20px;">Купите бойца в магазине!</div>'
-                                    }
-                                </div>
-                                ${selectedBrawler ? `<button class="back-btn" onclick="findBattle()">🔍 НАЙТИ БОЙ</button>` : ''}
-                                <div style="text-align:center;color:#555;font-size:12px;margin-top:8px;">
-                                    👥 Если никто не найдётся — бой с ботом
-                                </div>
+                        <div class="brawl-select">
+                            <h3 style="color:#f5c842;margin-bottom:8px;">Выбери бойца для PvP</h3>
+                            <div class="brawler-grid">
+                                ${ownedBrawlers.length ?
+                                    ownedBrawlers.map(pb => {
+                                        const icon = ALL_BRAWLERS.find(b => b.name === pb.name)?.icon || '⚡';
+                                        const stats = getBrawlerStats(pb.name, pb.level);
+                                        return `
+                                            <div class="brawler-card ${selectedBrawler === pb.name ? 'selected' : ''}" onclick="selectBrawlerForBattle('${pb.name}')">
+                                                ${icon} ${pb.name} (${pb.level}⚡)
+                                                <br><span style="font-size:10px;color:#888;">⚔️${stats.damage} ❤️${stats.hp}</span>
+                                            </div>
+                                        `;
+                                    }).join('') :
+                                    '<div style="color:#888;padding:20px;">Купите бойца в магазине!</div>'
+                                }
                             </div>
-                        `;
+                            ${selectedBrawler && selectedBrawlerStats ? `
+                                <div style="background:#0f0f2a;border-radius:16px;padding:12px;margin:10px 0;border:1px solid #f5c84233;">
+                                    <div style="font-size:18px;font-weight:700;color:#f5c842;">${selectedBrawler}</div>
+                                    <div style="display:flex;justify-content:space-around;margin-top:6px;">
+                                        <div><span style="color:#888;">⚔️ Урон</span><br><span style="color:#ff6b6b;font-size:20px;font-weight:700;">${selectedBrawlerStats.damage}</span></div>
+                                        <div><span style="color:#888;">❤️ HP</span><br><span style="color:#51cf66;font-size:20px;font-weight:700;">${selectedBrawlerStats.hp}</span></div>
+                                        <div><span style="color:#888;">⚡ Уровень</span><br><span style="color:#f5c842;font-size:20px;font-weight:700;">${selectedBrawlerStats.level || 1}</span></div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${selectedBrawler ? `<button class="back-btn" onclick="findBattle()">🔍 НАЙТИ БОЙ</button>` : ''}
+                            <div style="text-align:center;color:#555;font-size:12px;margin-top:8px;">
+                                👥 Если никто не найдётся — бой с ботом
+                            </div>
+                        </div>
+                    `;
                 content.innerHTML = html;
                 menuBtns.forEach(b => b.classList.remove('active'));
                 document.querySelector('[data-tab="battle"]').classList.add('active');
@@ -2584,13 +2621,13 @@
 
             if (battleState === 'searching') {
                 html += `
-                            <div class="pvp-search">
-                                <div class="spinner"></div>
-                                <h3>🔍 Поиск противника...</h3>
-                                <p>Ищем игрока для боя</p>
-                                <button class="cancel-btn" onclick="cancelSearch()">❌ Отмена</button>
-                            </div>
-                        `;
+                        <div class="pvp-search">
+                            <div class="spinner"></div>
+                            <h3>🔍 Поиск противника...</h3>
+                            <p>Ищем игрока для боя</p>
+                            <button class="cancel-btn" onclick="cancelSearch()">❌ Отмена</button>
+                        </div>
+                    `;
                 content.innerHTML = html;
                 menuBtns.forEach(b => b.classList.remove('active'));
                 document.querySelector('[data-tab="battle"]').classList.add('active');
@@ -2640,62 +2677,64 @@
                 }
 
                 html += `
-                            <div class="pvp-container">
-                                <div class="battle-status">
-                                    ${isMyTurn ? '🔥 <span class="fighting">ВАШ ХОД!</span>' : '⏳ <span class="waiting">Ход противника...</span>'}
-                                    ${isBot ? ' 🤖 Бот' : ''}
-                                </div>
-
-                                <div class="battle-field">
-                                    <div class="battle-player ${isMyTurn ? 'active' : ''} player1-container">
-                                        <span class="brawler-icon">${myIcon}</span>
-                                        <div class="name">${myName} ${isPlayer1 ? '(Вы)' : ''}</div>
-                                        <div class="power">⚡ Уровень ${myPower}</div>
-                                        <div class="hp-text">❤️ ${myHP}/${myMaxHP}</div>
-                                        <div class="hp-container">
-                                            <div class="hp-bar-bg">
-                                                <div class="hp-bar-fill ${myClass}" style="width:${myPercent}%;"></div>
-                                            </div>
-                                        </div>
-                                        ${myShield ? '<div class="shield-indicator">🛡️ ЩИТ</div>' : ''}
-                                        ${myCooldown > 0 ? `<div style="color:#9b59b6;font-size:12px;margin-top:2px;">⏳ ${myCooldown}</div>` : ''}
-                                    </div>
-
-                                    <div class="battle-vs">⚔️</div>
-
-                                    <div class="battle-player ${!isMyTurn ? 'active' : ''} player2-container">
-                                        <span class="brawler-icon">${oppIcon}</span>
-                                        <div class="name">${oppName} ${isBot ? '🤖' : ''}</div>
-                                        <div class="power">⚡ Уровень ${oppPower}</div>
-                                        <div class="hp-text">❤️ ${oppHP}/${oppMaxHP}</div>
-                                        <div class="hp-container">
-                                            <div class="hp-bar-bg">
-                                                <div class="hp-bar-fill ${oppClass}" style="width:${oppPercent}%;"></div>
-                                            </div>
-                                        </div>
-                                        ${oppShield ? '<div class="shield-indicator">🛡️ ЩИТ</div>' : ''}
-                                    </div>
-                                </div>
-
-                                <div class="battle-actions">
-                                    <button class="attack" onclick="window.makeMove('attack')" ${!isMyTurn ? 'disabled' : ''}>
-                                        <span class="btn-icon">⚔️</span>
-                                        <span class="btn-label">Атака</span>
-                                    </button>
-                                    <button class="defend" onclick="window.makeMove('defend')" ${!isMyTurn ? 'disabled' : ''}>
-                                        <span class="btn-icon">🛡️</span>
-                                        <span class="btn-label">Защита</span>
-                                    </button>
-                                    <button class="ability ${myCooldown <= 0 && isMyTurn ? 'ability-ready' : ''}" onclick="window.makeMove('ability')" ${!isMyTurn || myCooldown > 0 ? 'disabled' : ''}>
-                                        <span class="btn-icon">⚡</span>
-                                        <span class="btn-label">Супер</span>
-                                        ${myCooldown > 0 ? `<span class="cooldown-badge">${myCooldown}</span>` : ''}
-                                    </button>
-                                </div>
-
-                                <div class="battle-log">${logHtml}</div>
+                        <div class="pvp-container">
+                            <div class="battle-status">
+                                ${isMyTurn ? '🔥 <span class="fighting">ВАШ ХОД!</span>' : '⏳ <span class="waiting">Ход противника...</span>'}
+                                ${isBot ? ' 🤖 Бот' : ''}
+                                ${myShield ? ' 🛡️' : ''}
+                                ${myCooldown > 0 ? ` ⏳${myCooldown}` : ' ⚡ Готов'}
                             </div>
-                        `;
+
+                            <div class="battle-field">
+                                <div class="battle-player ${isMyTurn ? 'active' : ''} player1-container">
+                                    <span class="brawler-icon">${myIcon}</span>
+                                    <div class="name">${myName} ${isPlayer1 ? '(Вы)' : ''}</div>
+                                    <div class="power">⚡ Уровень ${myPower}</div>
+                                    <div class="hp-text">❤️ ${myHP}/${myMaxHP}</div>
+                                    <div class="hp-container">
+                                        <div class="hp-bar-bg">
+                                            <div class="hp-bar-fill ${myClass}" style="width:${myPercent}%;"></div>
+                                        </div>
+                                    </div>
+                                    ${myShield ? '<div class="shield-indicator">🛡️ ЩИТ</div>' : ''}
+                                    ${myCooldown > 0 ? `<div style="color:#9b59b6;font-size:12px;margin-top:2px;">⏳ ${myCooldown}</div>` : ''}
+                                </div>
+
+                                <div class="battle-vs">⚔️</div>
+
+                                <div class="battle-player ${!isMyTurn ? 'active' : ''} player2-container">
+                                    <span class="brawler-icon">${oppIcon}</span>
+                                    <div class="name">${oppName} ${isBot ? '🤖' : ''}</div>
+                                    <div class="power">⚡ Уровень ${oppPower}</div>
+                                    <div class="hp-text">❤️ ${oppHP}/${oppMaxHP}</div>
+                                    <div class="hp-container">
+                                        <div class="hp-bar-bg">
+                                            <div class="hp-bar-fill ${oppClass}" style="width:${oppPercent}%;"></div>
+                                        </div>
+                                    </div>
+                                    ${oppShield ? '<div class="shield-indicator">🛡️ ЩИТ</div>' : ''}
+                                </div>
+                            </div>
+
+                            <div class="battle-actions">
+                                <button class="attack" onclick="window.makeMove('attack')" ${!isMyTurn ? 'disabled' : ''}>
+                                    <span class="btn-icon">⚔️</span>
+                                    <span class="btn-label">Атака</span>
+                                </button>
+                                <button class="defend" onclick="window.makeMove('defend')" ${!isMyTurn ? 'disabled' : ''}>
+                                    <span class="btn-icon">🛡️</span>
+                                    <span class="btn-label">Защита</span>
+                                </button>
+                                <button class="ability ${myCooldown <= 0 && isMyTurn ? 'ability-ready' : ''}" onclick="window.makeMove('ability')" ${!isMyTurn || myCooldown > 0 ? 'disabled' : ''}>
+                                    <span class="btn-icon">⚡</span>
+                                    <span class="btn-label">Супер</span>
+                                    ${myCooldown > 0 ? `<span class="cooldown-badge">${myCooldown}</span>` : ''}
+                                </button>
+                            </div>
+
+                            <div class="battle-log">${logHtml}</div>
+                        </div>
+                    `;
                 content.innerHTML = html;
                 menuBtns.forEach(b => b.classList.remove('active'));
                 document.querySelector('[data-tab="battle"]').classList.add('active');
@@ -2710,15 +2749,15 @@
                     (battleData.winner === 'player2' && battleData.player2Id === currentUserId);
 
                 html += `
-                            <div class="battle-result">
-                                <div class="winner">${isWin ? '🎉 ПОБЕДА!' : '💀 ПОРАЖЕНИЕ'}</div>
-                                ${isWin ? `<div class="trophies">🏆 +15 кубков!</div>` : '<div style="color:#8888aa;margin-top:4px;">Попробуй снова!</div>'}
-                                <div style="color:#aaaacc;font-size:14px;margin-top:8px;">
-                                    ${battleData.player1Name} (⚡${battleData.player1Power}) vs ${battleData.player2Name} (⚡${battleData.player2Power})
-                                </div>
-                                <button class="back-btn" onclick="resetBattle()">⬅️ Назад</button>
+                        <div class="battle-result">
+                            <div class="winner">${isWin ? '🎉 ПОБЕДА!' : '💀 ПОРАЖЕНИЕ'}</div>
+                            ${isWin ? `<div class="trophies">🏆 +15 кубков!</div>` : '<div style="color:#8888aa;margin-top:4px;">Попробуй снова!</div>'}
+                            <div style="color:#aaaacc;font-size:14px;margin-top:8px;">
+                                ${battleData.player1Name} (⚡${battleData.player1Power}) vs ${battleData.player2Name} (⚡${battleData.player2Power})
                             </div>
-                        `;
+                            <button class="back-btn" onclick="resetBattle()">⬅️ Назад</button>
+                        </div>
+                    `;
                 content.innerHTML = html;
                 menuBtns.forEach(b => b.classList.remove('active'));
                 document.querySelector('[data-tab="battle"]').classList.add('active');
@@ -2742,35 +2781,35 @@
                     const cost = getUpgradeCost(level);
 
                     html += `
-                                <div class="brawler-detail">
-                                    <span class="avatar">${b.image ? `<img src="${b.image}">` : '⚡'}</span>
-                                    <div class="name">${b.name}</div>
-                                    <div class="rarity">${b.rarity || 'Обычный'}</div>
-                                    <div class="desc">${b.desc || 'Нет описания'}</div>
-                                    <div class="stats-grid">
-                                        <div class="stat-box"><div class="label">⚔️ Урон (ур. ${level})</div><div class="value damage">${stats.damage}</div></div>
-                                        <div class="stat-box"><div class="label">❤️ HP (ур. ${level})</div><div class="value hp">${stats.hp}</div></div>
-                                        <div class="stat-box"><div class="label">📊 Мин. урон</div><div class="value power">${b.minDamage || 100}</div></div>
-                                        <div class="stat-box"><div class="label">📈 Макс. урон</div><div class="value power">${b.maxDamage || 200}</div></div>
-                                    </div>
-                                    <div class="status-badge ${isOwned ? 'owned' : 'locked'}">${isOwned ? '✅ Есть в коллекции' : '🔒 Не куплен'}</div>
-                                    ${isOwned ? `
-                                        <div class="power-display">
-                                            <div class="level">⚡ Уровень ${level}/10</div>
-                                            <div style="display:flex;gap:4px;margin-top:6px;justify-content:center;">
-                                                ${[...Array(10)].map((_, i) => `<div style="width:16px;height:16px;border-radius:50%;background:${i < level ? '#f5c842' : '#555577'};"></div>`).join('')}
-                                            </div>
-                                            <div style="margin-top:6px;font-size:12px;color:#8888aa;">
-                                                Следующий уровень: 🪙${cost.coins} + 💎${cost.gems}
-                                            </div>
-                                            <button class="upgrade-btn" onclick="upgradeBrawler('${b.name}')" ${level >= 10 ? 'disabled' : ''}>
-                                                ${level >= 10 ? '⭐ МАКСИМАЛЬНЫЙ УРОВЕНЬ' : '⬆ ПОВЫСИТЬ УРОВЕНЬ'}
-                                            </button>
-                                        </div>
-                                    ` : ''}
-                                    <button class="back-btn" onclick="closeBrawlerDetail()">⬅️ Назад к списку</button>
+                            <div class="brawler-detail">
+                                <span class="avatar">${b.image ? `<img src="${b.image}">` : '⚡'}</span>
+                                <div class="name">${b.name}</div>
+                                <div class="rarity">${b.rarity || 'Обычный'}</div>
+                                <div class="desc">${b.desc || 'Нет описания'}</div>
+                                <div class="stats-grid">
+                                    <div class="stat-box"><div class="label">⚔️ Урон (ур. ${level})</div><div class="value damage">${stats.damage}</div></div>
+                                    <div class="stat-box"><div class="label">❤️ HP (ур. ${level})</div><div class="value hp">${stats.hp}</div></div>
+                                    <div class="stat-box"><div class="label">📊 Мин. урон</div><div class="value power">${b.minDamage || 100}</div></div>
+                                    <div class="stat-box"><div class="label">📈 Макс. урон</div><div class="value power">${b.maxDamage || 200}</div></div>
                                 </div>
-                            `;
+                                <div class="status-badge ${isOwned ? 'owned' : 'locked'}">${isOwned ? '✅ Есть в коллекции' : '🔒 Не куплен'}</div>
+                                ${isOwned ? `
+                                    <div class="power-display">
+                                        <div class="level">⚡ Уровень ${level}/10</div>
+                                        <div style="display:flex;gap:4px;margin-top:6px;justify-content:center;">
+                                            ${[...Array(10)].map((_, i) => `<div style="width:16px;height:16px;border-radius:50%;background:${i < level ? '#f5c842' : '#555577'};"></div>`).join('')}
+                                        </div>
+                                        <div style="margin-top:6px;font-size:12px;color:#8888aa;">
+                                            Следующий уровень: 🪙${cost.coins} + 💎${cost.gems}
+                                        </div>
+                                        <button class="upgrade-btn" onclick="upgradeBrawler('${b.name}')" ${level >= 10 ? 'disabled' : ''}>
+                                            ${level >= 10 ? '⭐ МАКСИМАЛЬНЫЙ УРОВЕНЬ' : '⬆ ПОВЫСИТЬ УРОВЕНЬ'}
+                                        </button>
+                                    </div>
+                                ` : ''}
+                                <button class="back-btn" onclick="closeBrawlerDetail()">⬅️ Назад к списку</button>
+                            </div>
+                        `;
                     content.innerHTML = html;
                     menuBtns.forEach(b => b.classList.remove('active'));
                     document.querySelector('[data-tab="brawlers"]').classList.add('active');
@@ -2788,12 +2827,12 @@
                     const level = playerBrawler ? playerBrawler.level || 1 : 1;
                     const icon = ALL_BRAWLERS.find(br => br.name === b.name)?.icon || '⚡';
                     html += `
-                                <div class="brawler-item" onclick="openBrawlerDetail('${b.name}')">
-                                    ${b.image ? `<img src="${b.image}">` : icon}
-                                    ${b.name}
-                                    <span style="font-size:11px;color:#f5c842;background:#f5c84222;padding:0 10px;border-radius:40px;margin-left:auto;">${owned ? '⚡'+level : '🔒'}</span>
-                                </div>
-                            `;
+                            <div class="brawler-item" onclick="openBrawlerDetail('${b.name}')">
+                                ${b.image ? `<img src="${b.image}">` : icon}
+                                ${b.name}
+                                <span style="font-size:11px;color:#f5c842;background:#f5c84222;padding:0 10px;border-radius:40px;margin-left:auto;">${owned ? '⚡'+level : '🔒'}</span>
+                            </div>
+                        `;
                 });
                 html += `</div>`;
             }
@@ -2811,14 +2850,14 @@
         function renderShop(cloudHtml) {
             let html = cloudHtml;
             html += `
-                        <div class="form-card">
-                            <h3 style="color:#f5c842;margin-bottom:8px;">🎟️ Активировать ваучер</h3>
-                            <div style="display:flex;gap:8px;">
-                                <input type="text" id="voucherActivateInput" placeholder="Введите код" style="flex:1;">
-                                <button class="submit-btn" onclick="activateVoucher()">Активировать</button>
-                            </div>
+                    <div class="form-card">
+                        <h3 style="color:#f5c842;margin-bottom:8px;">🎟️ Активировать ваучер</h3>
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" id="voucherActivateInput" placeholder="Введите код" style="flex:1;">
+                            <button class="submit-btn" onclick="activateVoucher()">Активировать</button>
                         </div>
-                    `;
+                    </div>
+                `;
 
             if (!shopItems.length) {
                 html += `<div class="empty-state"><span>🛒</span>Магазин пуст</div>`;
@@ -2829,20 +2868,20 @@
                         pb.name === item.brawlerName);
                     const isFree = item.free === true;
                     html += `
-                                <div class="shop-item">
-                                    ${item.image ? `<img src="${item.image}">` : `<div style="width:50px;height:50px;border-radius:40px;background:#1a1a3a;display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`}
-                                    <div class="info">
-                                        <div class="name">${item.name} ${isOwned ? '✅' : ''} ${isFree ? '🎁' : ''}</div>
-                                        <div class="desc">${item.desc || ''}</div>
-                                        <div class="reward">🎁 ${item.reward || 'Награда'}</div>
-                                        ${item.category === 'brawler' ? `<div style="font-size:11px;color:#4fc3f7;">👤 ${item.brawlerName} • ${isFree ? '🎁 БЕСПЛАТНО' : '💎 ' + item.cost}</div>` : ''}
-                                        ${item.category === 'resources' ? `<div style="font-size:11px;color:#ffd54f;">📦 ${item.resourceType === 'gems' ? '💎' : '🪙'} ${item.amount} ${isFree ? '🎁 БЕСПЛАТНО' : ''}</div>` : ''}
-                                    </div>
-                                    <button class="buy-btn" onclick="buyItem('${item.name}')" ${isOwned ? 'disabled style="opacity:0.5;"' : ''}>
-                                        ${isOwned ? '✅' : (isFree ? '🎁 Получить' : 'Купить')}
-                                    </button>
+                            <div class="shop-item">
+                                ${item.image ? `<img src="${item.image}">` : `<div style="width:50px;height:50px;border-radius:40px;background:#1a1a3a;display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`}
+                                <div class="info">
+                                    <div class="name">${item.name} ${isOwned ? '✅' : ''} ${isFree ? '🎁' : ''}</div>
+                                    <div class="desc">${item.desc || ''}</div>
+                                    <div class="reward">🎁 ${item.reward || 'Награда'}</div>
+                                    ${item.category === 'brawler' ? `<div style="font-size:11px;color:#4fc3f7;">👤 ${item.brawlerName} • ${isFree ? '🎁 БЕСПЛАТНО' : '💎 ' + item.cost}</div>` : ''}
+                                    ${item.category === 'resources' ? `<div style="font-size:11px;color:#ffd54f;">📦 ${item.resourceType === 'gems' ? '💎' : '🪙'} ${item.amount} ${isFree ? '🎁 БЕСПЛАТНО' : ''}</div>` : ''}
                                 </div>
-                            `;
+                                <button class="buy-btn" onclick="buyItem('${item.name}')" ${isOwned ? 'disabled style="opacity:0.5;"' : ''}>
+                                    ${isOwned ? '✅' : (isFree ? '🎁 Получить' : 'Купить')}
+                                </button>
+                            </div>
+                        `;
                 });
                 html += `</div>`;
             }
@@ -2855,21 +2894,21 @@
         function renderProfile(cloudHtml) {
             content.innerHTML = cloudHtml +
                 `
-                        <div class="profile-card">
-                            <span class="avatar">👤</span>
-                            <div class="nick">${profile.name || 'Игрок'}</div>
-                            <div style="font-size:12px;color:#555577;margin-bottom:8px;">ID: ${currentUserId?.slice(0,12)}</div>
-                            <div class="stats">
-                                <div class="stat-item"><div class="value gems">${profile.gems || 0}</div><div class="label">💎 Гемы</div></div>
-                                <div class="stat-item"><div class="value coins">${profile.coins || 0}</div><div class="label">🪙 Монеты</div></div>
-                                <div class="stat-item"><div class="value trophies">${profile.trophies || 0}</div><div class="label">🏆 Кубки</div></div>
-                            </div>
-                            <div style="margin-top:12px;color:#888;font-size:13px;">
-                                Бойцы: ${profile.brawlers?.map(b => `${b.name}(${b.level}⚡)`).join(', ') || 'нет'}
-                            </div>
-                            <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
+                    <div class="profile-card">
+                        <span class="avatar">👤</span>
+                        <div class="nick">${profile.name || 'Игрок'}</div>
+                        <div style="font-size:12px;color:#555577;margin-bottom:8px;">ID: ${currentUserId?.slice(0,12)}</div>
+                        <div class="stats">
+                            <div class="stat-item"><div class="value gems">${profile.gems || 0}</div><div class="label">💎 Гемы</div></div>
+                            <div class="stat-item"><div class="value coins">${profile.coins || 0}</div><div class="label">🪙 Монеты</div></div>
+                            <div class="stat-item"><div class="value trophies">${profile.trophies || 0}</div><div class="label">🏆 Кубки</div></div>
                         </div>
-                    `;
+                        <div style="margin-top:12px;color:#888;font-size:13px;">
+                            Бойцы: ${profile.brawlers?.map(b => `${b.name}(${b.level}⚡)`).join(', ') || 'нет'}
+                        </div>
+                        <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
+                    </div>
+                `;
             menuBtns.forEach(b => b.classList.remove('active'));
             document.querySelector('[data-tab="profile"]').classList.add('active');
         }
@@ -2878,16 +2917,16 @@
         function renderChat(cloudHtml) {
             content.innerHTML = cloudHtml +
                 `
-                        <div class="chat-container">
-                            <div class="chat-messages" id="chatMessages">
-                                <div class="chat-empty"><span>💬</span>Загрузка сообщений...</div>
-                            </div>
-                            <div class="chat-input-row">
-                                <input type="text" id="chatInput" placeholder="Введите сообщение..." maxlength="200" />
-                                <button onclick="sendMessage()">📤</button>
-                            </div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-empty"><span>💬</span>Загрузка сообщений...</div>
                         </div>
-                    `;
+                        <div class="chat-input-row">
+                            <input type="text" id="chatInput" placeholder="Введите сообщение..." maxlength="200" />
+                            <button onclick="sendMessage()">📤</button>
+                        </div>
+                    </div>
+                `;
             menuBtns.forEach(b => b.classList.remove('active'));
             document.querySelector('[data-tab="chat"]').classList.add('active');
             loadChat();
@@ -2944,6 +2983,7 @@
                         battleData = null;
                         battleId = null;
                         selectedBrawler = null;
+                        selectedBrawlerStats = null;
                     }
                     currentMainTab = tab;
                     render();
